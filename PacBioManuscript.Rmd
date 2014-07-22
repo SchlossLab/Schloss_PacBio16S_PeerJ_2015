@@ -929,7 +929,7 @@ do
 done
 ```
 
-Now we'd like to go ahead and classify all of our sequences using both the RDP and greengenes training sets:
+Now we'd like to go ahead and classify all of our sequences using both the RDP and greengenes training sets. We'll also classify the region-trimmed version of the Mock community sequence data:
 
 ```{r engine='bash'}
 wget http://www.mothur.org/w/images/5/59/Trainset9_032012.pds.zip
@@ -942,9 +942,47 @@ mv gg_13_5_99.pds.tax gg_13_5_99.pds_gg.tax
 
 for REGION in v*
 do
-  mothur "#classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=trainset9_032012.pds.fasta, taxonomy=trainset9_032012.pds_rdp.tax, processors=8);
-			classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=gg_13_5_99.fasta, taxonomy=gg_13_5_99.pds_gg.tax, processors=8)"
+  mothur "#classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta-$REGION/HMP_MOCK.filter.fasta, reference=trainset9_032012.pds.fasta, taxonomy=trainset9_032012.pds_rdp.tax, processors=8);
+			classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta-$REGION/HMP_MOCK.filter.fasta, reference=gg_13_5_99.fasta, taxonomy=gg_13_5_99.pds_gg.tax, processors=8)"
 done
 ```
 
-Need to make an R version of phylotype
+
+Let's see what fraction of each dataset classifies to each taxonomic level by both classification databases
+
+```{r}
+countGoodBootstraps <- function(nameConf, cutoff=80){
+  bootstrap <- gsub(".*\\((\\d*)\\).*", "\\1", nameConf)
+  bootstrap[bootstrap == "unclassified"] = 0
+  return(sum(as.numeric(bootstrap) >= cutoff))
+}
+
+
+getDepths <- function(region, database, cutoff=80){
+  taxFileName <- paste(region, "/", region, ".trim.unique.good.filter.unique.precluster.pick.", database, ".wang.taxonomy", sep="")
+  tax <- scan(taxFileName, what="", quiet =T)
+  lines <- 1:length(tax)
+  seqNames <- tax[lines %% 2 == 1]
+  taxString <- tax[lines %% 2 == 0]
+  taxList <- strsplit(taxString, ";")
+  depths <- unlist(lapply(taxList, countGoodBootstraps))
+  names(depths) <- seqNames
+  return(depths)
+}
+
+regions <- dir(path="./", pattern="v\\d+")
+
+for(r in regions){
+
+  d.rdp <- getDepths("v4", "pds_rdp")
+  d.gg <- getDepths("v4", "pds_gg")
+  
+  
+  write.table(cbind("rdp" = d.rdp, "gg" = d.gg), file=paste(r, "/", r, ".tax.compare", sep=""), quote=F)
+}
+````
+
+
+
+
+
