@@ -1041,8 +1041,8 @@ Let's use the reference sequences we sampled to see what the "correct" number of
 ```{r engine='bash'}
 for REGION in v*
 do
-    cut -f 2 $REGION/$REGION.mock*error.summary | sort | uniq > mock.ref.accnos
-    mothur "#get.seqs(fasta=$REGION/HMP_MOCK.filter.fasta, accnos=mock.ref.accnos); dist.seqs(cutoff=0.15, output=lt); cluster(phylip=current); summary.single(label=0.03, calc=sobs)"
+    grep "1$" $REGION/$REGION.mock*error.summary | cut -f 2 | sort | uniq > $REGION/mock.ref.accnos
+    mothur "#get.seqs(fasta=$REGION/HMP_MOCK.filter.fasta, accnos=$REGION/mock.ref.accnos); dist.seqs(cutoff=0.15, output=lt); cluster(phylip=current); summary.single(label=0.03, calc=sobs)"
 done
 ```
 
