@@ -1,0 +1,952 @@
+---
+title: "Sequencing 16S rRNA gene fragments using the Pacific Biosciences DNA sequencer"
+author: "Patrick D. Schloss"
+date: "July 21, 2014"
+output: html_document
+---
+
+##Pipeline development
+
+
+We were interested in the ability of PacBio to sequence varying sized regions from the 16S rRNA gene we fragments from the gene using DNA from a defined mock community, feces from a human and mouse, and soil. This notebook provides the mothur code and scripts that we used to process the results of our analysis. 
+
+We ran 10 SMRT cells and their data were located in the following folders that were housed within a folder called `raw_data`:  
+<code>  B01_1_Cell2_PacBioRun109_PSchloss311_p15  
+	C01_1_Cell3_PacBioRun109_PSchloss315_p16  
+	D01_1_Cell4_PacBioRun108_PSchloss310_p13  
+	D01_1_Cell4_PacBioRun109_PSchloss316_p4  
+	E01_1_Cell5_PacBioRun108_PSchloss311_p15  
+	E01_1_Cell5_PacBioRun109_PSchloss317_p19  
+	F01_1_Cell6_PacBioRun108_PSchloss312_p35  
+    H01_1_Cell8_PacBioRun112_PSchloss319_p19</code>
+
+If you substitute the "\_p" for "\_v" you'll see what region each run represented. There were two V15 runs and two V19 runs. These regions were amplified with the following primer sets:
+
+<code>	V19	AGRGTTTGATYMTGGCTCAG	GGYTACCTTGTTACGACTT  
+	V16	AGRGTTTGATYMTGGCTCAG	ACRACACGAGCTGACGAC  
+	V15	AGRGTTTGATYMTGGCTCAG	CCCGTCAATTCMTTTRAGT  
+	V13	AGRGTTTGATYMTGGCTCAG	ATTACCGCGGCTGCTGG  
+	V35	CCTACGGGAGGCAGCAG	CCCGTCAATTCMTTTRAGT  
+	V4	 GTGCCAGCMGCCGCGGTAA	GGACTACHVGGGTWTCTAAT</code>
+
+We also put sequencing indices at the 5' and 3' of the inserts to correspond to the different samples:
+
+<code>	mock1	ccaac	ccaac  
+	mock2	ggttg	ccaac  
+	mock3	ttggt	ccaac  
+	mouse1	aggtg	ccaac  
+	mouse2	cttac	ccaac  
+	mouse3	gaact	ccaac  
+	human1	tccga	ccaac  
+	human2	acagt	ccaac  
+	human3	cactg	ccaac  
+	soil1	aacca	ccaac  
+	soil2	tgtca	ccaac  
+	soil3	aaacc	ccaac</code>
+
+
+Putting it all together in an oligos file (pacbio.oligos), we get...
+
+<code>	primer	AGRGTTTGATYMTGGCTCAG	GGYTACCTTGTTACGACTT	v19  
+	primer	AGRGTTTGATYMTGGCTCAG	ACRACACGAGCTGACGAC	v16  
+	primer	AGRGTTTGATYMTGGCTCAG	CCCGTCAATTCMTTTRAGT	v15  
+	primer	AGRGTTTGATYMTGGCTCAG	ATTACCGCGGCTGCTGG	v13  
+	primer	CCTACGGGAGGCAGCAG	CCCGTCAATTCMTTTRAGT	v35  
+	primer	GTGCCAGCMGCCGCGGTAA	GGACTACHVGGGTWTCTAAT	v4  
+	barcode	ccaac	ccaac	mock1  
+	barcode	ggttg	ccaac	mock2  
+	barcode	ttggt	ccaac	mock3  
+	barcode	aggtg	ccaac	mouse1  
+	barcode	cttac	ccaac	mouse2  
+	barcode	gaact	ccaac	mouse3  
+	barcode	tccga	ccaac	human1  
+	barcode	acagt	ccaac	human2  
+	barcode	cactg	ccaac	human3  
+	barcode	aacca	ccaac	soil1  
+	barcode	tgtca	ccaac	soil2  
+	barcode	aaacc	ccaac	soil3</code>
+
+Let's use bash to clean up the folders a bit since these file names are long and unwieldy. We'll start by creating a folder called  `ccs.fastq`. We'll transfrer the fastqs from the `raw_data` folder into into region-specific folders: 
+
+
+```{r engine='bash'}
+  mkdir ccs.fastqs
+  cd ccs.fastqs
+  mkdir v19 v16 v15 v13 v35 v4
+  for REGION in 19 16 15 13 35 4
+  do
+      cp ../raw_data/*_p$REGION/Analysis_Results/*ccs.fastq v$REGION
+  done
+  
+  ls */*fastq | cut -f 1 -d "/" | sort | uniq -c
+```
+
+This last command allows us to see that every region has 3 \*.ccs.fastq files, except for the v15 (6 files) and v19 (4 files) regions. Let's go ahead and concatenate those fastq files and dump them into individual folders.
+
+```{r engine='bash'}
+cd ../
+mkdir v19 v16 v15 v13 v35 v4
+
+for REGION in $(ls -d v*)
+do
+    > $REGION/$REGION.fastq
+    for FILE in ccs.fastqs/$REGION/*.ccs.fastq
+    do
+        cat $FILE >> $REGION/$REGION.fastq
+    done
+done
+cd ../
+```
+
+We'd also like to concatenate the subread fasta files so that we can see how many base pairs were sequenced for each fragment:
+
+```{r engine='bash'}
+mkdir subreads.fasta
+cd subreads.fasta
+
+mkdir v19 v16 v15 v13 v35 v4
+for REGION in 19 16 15 13 35 4
+do
+    cp ../raw_data/*_p$REGION/Analysis_Results/*subreads.fasta v$REGION > v$REGION/v$REGION.subreads.fasta
+
+    for FILE in v$REGION/*.subreads.fasta
+    do
+        cat $FILE >> v$REGION/v$REGION.subreads.fasta
+    done
+done
+```
+
+For each of these subreads fasta files, we'd like to know the number of subreads per sequence as well as the length of the pooled subreads. We can run this with an R script:
+
+```{r}
+coverage <- function(folder){
+  suffix <- ".subreads.fasta"
+
+	file <- paste(folder, "/", folder, suffix, sep="")
+	data <- scan(file, what="", quiet=T)	
+
+	headers <- data[grepl("^>", data)]
+	headers <- substr(headers, 2, length(headers))
+
+	id <- gsub(".*/(\\d*)/.*", "\\1", headers)
+	start <- as.numeric(gsub(".*/(\\d*)_\\d*", "\\1", headers))
+	end <- as.numeric(gsub(".*/\\d*_(\\d*)", "\\1", headers))
+
+	freq <- table(id)
+	length <- aggregate(end-start, by=list(id), sum)	
+
+	data <- matrix(rep(NA, 2*length(freq)), ncol=2)
+	colnames(data) <- c("freq", "length")
+	rownames(data) <- names(freq)
+	data[,"freq"] <- freq[]
+	data[,"length"] <- length$x
+	write.table(data[order(as.numeric(rownames(data))),], file=paste(folder, "/", folder, ".coverage", sep=""), quote=F)
+    return(folder)
+}
+
+lapply(dir(), coverage)
+
+```
+
+Now we'd like to generate fasta and quality score files for each ccs file. When we do this, it is critical that we set the pacbio parameter to T. This is because by default PacBio will assign a base call even if the quality score is zero:
+
+
+```{r engine='bash'}
+cd ../
+
+for REGION in v*
+do
+    mothur "#fastq.info(fastq=$REGION/$REGION.fastq, pacbio=T, outputdir=./$REGION/)"
+done
+```
+
+Using the primer and barcode information from above, we can make region-specific oligos files and put them into the regional folders:
+
+```{r engine='bash'}
+for REGION in v*
+do
+    grep ""$REGION"" pacbio.oligos > $REGION/$REGION.oligos
+    grep "barcode" pacbio.oligos >> $REGION/$REGION.oligos
+done
+```
+
+Now we're all set to run some mothur commands. Since each file is a mixture of our mock community and data from soil, human feces, and mouse feces, we need to split the fasta and qual files by barcode. Let's initially be generous and allow for 2 mismatches to each barcode and 4 mismatches to each primer. To keep things simple, we'll concatenate the three mock community fasta, quality score, and groups files. We modified the source code to output the total number of mismatches to the barcodes and primers on the header line for each sequence in the trim file.
+
+```{r engine='bash'}
+for REGION in v*
+do
+    cd $REGION
+    mothur "#trim.seqs(fasta=$REGION.fasta, qfile=$REGION.qual, oligos=$REGION.oligos, checkorient=T, pdiffs=6, bdiffs=4, allfiles=T, processors=8)"
+    cat $REGION*mock?.$REGION.fasta > $REGION.mock.fasta
+    cat $REGION*mock?.$REGION.qual > $REGION.mock.qual
+    cat $REGION*mock?.$REGION.groups > $REGION.mock.groups
+    grep ">" $REGION.mock.fasta > $REGION.mismatches
+    cd ../
+done
+```
+
+Let's go back and extract the coverage data for each of the sequences using another R script:
+
+```{r}
+getCoverage <- function(region){
+  write(region, "")
+	file <- paste(region, "/", list.files(region, pattern="v\\d*.mock?.fasta"), sep="")
+	fasta <- scan(file, what="", quiet=T)
+	seqNames <- fasta[grepl(">", fasta)]
+	seqNames <- gsub(".*/(\\d*)/.*", "\\1", seqNames)
+
+	coverage <- read.table(file=paste("subreads.fasta/", region, "/", region, ".coverage", sep=""), header=T)
+	mock.coverage <- coverage[(seqNames),]
+	
+	write.table(mock.coverage, file=paste(region, "/", region, ".ccs.coverage", sep=""))
+}
+
+
+lapply(dir("./", pattern="v\\d*"), getCoverage)
+```
+
+Let's also calculate the average quality score for all of the trimmed sequences as well as the minimum average quality score over a 50 bp window:
+
+```{r}
+getAverageScore <- function(scoreString){
+  scoreVector <- as.numeric(unlist(strsplit(scoreString, " ")))
+    scoreVector[scoreVector > 72] <- 72
+	return(mean(scoreVector))
+}
+
+getMinRollingAverage <- function(scoreString, windowSize){
+	scoreVector <- as.numeric(unlist(strsplit(scoreString, " ")))
+    scoreVector[scoreVector > 72] <- 72
+    min.avg <- 0
+    
+    if(length(scoreVector) > windowSize){
+        avg <- filter(scoreVector, rep(1/windowSize, windowSize), side=1)
+        min.avg <- min(avg, na.rm=T)
+    }
+	return(min.avg)
+}
+
+reportAverageScores <- function(folder, windowSize = 50){
+	write(folder, "")
+	qual <- scan(file=paste(folder, "/", folder, ".mock.qual", sep=""), what="", sep="\n", quiet=T)
+	seq.names <- qual[1:length(qual) %% 2 == 1]
+	seq.names <- gsub(".*/(\\d*)/.*", "\\1", seq.names)
+	seq.scores <- qual[1:length(qual) %% 2 == 0]
+
+	ave.scores <- unlist(lapply(seq.scores, getAverageScore))
+	min.scores <- unlist(lapply(seq.scores, getMinRollingAverage, windowSize))
+	
+	report <- cbind(ave.scores, min.scores)
+	rownames(report) <- seq.names
+	colnames(report) <- c("ave", "min")
+	
+	write.table(report, paste(folder, "/", folder, ".mock.qreport", sep=""), quote=F)
+}
+
+lapply(dir("./", pattern="v\\d*"), reportAverageScores)
+```
+
+We are now ready to calculate the error rate for the various regions using the mock community and the HMP_MOCK sequence data. We will use mothur to align the sequences to HMP_MOCK.align, determine the start and end positions of the alignment, and calculate the error rate.
+
+```{r engine='bash'}
+for REGION in v*
+do
+    mothur "#align.seqs(fasta=$REGION/$REGION.mock.fasta, reference=HMP_MOCK.align, processors=8, outputdir=./$REGION/);
+        filter.seqs(fasta=$REGION/$REGION.mock.align-HMP_MOCK.align, vertical=T);
+        summary.seqs();
+        seq.error(fasta=$REGION/$REGION.mock.filter.fasta, reference=$REGION/HMP_MOCK.filter.fasta, report=$REGION/$REGION.mock.align.report, qfile=$REGION/$REGION.mock.qual, processors=8);"
+done
+```
+
+We now have all of the data summaries we need to start looking at the relationship between different factors and the sequencing error rates. We begin by looking at the different types of errors in our data.
+
+```{r}
+regions <- dir("./", pattern="v.*")
+
+sub.matrix <- read.table(file=paste(regions[1], "/", regions[1], ".mock.filter.error.matrix", sep=""), header=T, row.names=1)[-7,]
+for(i in 2:length(regions)){
+  sub.matrix <- sub.matrix + read.table(file=paste(regions[i], "/", regions[i], ".mock.filter.error.matrix", sep=""), header=T, row.names=1)[-7,]
+}
+
+matches <- c(sub.matrix[1,1], sub.matrix[2,2], sub.matrix[3,3], sub.matrix[4,4])
+total <- sum(sub.matrix)
+errors <- sub.matrix
+diag(errors[1:4,1:4]) <- 0
+error.rate <- 100 * sum(errors) / total				#1.925717
+apply(errors, 2, sum)[-5]/matches
+#         rA          rT          rG          rC 
+#0.008275158 0.009553617 0.012739700 0.012211228 
+#these are more or less equal to each other
+
+substitutions <- sum(errors[1:4,1:4])/sum(errors)	#0.3656617
+insertions <- sum(errors[,5])/sum(errors)			#0.450299
+deletions <- sum(errors[5,])/sum(errors)			#0.167206
+ambiguous <- sum(errors[6,])/sum(errors)			#0.02157014
+```
+
+These results indicate that there is no base-specific bias in the errors and that the overall error rate is 1.93%. Of this error, 36.5% is from substitutions, 45% is from insertions, 16.7% is from deletions, and 2.2% is from ambiguous base calls.
+
+Let's look to see whether there are any associations between the type of error and the quality score.
+
+```{r}
+regions <- dir("./", pattern="v.*")
+
+error.quality <- read.table(file=paste(regions[1], "/", regions[1], ".mock.filter.error.quality", sep=""), header=T, row.names=1)[-7,]
+for(i in 2:length(regions)){
+  error.quality <- error.quality + read.table(file=paste(regions[i], "/", regions[i], ".mock.filter.error.quality", sep=""), header=T, row.names=1)[-7,]
+}
+error.quality["72",] <- error.quality["72",] + error.quality["80",]
+error.quality <- error.quality[1:72,]
+
+#make own boxplot
+
+matches <- rep(as.numeric(rownames(error.quality)), error.quality$matches)
+m.quant <- quantile(matches, prob=c(0.025, 0.25, 0.5, 0.75, 0.975))
+
+subs <- rep(as.numeric(rownames(error.quality)), error.quality$substitutions)
+s.quant <- quantile(subs, prob=c(0.025, 0.25, 0.5, 0.75, 0.975))
+
+ins <- rep(as.numeric(rownames(error.quality)), error.quality$insertions)
+i.quant <- quantile(ins, prob=c(0.025, 0.25, 0.5, 0.75, 0.975))
+
+ambig <- rep(as.numeric(rownames(error.quality)), error.quality$ambiguous)
+a.quant <- quantile(ambig, prob=c(0.025, 0.25, 0.5, 0.75, 0.975))
+
+
+par(mar=c(6, 5, 0.5, 0.5))
+plot(1, xlim=c(0.5, 4.5), ylim=c(0,80), type="n", yaxt="n", xaxt="n", xlab="", ylab="")
+polygon(x=c(0.75, 1.25, 1.25, 0.75), y=c(m.quant["25%"], m.quant["25%"], m.quant["75%"], m.quant["75%"]))
+polygon(x=c(1.75, 2.25, 2.25, 1.75), y=c(s.quant["25%"], s.quant["25%"], s.quant["75%"], s.quant["75%"]))
+polygon(x=c(2.75, 3.25, 3.25, 2.75), y=c(i.quant["25%"], i.quant["25%"], i.quant["75%"], i.quant["75%"]))
+polygon(x=c(3.75, 4.25, 4.25, 3.75), y=c(a.quant["25%"], a.quant["25%"], a.quant["75%"], a.quant["75%"]))
+segments(x0=seq(0.75, 3.75, 1), x1=seq(1.25,4.25,1), y0=c(m.quant["50%"], s.quant["50%"], i.quant["50%"], a.quant["50%"]), lwd=4)
+
+arrows(x0=1:4, y0=c(m.quant["75%"], s.quant["75%"], i.quant["75%"], a.quant["75%"]), y1=c(m.quant["97.5%"], s.quant["97.5%"], i.quant["97.5%"], a.quant["97.5%"]), angle=90)
+arrows(x0=1:4, y0=c(m.quant["25%"], s.quant["25%"], i.quant["25%"], a.quant["25%"]), y1=c(m.quant["2.5%"], s.quant["2.5%"], i.quant["2.5%"], a.quant["2.5%"]), angle=90)
+
+axis(2, las=2)
+axis(1, at=c(1,2,3,4), label=c("Matches", "Substitutions", "Insertions", "Deletions"), las=2)
+title(ylab="Quality score")
+```
+
+There is a pretty good separtion between the correct and incorrect (substitutions/insertions) base calls. We will use this later to help us develop a plan for screening out sequences that are of low quality.  
+
+Let's remove any sequences with a homopolymer length longer than 8, sequences with ambiguous base calls, sequences that don't start and end at the expected positions, and any sequences that were flagged as being chimeras (these aren't sequencing errors).
+
+```{r}
+getMode <- function(x){
+  return(as.numeric(names(sort(table(x), decreasing=T)[1])))
+}
+
+generateComposite <- function(folder){
+	#read everything in
+	write(folder, "")
+
+	coverage <- read.table(file=paste(folder, "/", folder, ".ccs.coverage", sep=""), header=T, row.names=1)
+	mismatches <- read.table(file=paste(folder, "/", folder, ".mismatches", sep=""), header=F, row.names=1)
+	aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
+	error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+	summary <- read.table(file=paste(folder, "/", folder, ".mock.filter.summary", sep=""), header=T, row.names=1)
+
+
+	#fix some column names
+	colnames(mismatches) <- c("barcode", "primer")
+    aveq <- aveq[,-1]
+    colnames(aveq) <- c("aveQ", "minQ")
+    
+	#basic screening of sequences
+	non.chimeras <- error$numparents==1
+
+	mode.start <- getMode(summary$start)
+	mode.end <- getMode(summary$end)
+
+    good.start <- summary$start == mode.start  #find sequences that start at correct location in alignment
+    good.end <- summary$end == mode.end        #find sequences that end at correct location in alignment
+	good.homop <- summary$polymer <= 8         #find sequences with less than or equal to 8 nt
+    good.ambig <- summary$ambig == 0           #find sequences with no ambiguous base calls
+    
+	good.sequences <- non.chimeras & good.start & good.end & good.homop & good.ambig
+
+
+	#create composite data frame of good sequences
+	composite <- cbind(error[good.sequences,], coverage[good.sequences,],
+						mismatches[good.sequences,], aveq[good.sequences,],
+						summary[good.sequences,])
+	write.table(composite, paste(folder, "/", folder, ".composite", sep=""), quote=F, sep="\t")
+    
+    return(nrow(composite) / nrow(coverage))
+}
+
+regions <- dir("./", pattern="v\\d*")
+fraction.kept <- unlist(lapply(regions, generateComposite))
+names(fraction.kept) <- regions
+sort(fraction.kept, decreasing=T)
+
+#       v4       v13       v15       v35       v19       v16 
+#0.9486609 0.7465453 0.7421388 0.6689949 0.5680581 0.5444816 
+```
+
+Because PacBio sequencing is done in a circular manner to produce a conensus sequences, there should be no length effects. Therefore, it stands to reason that the error rate we see in the barcodes and primers, should be the error rate for the entire fragment. If a read has no errors in the barcodes and primers, then we would expect there to be very few errors in the rest of the fragment. If there are a lot of errors, well then we expect a high error rate for the fragment. First, let's plot the error rate for different numbers of mismatches to the barcodes and primers:
+
+```{r}
+plotBarcodePrimerError <- function(folder){
+  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+    
+	total.mismatch <- composite$barcode + composite$primer
+    composite <- composite[total.mismatch <= 5,]
+    total.mismatch <- composite$barcode + composite$primer
+       
+    error.mismatch <- aggregate(composite$error, by=list(total.mismatch), function(x){c(quantile(x, probs=c(0.025, 0.5, 0.975)), length(x))})$x
+    error.mismatch <- error.mismatch[1:6,]
+	colnames(error.mismatch) <- c("lci", "median", "uci", "n")
+	rownames(error.mismatch) <- 0:5
+	error.mismatch[, "n"] <- 100 * error.mismatch[, "n"]/sum(error.mismatch[, "n"])
+
+	par(mar=c(5, 5, 0.5, 0.5))
+	stripchart(composite$error~total.mismatch, vertical=T, method="jitter", pch=19, col="grey", ylab="", yaxt="n", ylim=c(0,0.33))
+	segments(x0=(1:6)-0.25, x1=(1:6)+0.25, y0=error.mismatch[,"median"], lwd=3)
+	segments(x0=(1:6)-0.25, x1=(1:6)+0.25, y0=error.mismatch[,"lci"], lwd=1)
+	segments(x0=(1:6)-0.25, x1=(1:6)+0.25, y0=error.mismatch[,"uci"], lwd=1)
+
+	title(xlab="Total number of mismatches to\nbarcodes and primers", ylab="Error rate (%)")
+	axis(2, at=seq(0, 0.4, 0.1), label=seq(0,40,10), las=2)
+	mtext(1, at=seq(1:6), text=format(error.mismatch[,"n"], digits=1), line=-1, cex=0.5)
+	text(x=1:6, y=error.mismatch[,"median"], label=format(100*error.mismatch[,"median"], digits=2), pos=3, cex=0.8, font=2)
+	text(1, 0.33, label=toupper(folder), font=2, cex=1.25)
+}
+
+folder <- "v19"
+par(mfrow=c(4,2))
+#lapply(dir("./", pattern="v\\d*"), plotBarcodeError)
+
+lapply(c("v4", "v35", "v13", "v15", "v16", "v19"), plotBarcodePrimerError)
+par(mfrow=c(1,1))
+```
+
+We see that the median error rate does increase with the number of mismatches to the barcodes and primers. Considering the total length of the barcodes and primers does not vary much across the regions, there does't seem to be a consistent association between the error rate of the fragment and the oligos. Let's check it out.
+
+```{r}
+getFragment_BPErrorRates <- function(folder, length){
+  bp.length <- length[folder]
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+	fragment.error <- mean(composite$error)
+	
+	bc.primer <- composite$barcode + composite$primer
+	bp.error <- mean(bc.primer/bp.length)
+	return(c(fragment.error, bp.error))
+}
+
+oligos.file <- scan("pacbio.oligos", what="", sep="\n", quiet=T)
+primers <- oligos.file[grepl("primer", oligos.file)]
+region <- gsub(".*(v\\d*)$", "\\1", primers)
+length <- nchar(gsub("primer\t(.*)\t(.*)\t.*", "\\1\\2", primers))+10
+names(length) <- region
+
+regions <- dir("./", pattern="v.*")
+errors <- unlist(lapply(regions, getFragment_BPErrorRates, length))
+errors <- matrix(errors, ncol=2, byrow=T)
+rownames(errors) <- regions
+colnames(errors) <- c("fragment", "oligos")
+
+cor.test(errors[,"fragment"], errors[,"oligos"])
+
+#	Pearson's product-moment correlation
+#
+#data:  errors[, "fragment"] and errors[, "oligos"]
+#t = -1.0267, df = 6, p-value = 0.3442
+#alternative hypothesis: true correlation is not equal to 0
+#95 percent confidence interval:
+# -0.8576225  0.4371967
+#sample estimates:
+#       cor 
+#-0.3865714 
+```
+
+The last command shows us that our correlation is not significant (P=0.34). This is likely because the combined length of the two barcodes and primers varies between 44 and 49 nucleotides. Therefore, if we have a 1 nt mismatch, the error rate will vary between 2.0 and 2.2%. So it isn't precise enough to give us a way to assess the overall error rate; however, it does apear to be a likely candidate to help us screen out bad sequences.  
+
+A significant factor in PacBio's consensus sequencing is that repeated rounds of sequencing builds one's confidence in the overall base calls. Using the subread data we have already calcualted the coverage as well as the total length sequenced. We will now assess the error rate as a function of the sequence coverage and the number of bases sequenced. The results should be pretty similar so we'll focus primarily on the level of coverage.
+
+```{r}
+plotLines <- function(folder){
+  write(folder, "")
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+
+	error <- aggregate(composite$error, by=list(composite$freq), function(x){c(mean=mean(x), quantile(x, prob=c(0.025, 0.975)), n=length(x))})
+	coverage <- error[, "Group.1"]
+	error <- error$x
+	mean <- error[,"mean"]
+	lci <- error[,"2.5%"]
+	uci <- error[,"97.5%"]
+	N <- error[, "n"]
+	percent.n <- N/cumsum(N)
+	points(mean~coverage, type="l", lwd=1)
+
+}
+
+plot(1, xlim=c(0,70), ylim=c(0,0.08), type="n", xlab="", ylab="", yaxt="n")
+title(xlab="Coverage", ylab="Error rate (%)")
+axis(2, at=seq(0,0.1, 0.02), label=seq(0,10, 2), las=2)
+
+lapply(dir("./", pattern="v.*"), plotLines)
+```
+
+This plot shows us that the error rates appear to plateau around 10-fold coverage. It is interesting that beyond that, the error rate really doesn't improve much. Let's find out the actual average error rate for each region when we only use reads with 10-fold coverage:
+
+```{r}
+
+errorAtCoverageCutoff <- function(folder){
+  write(folder, "")
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+	total.seqs <- nrow(composite)
+	orig.error <- mean(composite$error)
+	
+	composite <- composite[composite$freq >= 10,]
+	covered.seqs <- nrow(composite)
+
+	error <- mean(composite$error)
+	frac.kept <- covered.seqs / total.seqs
+	return(c(orig.error=orig.error, error=error, kept=frac.kept))
+}
+
+regions <- dir("./", pattern="v.*")
+output <- unlist(lapply(regions, errorAtCoverageCutoff))
+output <- matrix(output, ncol=3, byrow=T)
+rownames(output) <- regions
+colnames(output) <- c("orig", "final", "kept")
+
+o <- order(output[,"orig"])
+output[o,]
+
+error.reduction <- (1-sort(output[,"final"]/output[,"orig"]))*100
+error.reduction
+
+#       v4       v13       v15       v19       v35       v16
+#51.713740 31.071796 27.080588 26.858299 26.635537 26.201676
+```
+
+From this we see that there really is no clear pattern between the length of the region and the error rate or the fraction of sequences that we kept. The reduction in error rate varied between 26.2 (V16) and 51.7% (V4).
+
+Next we'll consider the relationship between the sequencing error rate and the average quality score for the read. This should be proportional to the level of coverage.
+
+```{r}
+errorQualityScore <- function(folder){
+  write(folder, "")
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+
+	binned <- aggregate(composite$error, by=list(round(composite$aveQ)), mean)
+	points(binned, type="l")
+}
+
+regions <- dir("./", pattern="v.*")
+
+plot(1, xlim=c(20,75), ylim=c(0,0.10), type="n", yaxt="n", xlab="", ylab="")
+lapply(regions, errorQualityScore)
+title(xlab="Average Quality Score", ylab="Error Rate (%)")
+axis(2, las=2, at=seq(0,0.1,0.02), label=seq(0,10,2))
+```
+
+The resulting plot shows that, in general, as the average quality score for a read increases, it's error rate decreases. As an alternative, let's plot the minimum average quality score from the 50-nt sliding window analysis we did above.
+
+```{r}
+errorMinQualityScore <- function(folder){
+  write(folder, "")
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+
+	binned <- aggregate(composite$error, by=list(round(composite$minQ)), mean)
+	points(binned, type="l")
+}
+
+regions <- dir("./", pattern="v.*")
+
+plot(1, xlim=c(20,75), ylim=c(0,0.10), type="n", yaxt="n", xlab="", ylab="")
+lapply(regions, errorMinQualityScore)
+title(xlab="Minimum Sliding Window Quality Score", ylab="Error Rate (%)")
+axis(2, las=2, at=seq(0,0.1,0.02), label=seq(0,10,2))
+```
+
+As expected, the two sets of curves are different with the minimum sliding window average quality scores being smaller than the whole sequence averages. It would be nice to pick a threshold so that we can compare the two methods. To do this, let's look at the fraction of perfect sequences by both methods as a function of the quality score. As it is clear that we would like to have as high a quality score as possible while maintaining a decent number of reads, let's look at the distribution of reads by average quality score.
+
+```{r}
+
+nQualityScore <- function(folder){
+  write(folder, "")
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+
+	binned <- aggregate(composite$error, by=list(round(composite$aveQ)), length)
+	total.n <- sum(binned$x)
+	binned$x <- rev(cumsum(rev(binned$x)/total.n))
+	target <- binned[binned$Group.1=="65", "x"]
+
+	plot(1, xlim=c(20,75), ylim=c(0,1), type="n", yaxt="n", xlab="", ylab="")
+    points(binned, type="l")
+    title(xlab="Quality Score", ylab="Percent of Sequences with Quality Score or Higher")
+    axis(2, at=seq(0,1,0.2), label=seq(0,100,20), las=2)
+
+	
+	
+	binned <- aggregate(composite$error, by=list(round(composite$minQ)), length)
+	total.n <- sum(binned$x)
+	binned$x <- rev(cumsum(rev(binned$x)/total.n))
+
+
+    points(binned, type="l", col="red")
+
+    text(x=72, y=0.95, label=folder, font=2, cex=1.5)
+    
+	binned$x <- binned$x - target
+	return(binned[which.min(abs(binned$x)), "Group.1"])
+}
+
+par(mfrow=c(4,2))
+regions <- dir("./", pattern="v.*")
+equivallent <- lapply(regions, nQualityScore)
+par(mfrow=c(1,1))
+
+equivallent <- unlist(equivallent)
+names(equivallent) <- regions
+equivallent
+
+#v13 v15 v16 v19 v35  v4
+# 56  57  54  55  56  60
+```
+
+From this we see that the curves roughly parallel each other and that to get the same number of reads back you would select a minimum sliding window average of 54 to 60. Let's compare the average error rates when we use a sliding window threshold of 55 and a full sequence threshold of 65:
+
+
+```{r}
+getErrorQThreshold <- function(folder){
+  write(folder, "")
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+	full <- mean(composite[composite$aveQ >= 65, "error"])
+	window <- mean(composite[composite$minQ >= 55, "error"])
+	return(c(mean(composite$error), full, window))
+}
+
+regions <- dir("./", pattern="v.*")
+output <- matrix(unlist(lapply(regions, getErrorQThreshold)), ncol=3, byrow=T)
+
+rownames(output) <- regions
+colnames(output) <- c("original", "full", "window")
+
+output/output[,"original"]
+#    original      full    window
+#v13        1 0.5597030 0.5274460
+#v15        1 0.3823884 0.3686299
+#v16        1 0.5272257 0.3912533
+#v19        1 0.3482606 0.3343369
+#v35        1 0.4728069 0.4069662
+#v4         1 0.4008387 0.4754781
+
+
+output[,"full"] / output[,"window"]
+#      v13       v15       v16       v19       v35        v4
+#1.0611571 1.0373234 1.3475302 1.0416458 1.1617841 0.8430224
+```
+
+In general, the sliding window approach yields the lower error rate when we use a threshold of 55. From here forward we'll use the sliding window approach with a threshold of 55. Overall, we also see some significant reduction in the error rate; however, it is still no where near what we have previously observed using the 454 and Illumina platforms. Requiring that the a sequence not have a 50-bp region with an average quality score below 55 allows us to keep a reasonable number of reads while maintaining an error rate below 1%.  
+
+At this point we are kind of out of tricks to reduce the error rate further beyond combining methods. Let's go back and merge our approaches - allow no or one mismatch to the barcodes and primers, require 10-fold coverage, and an average quality score of 65. We are also interested in whether any of these specification are redundant with each other.
+
+```{r}
+
+oligosCoverage <- function(folder){
+  write(folder, "")
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+	
+	mismatch <- composite$barcode + composite$primer
+	good0 <- mismatch == 0 & composite$freq >= 10
+	composite.good0 <- composite[good0,]
+
+	good1 <- mismatch <= 1 & composite$freq >= 10
+	composite.good1 <- composite[good1,]
+
+	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite), 
+										mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
+	
+}
+
+regions <- dir("./", pattern="v.*")
+oligos.coverage <- matrix(unlist(lapply(regions, oligosCoverage)), ncol=5, byrow=T)
+rownames(oligos.coverage) <- regions
+colnames(oligos.coverage) <- c("original", "0.error", "0.frac", "1.error", "1.frac")
+oligos.coverage
+#       original     0.error    0.frac     1.error    1.frac
+#v13 0.014883360 0.009371691 0.4302483 0.009899256 0.6108352
+#v15 0.009367667 0.004050098 0.3762085 0.005253236 0.5834384
+#v16 0.014569803 0.007945951 0.2929975 0.008956478 0.4256757
+#v19 0.013413156 0.006706336 0.3142608 0.007903900 0.4856230
+#v35 0.013968573 0.009096211 0.4857547 0.009503092 0.6257300
+#v4  0.005741810 0.001565052 0.5476458 0.002068184 0.7389796
+
+
+
+oligosQScore <- function(folder){
+	write(folder, "")
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+
+	mismatch <- composite$barcode + composite$primer
+	good0 <- mismatch == 0 & composite$minQ>= 55
+	composite.good0 <- composite[good0,]
+
+	good1 <- mismatch <= 1 & composite$minQ >= 55
+	composite.good1 <- composite[good1,]
+
+	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite), 
+										mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
+}
+
+regions <- dir("./", pattern="v.*")
+oligos.qscore <- matrix(unlist(lapply(regions, oligosQScore)), ncol=5, byrow=T)
+rownames(oligos.qscore) <- regions
+colnames(oligos.qscore) <- c("original", "0.error", "0.frac", "1.error", "1.frac")
+oligos.qscore
+#       original     0.error    0.frac     1.error    1.frac
+#v13 0.014883360 0.007335174 0.4568849 0.007656937 0.6449210
+#v15 0.009367667 0.002236401 0.3719210 0.002718334 0.5614124
+#v16 0.014569803 0.004243318 0.3304668 0.004264359 0.4797297
+#v19 0.013413156 0.003444504 0.2436828 0.003889155 0.3496950
+#v35 0.013968573 0.004661911 0.4942488 0.005017634 0.6420103
+#v4  0.005741810 0.001594760 0.5881636 0.002036243 0.8031326
+
+
+coverageQScore <- function(folder){
+	write(folder, "")
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+
+	good <- composite$freq >= 10 & composite$minQ>= 55
+	composite.good <- composite[good,]
+
+	return(c(mean(composite[,"error"]), mean(composite.good[,"error"]), nrow(composite.good)/nrow(composite) ))
+
+}
+
+regions <- dir("./", pattern="v.*")
+coverage.qscore <- matrix(unlist(lapply(regions, coverageQScore)), ncol=3, byrow=T)
+rownames(coverage.qscore) <- regions
+colnames(coverage.qscore) <- c("original", "error", "frac")
+coverage.qscore
+#       original       error      frac
+#v13 0.014883360 0.007981498 0.6194131
+#v15 0.009367667 0.003382451 0.5420765
+#v16 0.014569803 0.005981643 0.4023342
+#v19 0.013413156 0.004333439 0.3174557
+#v35 0.013968573 0.005746871 0.6007786
+#v4  0.005741810 0.002461436 0.7820765
+
+
+
+allFilters <- function(folder){
+	write(folder, "")
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+
+	mismatch <- composite$barcode + composite$primer
+	good0 <- mismatch == 0 & composite$minQ>= 55 & composite$freq >= 10
+	composite.good0 <- composite[good0,]
+
+	good1 <- mismatch <= 1 & composite$minQ >= 55 & composite$freq >= 10
+	composite.good1 <- composite[good1,]
+
+	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite), 
+										mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
+
+}
+
+regions <- dir("./", pattern="v.*")
+all.filters <- matrix(unlist(lapply(regions, allFilters)), ncol=5, byrow=T)
+rownames(all.filters) <- regions
+colnames(all.filters) <- c("original", "0.error", "0.frac", "1.error", "1.frac")
+all.filters
+#       original     0.error    0.frac     1.error    1.frac
+#v13 0.014883360 0.007514957 0.4108352 0.007803994 0.5792325
+#v15 0.009367667 0.002143636 0.3271963 0.002635042 0.4905422
+#v16 0.014569803 0.004104780 0.2635135 0.004196239 0.3746929
+#v19 0.013413156 0.003394943 0.2079582 0.003873570 0.2974150
+#v35 0.013968573 0.004717181 0.4434613 0.005107118 0.5685719
+#v4  0.005741810 0.001413481 0.5459107 0.001830115 0.7350872
+```
+
+When we take a look at the output from oligos.qscore, oligos.coverage, coverage.qscore, and all.filters it becomes apparent that the oligos.qscore strategy reduces the error rates the most, while having a comparable effect on the number of sequences passing the filter relative to the other methods. When we look at the choice of allowing either no or one difference to the oligos, we find a negligible difference between the error rates of the two options. However, we retain considerably more sequences by allowing a single mismatch to the oligos. So, in the end our strategy to reduce the sequencing error rate is to allow a total of one mismatch to the barcodes and primers and using the sliding window threshold of 55. Let's take a look at the overall error rate for each region with this filter.
+
+```{r}
+
+oligosQScorePlot <- function(folder, position){
+  write(folder, "")
+	write(position, "")
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+
+	mismatch <- composite$barcode + composite$primer
+	good <- mismatch <= 1 & composite$minQ >= 55
+	composite.good <- composite[good,]
+	
+	error.ci <- quantile(composite.good[,"error"], probs=c(0.025, 0.975))
+	error.mean <- mean(composite.good[,"error"])
+	
+	stripchart(at=position, composite.good[,"error"], vertical=T, method="jitter", jitter=0.2, pch=19, col="gray", add=T)
+	segments(x0=position-0.3, x1=position+0.3, y0=error.mean, lwd=4)
+	segments(x0=position-0.3, x1=position+0.3, y0=error.ci[1], lwd=2)
+	segments(x0=position-0.3, x1=position+0.3, y0=error.ci[2], lwd=2)
+	text(x=position, y=error.mean, label=format(100*error.mean, digits=2, nsmall=2), pos=3, cex=0.8)
+}
+
+regions <- c("v4", "v35", "v13", "v15", "v16", "v19")
+
+plot(1, xlim=c(0.5,6.5), ylim=c(0,0.1), xlab="", ylab="", yaxt="n", xaxt="n", type="n")
+
+mapply(oligosQScorePlot, regions, 1:6)
+
+regions <- toupper(regions)
+regions <- gsub("V(\\d)(\\d)", "V\\1-V\\2", regions)
+axis(1, at=1:6, label=regions, tick=F)
+axis(2, las=2, at=seq(0,0.1,0.02), label=seq(0,10,2))
+title(ylab="Error rate (%)", xlab="Region within 16S rRNA gene")
+```
+
+Having settled in on a pipeline, we would now like to run that protocol from the beginning on all of our samples. Let's create some new folders and make links to the original fasta files:
+
+```{r engine='bash'}
+
+mkdir pipeline_dev analysis
+mv v* pipeline_dev
+
+cd ../analysis
+mkdir v13  v15  v16  v19  v35  v4
+cd ../pipeline_dev
+
+for REGION in v*
+do
+    cp -l $REGION/$REGION.fasta $REGION/$REGION.qual $REGION/$REGION.oligos ../analysis/$REGION
+done
+cd ../analysis
+
+wget http://www.mothur.org/w/images/9/98/Silva.bacteria.zip
+unzip Silva.bacteria.zip 
+mv silva.bacteria/silva.bacteria.fasta ./
+```
+
+To recap, the pipeline consists of removing any fragment that has more than one mismatch to the barcodes or primers, contains an ambiguous basecall, has a 50 bp window with an average quality score below 55, has a homopolymer longer than 8 nt, and does not align correctly to the region of interest.  
+
+  
+  
+##Analysis of different communities based on new pipeline
+Let's run this using trim.seqs in mothur on each of the files. While we're at it, we'll go ahead and unique, align the sequences, and summarize the alignments.
+
+```{r engine='bash'}
+for REGION in v*
+do
+    cd $REGION
+    mothur "#trim.seqs(fasta=$REGION.fasta, qfile=$REGION.qual, oligos=$REGION.oligos, checkorient=T, tdiffs=1, maxambig=0, maxhomop=8, qwindowsize=50, qwindowaverage=55, processors=8);
+            unique.seqs(fasta=current); align.seqs(fasta=current, reference=../silva.bacteria.fasta);
+            summary.seqs(name=current)"
+    cd ../
+done
+```
+
+Looking at the output from the summary.seqs commands we come up with the following positions within the alignment for our start and end values:
+
+
+| Region | Start | End   | 
+|------------------------- 
+| v13    | 1044  | 13125 |  
+| v15    | 1044  | 27659 |  
+| v16    | 1044  | 34113 |  
+| v19    | 1044  | 43116 |  
+| v4     | 6428  | 27659 |  
+| v35    | 13862 | 23444 |  
+
+Now we want to run screen.seqs to remove sequences that do not start at or before the start position or end at or after end.
+
+```{r engine='bash'}
+mothur "#screen.seqs(fasta=v13.trim.unique.align, name=v13.trim.names, group=v13.groups, start=1044, end=13125, processors=8, inputdir=./v13)"
+mothur "#screen.seqs(fasta=v15.trim.unique.align, name=v15.trim.names, group=v15.groups, start=1044, end=27659, processors=8, inputdir=./v15)"
+mothur "#screen.seqs(fasta=v16.trim.unique.align, name=v16.trim.names, group=v16.groups, start=1044, end=34113, processors=8, inputdir=./v16)"
+mothur "#screen.seqs(fasta=v19.trim.unique.align, name=v19.trim.names, group=v19.groups, start=1044, end=43116, processors=8, inputdir=./v17)"
+mothur "#screen.seqs(fasta=v35.trim.unique.align, name=v35.trim.names, group=v35.groups, start=6428, end=27659, processors=8, inputdir=./v35)"
+mothur "#screen.seqs(fasta=v4.trim.unique.align, name=v4.trim.names, group=v4.groups, start=13862, end=23444, processors=8, inputdir=./v4)"
+```
+
+After we run screen.seqs, we'll go ahead and complete the pipeline by using filter.seqs to remove any columns that only contain gaps (vertical=T) or that contain missing data (trump=.) and we'll run unique.seqs and summary.seqs to get the sequence lengths:
+
+```{r engine='bash'}
+for REGION in v*
+do
+    mothur "#set.dir(input=./$REGION, output=./$REGION);
+            filter.seqs(fasta=$REGION.trim.unique.good.align-../HMP_MOCK.align, vertical=T, trump=., processors=8);
+            unique.seqs(fasta=$REGION.trim.unique.good.filter.fasta, name=$REGION.trim.good.names);
+            summary.seqs(name=current)"
+done
+```
+
+Next we'll want to run pre.cluster using the diffs parameter equal to 1 difference per 100 bp. In the previous step we got those lengths:
+
+| Region | Length |
+|--------|--------|
+| v13    | 489    |  
+| v15    | 879    |  
+| v16    | 1028   |  
+| v19    | 1458   |  
+| v35    | 545    |  
+| v4     | 253    |  
+
+Once we run pre.cluster, we'll check for chimeras, remove them, cluster the sequences and then make a shared file from them
+
+```{r engine='bash'}
+mothur "#pre.cluster(fasta=v13/current, name=v13/v13.trim.unique.good.filter.names, group=$REGION.good.groups, diffs=2);"
+mothur "#pre.cluster(fasta=current, name=current, group=$REGION.good.groups, diffs=2);"
+mothur "#pre.cluster(fasta=current, name=current, group=$REGION.good.groups, diffs=2);"
+mothur "#pre.cluster(fasta=current, name=current, group=$REGION.good.groups, diffs=2);"
+mothur "#pre.cluster(fasta=current, name=current, group=$REGION.good.groups, diffs=2);"
+mothur "#pre.cluster(fasta=current, name=current, group=$REGION.good.groups, diffs=2);"
+
+for REGION in v*
+do
+    mothur "#set.dir(input=./$REGION, output=./$REGION);
+            chimera.uchime(fasta=$REGION.trim.unique.good.filter.unique.precluster.fasta, name=$REGION.trim.unique.good.filter.unique.precluster.names, group=$REGION.good.groups, dereplicate=T, processors=8);
+            remove.seqs(fasta=current, group=current, name=current, accnos=current, dups=F);
+            dist.seqs(fasta=current, cutoff=0.15, processors=8);
+            cluster();
+            make.shared(list=current, label=0.03, group=current)"
+done
+```
+
+Let's get the error rates for our mock communities from before and after running the pre.cluster steps.
+
+```{r engine='bash'}
+
+for REGION in v*
+do
+    for REP in 1 2 3
+    do
+        mothur "#set.dir(input=./$REGION, output=./$REGION);
+            get.groups(fasta=$REGION.trim.unique.fasta, group=$REGION.good.groups, name=$REGION.trim.unique.good.filter.names, groups=mock$REP.$REGION);
+            system(mv $REGION/$REGION.trim.unique.good.filter.unique.names $REGION/$REGION.mock$REP.unique.names);
+            system(mv $REGION/$REGION.trim.unique.good.filter.unique.fasta $REGION/$REGION.mock$REP.unique.fasta);
+            seq.error(fasta=$REGION.mock$REP.unique.fasta, name=$REGION.mock$REP.unique.names, reference=HMP_MOCK.filter.fasta, aligned=T, processors=8)"
+        
+        mothur "#set.dir(input=./$REGION, output=./$REGION);
+            get.groups(fasta=$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, group=$REGION.good.pick.groups, name=$REGION.trim.unique.good.filter.unique.precluster.pick.names, groups=mock$REP.$REGION);
+            system(mv $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.pick.names $REGION/$REGION.mock$REP.precluster.names);
+            system(mv $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.pick.fasta $REGION/$REGION.mock$REP.precluster.fasta);
+            seq.error(fasta=$REGION.mock$REP.precluster.fasta, name=$REGION.mock$REP.precluster.names, reference=HMP_MOCK.filter.fasta, aligned=T, processors=8)"
+    done
+done
+```
+
+Now we'd like to go ahead and classify all of our sequences using both the RDP and greengenes training sets:
+
+```{r engine='bash'}
+wget http://www.mothur.org/w/images/5/59/Trainset9_032012.pds.zip
+unzip -o Trainset9_032012.pds.zip
+mv trainset9_032012.pds.tax trainset9_032012.pds_rdp.tax
+
+wget http://www.mothur.org/w/images/9/9d/Gg_13_5_99.taxonomy.tgz
+tar xvzf Gg_13_5_99.taxonomy.tgz
+mv gg_13_5_99.pds.tax gg_13_5_99.pds_gg.tax
+
+for REGION in v*
+do
+  mothur "#classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=trainset9_032012.pds.fasta, taxonomy=trainset9_032012.pds_rdp.tax, processors=8);
+			classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=gg_13_5_99.fasta, taxonomy=gg_13_5_99.pds_gg.tax, processors=8)"
+done
+```
+
+Need to make an R version of phylotype
