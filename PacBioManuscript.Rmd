@@ -857,7 +857,7 @@ Now we want to run screen.seqs to remove sequences that do not start at or befor
 mothur "#screen.seqs(fasta=v13.trim.unique.align, name=v13.trim.names, group=v13.groups, start=1044, end=13125, processors=8, inputdir=./v13)"
 mothur "#screen.seqs(fasta=v15.trim.unique.align, name=v15.trim.names, group=v15.groups, start=1044, end=27659, processors=8, inputdir=./v15)"
 mothur "#screen.seqs(fasta=v16.trim.unique.align, name=v16.trim.names, group=v16.groups, start=1044, end=34113, processors=8, inputdir=./v16)"
-mothur "#screen.seqs(fasta=v19.trim.unique.align, name=v19.trim.names, group=v19.groups, start=1044, end=43116, processors=8, inputdir=./v17)"
+mothur "#screen.seqs(fasta=v19.trim.unique.align, name=v19.trim.names, group=v19.groups, start=1044, end=43116, processors=8, inputdir=./v19)"
 mothur "#screen.seqs(fasta=v35.trim.unique.align, name=v35.trim.names, group=v35.groups, start=6428, end=27659, processors=8, inputdir=./v35)"
 mothur "#screen.seqs(fasta=v4.trim.unique.align, name=v4.trim.names, group=v4.groups, start=13862, end=23444, processors=8, inputdir=./v4)"
 ```
@@ -888,23 +888,25 @@ Next we'll want to run pre.cluster using the diffs parameter equal to 1 differen
 Once we run pre.cluster, we'll check for chimeras, remove them, cluster the sequences and then make a shared file from them
 
 ```{r engine='bash'}
-mothur "#pre.cluster(fasta=v13/current, name=v13/v13.trim.unique.good.filter.names, group=$REGION.good.groups, diffs=2);"
-mothur "#pre.cluster(fasta=current, name=current, group=$REGION.good.groups, diffs=2);"
-mothur "#pre.cluster(fasta=current, name=current, group=$REGION.good.groups, diffs=2);"
-mothur "#pre.cluster(fasta=current, name=current, group=$REGION.good.groups, diffs=2);"
-mothur "#pre.cluster(fasta=current, name=current, group=$REGION.good.groups, diffs=2);"
-mothur "#pre.cluster(fasta=current, name=current, group=$REGION.good.groups, diffs=2);"
+mothur "#pre.cluster(fasta=v13/v13.trim.unique.good.filter.unique.fasta, name=v13/v13.trim.unique.good.filter.names, group=v13/v13.good.groups, diffs=4, processors=8);"
+mothur "#pre.cluster(fasta=v15/v15.trim.unique.good.filter.unique.fasta, name=v15/v15.trim.unique.good.filter.names, group=v15/v15.good.groups, diffs=10, processors=8);"
+mothur "#pre.cluster(fasta=v16/v16.trim.unique.good.filter.unique.fasta, name=v16/v16.trim.unique.good.filter.names, group=v16/v16.good.groups, diffs=10, processors=8);"
+mothur "#pre.cluster(fasta=v19/v19.trim.unique.good.filter.unique.fasta, name=v19/v19.trim.unique.good.filter.names, group=v19/v19.good.groups, diffs=14, processors=8);"
+mothur "#pre.cluster(fasta=v35/v35.trim.unique.good.filter.unique.fasta, name=v35/v35.trim.unique.good.filter.names, group=v35/v35.good.groups, diffs=5, processors=8);"
+mothur "#pre.cluster(fasta=v4/v4.trim.unique.good.filter.unique.fasta, name=v4/v4.trim.unique.good.filter.names, group=v4/v4.good.groups, diffs=2, processors=8);"
+
 
 for REGION in v*
 do
     mothur "#set.dir(input=./$REGION, output=./$REGION);
-            chimera.uchime(fasta=$REGION.trim.unique.good.filter.unique.precluster.fasta, name=$REGION.trim.unique.good.filter.unique.precluster.names, group=$REGION.good.groups, dereplicate=T, processors=8);
-            remove.seqs(fasta=current, group=current, name=current, accnos=current, dups=F);
-            dist.seqs(fasta=current, cutoff=0.15, processors=8);
-            cluster();
-            make.shared(list=current, label=0.03, group=current)"
+      chimera.uchime(fasta=$REGION.trim.unique.good.filter.unique.precluster.fasta, name=$REGION.trim.unique.good.filter.unique.precluster.names, group=$REGION.good.groups, dereplicate=T, processors=8);
+      remove.seqs(fasta=current, group=current, name=current, accnos=current, dups=F);
+      dist.seqs(fasta=current, cutoff=0.15, processors=8);
+      cluster();
+      make.shared(list=current, label=0.03, group=current)"
 done
 ```
+
 
 Let's get the error rates for our mock communities from before and after running the pre.cluster steps.
 
@@ -929,7 +931,123 @@ do
 done
 ```
 
-Now we'd like to go ahead and classify all of our sequences using both the RDP and greengenes training sets. We'll also classify the region-trimmed version of the Mock community sequence data:
+One of the parameters we'd like to know is the number of OTUs per region and sample. To do this, we will need to rarefy our data to a common number of sequences. Let's count the number of reads across all samples:
+
+```{r}
+
+regions <- dir(path="./", pattern="v\\d+")
+
+counts <- matrix(rep(0, length(regions)*12), nrow=length(regions))
+rownames(counts) <- regions
+colnames(counts) <- c("human1", "human2", "human3", "mock1", "mock2", "mock3", "mouse1", "mouse2", "mouse3", "soil1", "soil2", "soil3")
+
+
+for(r in regions){
+  shared <- read.table(file=paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.an.shared", sep=""), header=T)
+  rownames(shared) <- shared$Group
+  shared <- shared[,-c(1,2,3)]
+  
+  groups <- gsub(".v\\d*", "", rownames(shared))
+  stopifnot(sum(groups == colnames(counts)) == length(groups))
+  nseqs <- apply(shared, 1, sum)
+  counts[r,] <- nseqs
+}
+```
+
+Unfortunately, those counts are kind of depressing:
+
+|   | human1  | human2	| human3	| mock1		| mock2		| mock3		| mouse1	| mouse2	| mouse3	| soil1		| soil2	| soil3	|
+|-------------------------------------------------------------------------------------------------------------------------------------------|
+|v13 | 990		| 768		| 1022		| 693		| 711		| 722		| 410		| 991		| 325		| 756		| 549	| 799	|
+|v15 | 519		| 652		| 1302		| 1337		| 1702		| 1491		| 807		| 606		| 1227		| 1167		| 1349	| 1393	|
+|v16 | 442		| 386		| 530		| 204		| 197		| 198		| 134		| 404		| 234		| 294		| 243	| 180	|
+|v19 | 132		| 46		| 105		| 360		| 262		| 290		| 230		| 94		| 87		| 319		| 375	| 591	|
+|v35 | 982		| 876		| 804		| 831		| 1108		| 1089		| 447		| 444		| 298		| 538		| 295	| 917	|
+|v4	 | 615		| 902		| 568		| 3699		| 4076		| 4828		| 1512		| 972		| 1167		| 722		| 2698	| 1301	|
+
+Let's merge the three replicates for each sample like we did for the error analysis and move forward... First we'll make a mapping file and then we'll run merge.groups in mothur
+
+```{r}
+regions <- dir(path="./", pattern="v\\d+")
+for(r in regions){
+  write.table(cbind(paste(colnames(counts), ".", r, sep=""), gsub("\\d", "", colnames(counts))), file=paste(r, "/merge.groups", sep=""), quote=F, row.names=F, col.names=F, sep="\t")
+}
+```
+
+```{r engine='bash'}
+for REGION in v*
+do
+    mothur "#merge.groups(shared=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.shared, design=$REGION/merge.groups)"
+done
+```
+
+Here's what we get out when we run the above code again on the meged groups:
+
+
+```{r}
+
+regions <- dir(path="./", pattern="v\\d+")
+
+counts <- matrix(rep(0, length(regions)*4), nrow=length(regions))
+rownames(counts) <- regions
+colnames(counts) <- c("human", "mock","mouse", "soil")
+
+for(r in regions){
+  shared <- read.table(file=paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.an.merge.shared", sep=""), header=T)
+  rownames(shared) <- shared$Group
+  shared <- shared[,-c(1,2,3)]
+  
+  groups <- gsub(".v\\d*", "", rownames(shared))
+  stopifnot(sum(groups == colnames(counts)) == length(groups))
+  nseqs <- apply(shared, 1, sum)
+  counts[r,] <- nseqs
+}
+```
+
+The merged counts:
+
+|     | human | mock   | mouse | soil
+|-------------------------------------
+|v13  | 2780  | 2126   | 1726  | 2104
+|v15  | 2473  | 4530   | 2640  | 3909
+|v16  | 1358  | 599    | 772   | 717
+|v19  | 283   | 912    | 411   | 1285
+|v35  | 2662  | 3028   | 1189  | 1750
+|v4   | 2085  | 12603  | 3651  | 4721
+
+Let's sub-sample everything to 283 reads per sample
+
+```{r engine="bash"}
+for REGION in v*
+do
+    mothur "#summary.single(shared=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.shared, calc=sobs-coverage, subsample=283, iters=1000)"
+done
+```
+
+Let's remove all of the chimeras we didn't detect and see how many OTUs we would have come up with
+
+```{r engine='bash'}
+for REGION in v*
+do
+  grep "2$" $REGION/$REGION.mock*error.summary | cut -f 2 -d ":" | cut -f 1 > $REGION/$REGION.extra.chimeras
+  cat $REGION/$REGION.mock?.precluster.names > $REGION/$REGION.precluster.names
+  mothur "#remove.seqs(fasta=$REGION/$REGION.mock.precluster.fasta, name=$REGION/$REGION.precluster.names, accnos=$REGION/$REGION.extra.chimeras);
+          dist.seqs(cutoff=0.15); cluster(); summary.single(subsample=283, calc=sobs, label=0.03)"
+done
+```
+
+Let's use the reference sequences we sampled to see what the "correct" number of OTUs would have been
+
+```{r engine='bash'}
+for REGION in v*
+do
+    cut -f 2 $REGION/$REGION.mock*error.summary | sort | uniq > mock.ref.accnos
+    mothur "#get.seqs(fasta=$REGION/HMP_MOCK.filter.fasta, accnos=mock.ref.accnos); dist.seqs(cutoff=0.15, output=lt); cluster(phylip=current); summary.single(label=0.03, calc=sobs)"
+done
+```
+
+
+Now we'd like to go ahead and classify all of our sequences using both the RDP and greengenes training sets:
 
 ```{r engine='bash'}
 wget http://www.mothur.org/w/images/5/59/Trainset9_032012.pds.zip
@@ -942,12 +1060,23 @@ mv gg_13_5_99.pds.tax gg_13_5_99.pds_gg.tax
 
 for REGION in v*
 do
-  mothur "#classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta-$REGION/HMP_MOCK.filter.fasta, reference=trainset9_032012.pds.fasta, taxonomy=trainset9_032012.pds_rdp.tax, processors=8);
-			classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta-$REGION/HMP_MOCK.filter.fasta, reference=gg_13_5_99.fasta, taxonomy=gg_13_5_99.pds_gg.tax, processors=8)"
+  mothur "#classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=trainset9_032012.pds.fasta, taxonomy=trainset9_032012.pds_rdp.tax, processors=8);
+			     classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=gg_13_5_99.fasta, taxonomy=gg_13_5_99.pds_gg.tax, processors=8)"
 done
 ```
 
+Let's also classify the sequences from the mock community samples that we pulled out earlier:
 
+```{r engine='bash'}
+for REGION in v*
+do
+  cat $REGION/$REGION.mock?.precluster.fasta > $REGION/$REGION.mock.precluster.fasta
+  mothur "#classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=trainset9_032012.pds.fasta, taxonomy=trainset9_032012.pds_rdp.tax, processors=8);
+	         classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta, reference=gg_13_5_99.fasta, taxonomy=gg_13_5_99.pds_gg.tax, processors=8)"
+done
+
+```
+        
 Let's see what fraction of each dataset classifies to each taxonomic level by both classification databases
 
 ```{r}
@@ -958,8 +1087,7 @@ countGoodBootstraps <- function(nameConf, cutoff=80){
 }
 
 
-getDepths <- function(region, database, cutoff=80){
-  taxFileName <- paste(region, "/", region, ".trim.unique.good.filter.unique.precluster.pick.", database, ".wang.taxonomy", sep="")
+getDepths <- function(taxFileName, cutoff=80){
   tax <- scan(taxFileName, what="", quiet =T)
   lines <- 1:length(tax)
   seqNames <- tax[lines %% 2 == 1]
@@ -973,16 +1101,107 @@ getDepths <- function(region, database, cutoff=80){
 regions <- dir(path="./", pattern="v\\d+")
 
 for(r in regions){
+  rdpFileName <- paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.pds_rdp.wang.taxonomy", sep="")
+  rdp <- getDepths(rdpFileName)
 
-  d.rdp <- getDepths("v4", "pds_rdp")
-  d.gg <- getDepths("v4", "pds_gg")
+  ggFileName <- paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.pds_gg.wang.taxonomy", sep="")
+  gg <- getDepths(ggFileName)
+  write.table(cbind("rdp" = rdp, "gg" = gg), file=paste(r, "/", r, ".tax.compare", sep=""), quote=F)
   
   
-  write.table(cbind("rdp" = d.rdp, "gg" = d.gg), file=paste(r, "/", r, ".tax.compare", sep=""), quote=F)
+  rdpMock <- paste(r, "/", r, ".mock.precluster.pds_rdp.wang.taxonomy", sep="")
+  rdp <- getDepths(rdpMock)
+
+  ggMock <- paste(r, "/", r, ".mock.precluster.pds_gg.wang.taxonomy", sep="")
+  gg <- getDepths(ggMock)
+  write.table(cbind("rdp" = rdp, "gg" = gg), file=paste(r, "/mock.tax.compare", sep=""), quote=F)  
 }
-````
 
+```
 
+Now we'd like to break this down by sample type. First we'll count the number of times each sequence shows up in each group using mothur:
 
+```{r engine='bash'}
+for REGION in v*
+do
+    mothur "#merge.groups(group=$REGION/$REGION.good.pick.groups, design=$REGION/merge.groups);
+            count.seqs(group=$REGION/$REGION.good.pick.merge.groups, name=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.names)"
+done
+```
 
+```{r}
 
+getDepthByLibrary <- function(region){
+  count.file <- paste(region, "/", region, ".trim.unique.good.filter.unique.precluster.pick.count_table", sep="")
+  count.table <- read.table(file=count.file, header=T, row.names=1)
+  
+  depth.file <- paste(region, "/", region, ".tax.compare", sep="")
+  depth.table <- read.table(file=depth.file, header=T, row.names=1)
+  depth.table$rdp <- factor(depth.table$rdp, levels=0:7)
+  depth.table$gg <- factor(depth.table$gg, levels=0:7)
+  
+  mock.depth <- depth.table[count.table$mock > 0,]
+  human.depth <- depth.table[count.table$human > 0,]
+  mouse.depth <- depth.table[count.table$mouse > 0,]
+  soil.depth <- depth.table[count.table$soil > 0,]
+  
+  mock.gg <- 100*summary(mock.depth$gg)/nrow(mock.depth)
+  human.gg <- 100*summary(human.depth$gg)/nrow(human.depth)
+  mouse.gg <- 100*summary(mouse.depth$gg)/nrow(mouse.depth)
+  soil.gg <- 100*summary(soil.depth$gg)/nrow(soil.depth)
+  
+  mock.rdp <- 100*summary(mock.depth$rdp)/nrow(mock.depth)
+  human.rdp <- 100*summary(human.depth$rdp)/nrow(human.depth)
+  mouse.rdp <- 100*summary(mouse.depth$rdp)/nrow(mouse.depth)
+  soil.rdp <- 100*summary(soil.depth$rdp)/nrow(soil.depth)
+  
+  return(rbind(mock.rdp, human.rdp, mouse.rdp, soil.rdp, mock.gg, human.gg, mouse.gg, soil.gg))
+}
+
+#composite <-array(0, dim=c(8,6,8))
+composite <- data.frame(matrix(rep(0, 8*6*8), ncol=8))
+colnames(composite) <- 0:7
+composite[1:8,] <- getDepthByLibrary("v4");
+composite[9:16,] <- getDepthByLibrary("v35")
+composite[17:24,] <- getDepthByLibrary("v13")
+composite[25:32,] <- getDepthByLibrary("v15")
+composite[33:40,] <- getDepthByLibrary("v16")
+composite[41:48,] <- getDepthByLibrary("v19")
+
+composite$region <- c(rep("v4", 8), rep("v35", 8), rep("v13", 8), rep("v15", 8), rep("v16", 8), rep("v19", 8))
+composite$database <- rep(c(rep("rdp", 4), rep("gg", 4)), 6)
+composite$sample <- rep(c("mock", "human", "mouse", "soil"), 12)
+composite$total <- composite[,"6"] + composite[,"7"]
+write.table(file="taxonomy.depth.analysis", composite, quote=F)
+```
+
+Let's build some dot-plots to show how well the various regions classified for each sample
+
+```{r}
+  data <- read.table(file="taxonomy.depth.analysis", header=T)
+  rdp <- cbind("Mock"=data[data$database=="rdp" & data$sample=="mock", "total"], "Human"=data[data$database=="rdp" & data$sample=="human", "total"],
+               "Mouse"=data[data$database=="rdp" & data$sample=="mouse", "total"], "Soil"=data[data$database=="rdp" & data$sample=="soil", "total"])
+  rownames(rdp) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
+
+  gg <- cbind("Mock"=data[data$database=="gg" & data$sample=="mock", "total"], "Human"=data[data$database=="gg" & data$sample=="human", "total"],
+               "Mouse"=data[data$database=="gg" & data$sample=="mouse", "total"], "Soil"=data[data$database=="gg" & data$sample=="soil", "total"])
+  rownames(gg) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
+
+  gg.sp <- cbind("Mock"=data[data$database=="gg" & data$sample=="mock", "X7"], "Human"=data[data$database=="gg" & data$sample=="human", "X7"],
+               "Mouse"=data[data$database=="gg" & data$sample=="mouse", "X7"], "Soil"=data[data$database=="gg" & data$sample=="soil", "X7"])
+  rownames(gg.sp) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
+
+  par(mar=c(5, 5, 0.5, 1))
+  dotchart(rdp, xlim=c(0,100), col="black", xlab="Unique reads that classified\nto genus or species level (%)")
+  points(x=gg[,"Mock"], y=25:30, pch=19, col="black")
+  points(x=gg[,"Human"], y=22:17, pch=19, col="black")
+  points(x=gg[,"Mouse"], y=14:9, pch=19, col="black")
+  points(x=gg[,"Soil"], y=6:1, pch=19, col="black")
+
+  points(x=gg.sp[,"Mock"], y=25:30, pch=21, bg="gray")
+  points(x=gg.sp[,"Human"], y=22:17, pch=21, bg="gray")
+  points(x=gg.sp[,"Mouse"], y=14:9, pch=21, bg="gray")
+  points(x=gg.sp[,"Soil"], y=6:1, pch=21, bg="gray")
+
+  legend(x=63, y=12, legend=c("RDP (gen.)", "greengenes (gen.+sp.)", "greengenes (sp.)"), pch=c(21,19,21), col=c("black", "black", "black"), pt.bg=c("white", "black", "gray"), bg="white")
+```
