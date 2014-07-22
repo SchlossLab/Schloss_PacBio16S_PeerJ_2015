@@ -6,8 +6,6 @@ output: html_document
 ---
 
 ##Pipeline development
-
-
 We were interested in the ability of PacBio to sequence varying sized regions from the 16S rRNA gene we fragments from the gene using DNA from a defined mock community, feces from a human and mouse, and soil. This notebook provides the mothur code and scripts that we used to process the results of our analysis. 
 
 We ran 10 SMRT cells and their data were located in the following folders that were housed within a folder called `raw_data`:  
