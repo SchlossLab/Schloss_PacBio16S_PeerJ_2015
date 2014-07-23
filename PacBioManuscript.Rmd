@@ -526,6 +526,76 @@ error.reduction
 From this we see that there really is no clear pattern between the length of the region and the error rate or the fraction of sequences that we kept. The reduction in error rate varied between 26.2 (V16) and 51.7% (V4).
 
 
+Next we'll consider the relationship between the sequencing error rate and the average quality score for the read. This should be proportional to the level of coverage. We'll plot the minimum average quality score from the 50-nt sliding window analysis we did above.
+
+```{r}
+#regions <- dir("./", pattern="v\\d.*")
+regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
+clrs <- rainbow(length(regions))
+pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
+names(clrs) <- regions
+
+errorMinQualityScore <- function(folder){
+  write(folder, "")
+  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
+  aveq <- aveq[,-1]
+  colnames(aveq) <- c("aveQ", "minQ")
+
+  binned <- aggregate(error$error, by=list(round(aveq$minQ)), mean)
+  binned <- binned[binned$Group.1 <= 70, ]
+  points(binned, type="l", col=clrs[folder], lwd=2)
+}
+
+pdf(file="ErrorMinQ.pdf")
+par(mar=c(5,5,0.5, 0.5))
+plot(1, xlim=c(10,75), ylim=c(0,0.10), type="n", yaxt="n", xlab="", ylab="")
+lapply(regions, errorMinQualityScore)
+title(xlab="Minimum average quality score\nwithin a 50-nt window across the full sequence", ylab="Error Rate (%)")
+axis(2, las=2, at=seq(0,0.1,0.02), label=seq(0,10,2))
+legend(x=60, y=0.10, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
+dev.off()
+
+```
+
+Great - as we increase the threshold, we decrease the error rate. The next question is what to pick as our threshold. Let's see how the fraction of reads remaining changes as we increase the threshold:
+
+```{r}
+
+#regions <- dir("./", pattern="v\\d.*")
+regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
+clrs <- rainbow(length(regions))
+pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
+names(clrs) <- regions
+
+fractionMinQualityScore <- function(folder){
+  write(folder, "")
+  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
+  aveq <- aveq[,-1]
+  colnames(aveq) <- c("aveQ", "minQ")
+
+  binned <- aggregate(error$error, by=list(round(aveq$minQ)), length)
+
+  remaining <- 1-cumsum(binned$x)/sum(binned$x)
+  points(remaining, type="l", col=clrs[folder], lwd=2)
+}
+
+pdf(file="fractionMinQ.pdf")
+par(mar=c(5,5,0.5, 0.5))
+plot(1, xlim=c(10,75), ylim=c(0,1), type="n", yaxt="n", xlab="", ylab="")
+lapply(regions, fractionMinQualityScore)
+title(xlab="Minimum average quality score\nwithin a 50-nt window across the full sequence", ylab="Sequences above threshold (%)")
+axis(2, las=2, at=seq(0,1,0.2), label=seq(0,100,20))
+legend(x=10, y=0.30, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
+dev.off()
+
+```
+
+It was difficult to pinpoint a threshold minimum average quality score based on the error rates alone as each of the curves resembled a hockey stick. When we calculated the fraction of reads remaining for different thresholds, we observed a slight inflection in the curve at a minimum average quality score near 55. Requiring that the a sequence not have a 50-bp region with an average quality score below 55 allows us to keep a reasonable number of reads while maintaining an error rate below 1%.
+
+
+
 
 
 
@@ -586,124 +656,6 @@ sort(fraction.kept, decreasing=T)
 
 
 
-Next we'll consider the relationship between the sequencing error rate and the average quality score for the read. This should be proportional to the level of coverage.
-
-```{r}
-errorQualityScore <- function(folder){
-  write(folder, "")
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-
-	binned <- aggregate(composite$error, by=list(round(composite$aveQ)), mean)
-	points(binned, type="l")
-}
-
-regions <- dir("./", pattern="v.*")
-
-plot(1, xlim=c(20,75), ylim=c(0,0.10), type="n", yaxt="n", xlab="", ylab="")
-lapply(regions, errorQualityScore)
-title(xlab="Average Quality Score", ylab="Error Rate (%)")
-axis(2, las=2, at=seq(0,0.1,0.02), label=seq(0,10,2))
-```
-
-The resulting plot shows that, in general, as the average quality score for a read increases, it's error rate decreases. As an alternative, let's plot the minimum average quality score from the 50-nt sliding window analysis we did above.
-
-```{r}
-errorMinQualityScore <- function(folder){
-  write(folder, "")
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-
-	binned <- aggregate(composite$error, by=list(round(composite$minQ)), mean)
-	points(binned, type="l")
-}
-
-regions <- dir("./", pattern="v.*")
-
-plot(1, xlim=c(20,75), ylim=c(0,0.10), type="n", yaxt="n", xlab="", ylab="")
-lapply(regions, errorMinQualityScore)
-title(xlab="Minimum Sliding Window Quality Score", ylab="Error Rate (%)")
-axis(2, las=2, at=seq(0,0.1,0.02), label=seq(0,10,2))
-```
-
-As expected, the two sets of curves are different with the minimum sliding window average quality scores being smaller than the whole sequence averages. It would be nice to pick a threshold so that we can compare the two methods. To do this, let's look at the fraction of perfect sequences by both methods as a function of the quality score. As it is clear that we would like to have as high a quality score as possible while maintaining a decent number of reads, let's look at the distribution of reads by average quality score.
-
-```{r}
-
-nQualityScore <- function(folder){
-  write(folder, "")
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-
-	binned <- aggregate(composite$error, by=list(round(composite$aveQ)), length)
-	total.n <- sum(binned$x)
-	binned$x <- rev(cumsum(rev(binned$x)/total.n))
-	target <- binned[binned$Group.1=="65", "x"]
-
-	plot(1, xlim=c(20,75), ylim=c(0,1), type="n", yaxt="n", xlab="", ylab="")
-    points(binned, type="l")
-    title(xlab="Quality Score", ylab="Percent of Sequences with Quality Score or Higher")
-    axis(2, at=seq(0,1,0.2), label=seq(0,100,20), las=2)
-
-	
-	
-	binned <- aggregate(composite$error, by=list(round(composite$minQ)), length)
-	total.n <- sum(binned$x)
-	binned$x <- rev(cumsum(rev(binned$x)/total.n))
-
-
-    points(binned, type="l", col="red")
-
-    text(x=72, y=0.95, label=folder, font=2, cex=1.5)
-    
-	binned$x <- binned$x - target
-	return(binned[which.min(abs(binned$x)), "Group.1"])
-}
-
-par(mfrow=c(4,2))
-regions <- dir("./", pattern="v.*")
-equivallent <- lapply(regions, nQualityScore)
-par(mfrow=c(1,1))
-
-equivallent <- unlist(equivallent)
-names(equivallent) <- regions
-equivallent
-
-#v13 v15 v16 v19 v35  v4
-# 56  57  54  55  56  60
-```
-
-From this we see that the curves roughly parallel each other and that to get the same number of reads back you would select a minimum sliding window average of 54 to 60. Let's compare the average error rates when we use a sliding window threshold of 55 and a full sequence threshold of 65:
-
-
-```{r}
-getErrorQThreshold <- function(folder){
-  write(folder, "")
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-	full <- mean(composite[composite$aveQ >= 65, "error"])
-	window <- mean(composite[composite$minQ >= 55, "error"])
-	return(c(mean(composite$error), full, window))
-}
-
-regions <- dir("./", pattern="v.*")
-output <- matrix(unlist(lapply(regions, getErrorQThreshold)), ncol=3, byrow=T)
-
-rownames(output) <- regions
-colnames(output) <- c("original", "full", "window")
-
-output/output[,"original"]
-#    original      full    window
-#v13        1 0.5597030 0.5274460
-#v15        1 0.3823884 0.3686299
-#v16        1 0.5272257 0.3912533
-#v19        1 0.3482606 0.3343369
-#v35        1 0.4728069 0.4069662
-#v4         1 0.4008387 0.4754781
-
-
-output[,"full"] / output[,"window"]
-#      v13       v15       v16       v19       v35        v4
-#1.0611571 1.0373234 1.3475302 1.0416458 1.1617841 0.8430224
-```
-
-In general, the sliding window approach yields the lower error rate when we use a threshold of 55. From here forward we'll use the sliding window approach with a threshold of 55. Overall, we also see some significant reduction in the error rate; however, it is still no where near what we have previously observed using the 454 and Illumina platforms. Requiring that the a sequence not have a 50-bp region with an average quality score below 55 allows us to keep a reasonable number of reads while maintaining an error rate below 1%.  
 
 At this point we are kind of out of tricks to reduce the error rate further beyond combining methods. Let's go back and merge our approaches - allow no or one mismatch to the barcodes and primers, require 10-fold coverage, and an average quality score of 65. We are also interested in whether any of these specification are redundant with each other.
 
