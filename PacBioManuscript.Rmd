@@ -343,6 +343,102 @@ title(ylab="Quality score")
 
 There is a pretty good separtion between the correct and incorrect (substitutions/insertions) base calls. We will use this later to help us develop a plan for screening out sequences that are of low quality.  
 
+Because PacBio sequencing is done in a circular manner to produce a conensus sequences, there should be no length effects. Therefore, it stands to reason that the error rate we see in the barcodes and primers, should be the error rate for the entire fragment. If a read has no errors in the barcodes and primers, then we would expect there to be very few errors in the rest of the fragment. If there are a lot of errors, well then we expect a high error rate for the fragment. First, let's plot the error rate for different numbers of mismatches to the barcodes and primers:
+
+```{r}
+plotBarcodePrimerError <- function(folder){
+  mismatches <- read.table(file=paste(folder, "/", folder, ".mismatches", sep=""), header=F, row.names=1, col.names=c("x", "barcode", "primer"))
+	error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+  
+  total.mismatch <- mismatches$barcode + mismatches$primer
+       
+  error.mismatch <- aggregate(error$error, by=list(total.mismatch), function(x){c(quantile(x, probs=c(0.025, 0.5, 0.975)), length(x))})$x
+	colnames(error.mismatch) <- c("lci", "median", "uci", "n")
+	rownames(error.mismatch) <- 0:(nrow(error.mismatch)-1)
+	error.mismatch[, "n"] <- 100 * error.mismatch[, "n"]/sum(error.mismatch[, "n"])
+
+	par(mar=c(5, 5, 0.5, 0.5))
+	stripchart(error$error~total.mismatch, vertical=T, method="jitter", pch=19, col="grey", ylab="", yaxt="n", ylim=c(0,0.33))
+	segments(x0=(1:nrow(error.mismatch))-0.25, x1=(1:nrow(error.mismatch))+0.25, y0=error.mismatch[,"median"], lwd=3)
+	segments(x0=(1:nrow(error.mismatch))-0.25, x1=(1:nrow(error.mismatch))+0.25, y0=error.mismatch[,"lci"], lwd=1)
+	segments(x0=(1:nrow(error.mismatch))-0.25, x1=(1:nrow(error.mismatch))+0.25, y0=error.mismatch[,"uci"], lwd=1)
+
+	title(xlab="Total number of mismatches to\nbarcodes and primers", ylab="Error rate (%)")
+	axis(2, at=seq(0, 0.4, 0.1), label=seq(0,40,10), las=2)
+	mtext(1, at=seq(1:nrow(error.mismatch)), text=format(error.mismatch[,"n"], digits=1), line=-1, cex=0.5)
+	text(x=1:nrow(error.mismatch), y=error.mismatch[,"median"], label=format(100*error.mismatch[,"median"], digits=2), pos=3, cex=0.8, font=2)
+	text(1, 0.33, label=toupper(folder), font=2, cex=1.25)
+}
+
+pdf(file="test.pdf", height=10, width=8)
+par(mfrow=c(3,2))
+lapply(c("v4", "v35", "v13", "v15", "v16", "v19"), plotBarcodePrimerError)
+par(mfrow=c(1,1))
+dev.off()
+
+```
+
+We see that the median error rate does increase with the number of mismatches to the barcodes and primers. Considering the total length of the barcodes and primers does not vary much across the regions, there does't seem to be a consistent association between the error rate of the fragment and the oligos. Let's check it out.
+
+```{r}
+getFragment_BPErrorRates <- function(folder, length){
+  bp.length <- length[folder]
+  
+  mismatches <- read.table(file=paste(folder, "/", folder, ".mismatches", sep=""), header=F, row.names=1, col.names=c("x", "barcode", "primer"))
+  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+  
+	bc.primer <- mismatches$barcode + mismatches$primer
+  return(cbind(error$error, bc.primer/bp.length))
+}
+
+oligos.file <- scan("../pacbio.oligos", what="", sep="\n", quiet=T)
+primers <- oligos.file[grepl("primer", oligos.file)]
+region <- gsub(".*(v\\d*)$", "\\1", primers)
+length <- nchar(gsub("primer\t(.*)\t(.*)\t.*", "\\1\\2", primers))+10
+names(length) <- region
+
+regions <- dir("./", pattern="v.*")
+errors <- lapply(regions, getFragment_BPErrorRates, length)
+
+errors.table <- matrix(errors[[1]], ncol=2, byrow=F)
+for(r in 2:length(length)){
+  errors.table <- rbind(errors.table, matrix(errors[[r]], ncol=2, byrow=F))
+}
+colnames(errors.table) <- c("fragment", "oligos")
+
+cor.test(errors.table[, "fragment"], errors.table[,"oligos"])
+
+#  Pearson's product-moment correlation
+#
+#data:  errors.table[, "fragment"] and errors.table[, "oligos"]
+#t = 124.9934, df = 61936, p-value < 2.2e-16
+#alternative hypothesis: true correlation is not equal to 0
+#95 percent confidence interval:
+# 0.4425063 0.4550844
+#sample estimates:
+#      cor 
+#0.4488176 
+
+summary(errors.table)
+#    fragment            oligos       
+# Min.   :0.000000   Min.   :0.00000  
+# 1st Qu.:0.000000   1st Qu.:0.00000  
+# Median :0.004065   Median :0.00000  
+# Mean   :0.020127   Mean   :0.01859  
+# 3rd Qu.:0.023346   3rd Qu.:0.02128  
+# Max.   :1.000000   Max.   :0.21739  
+
+
+```
+
+The last two commands shows us that there is a significant correlation between the barcode/primer error rate and the error rate of the rest of the fragment (R=0.45; P<<0.001) and that the average error rates are comparable. Based on this result, it is clear taht we want to minimize the number of mismatches to the barcodes and primers.
+
+
+
+
+
+
+
 Let's remove any sequences with a homopolymer length longer than 8, sequences with ambiguous base calls, sequences that don't start and end at the expected positions, and any sequences that were flagged as being chimeras (these aren't sequencing errors).
 
 ```{r}
@@ -398,88 +494,6 @@ sort(fraction.kept, decreasing=T)
 #0.9486609 0.7465453 0.7421388 0.6689949 0.5680581 0.5444816 
 ```
 
-Because PacBio sequencing is done in a circular manner to produce a conensus sequences, there should be no length effects. Therefore, it stands to reason that the error rate we see in the barcodes and primers, should be the error rate for the entire fragment. If a read has no errors in the barcodes and primers, then we would expect there to be very few errors in the rest of the fragment. If there are a lot of errors, well then we expect a high error rate for the fragment. First, let's plot the error rate for different numbers of mismatches to the barcodes and primers:
-
-```{r}
-plotBarcodePrimerError <- function(folder){
-  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-    
-	total.mismatch <- composite$barcode + composite$primer
-    composite <- composite[total.mismatch <= 5,]
-    total.mismatch <- composite$barcode + composite$primer
-       
-    error.mismatch <- aggregate(composite$error, by=list(total.mismatch), function(x){c(quantile(x, probs=c(0.025, 0.5, 0.975)), length(x))})$x
-    error.mismatch <- error.mismatch[1:6,]
-	colnames(error.mismatch) <- c("lci", "median", "uci", "n")
-	rownames(error.mismatch) <- 0:5
-	error.mismatch[, "n"] <- 100 * error.mismatch[, "n"]/sum(error.mismatch[, "n"])
-
-	par(mar=c(5, 5, 0.5, 0.5))
-	stripchart(composite$error~total.mismatch, vertical=T, method="jitter", pch=19, col="grey", ylab="", yaxt="n", ylim=c(0,0.33))
-	segments(x0=(1:6)-0.25, x1=(1:6)+0.25, y0=error.mismatch[,"median"], lwd=3)
-	segments(x0=(1:6)-0.25, x1=(1:6)+0.25, y0=error.mismatch[,"lci"], lwd=1)
-	segments(x0=(1:6)-0.25, x1=(1:6)+0.25, y0=error.mismatch[,"uci"], lwd=1)
-
-	title(xlab="Total number of mismatches to\nbarcodes and primers", ylab="Error rate (%)")
-	axis(2, at=seq(0, 0.4, 0.1), label=seq(0,40,10), las=2)
-	mtext(1, at=seq(1:6), text=format(error.mismatch[,"n"], digits=1), line=-1, cex=0.5)
-	text(x=1:6, y=error.mismatch[,"median"], label=format(100*error.mismatch[,"median"], digits=2), pos=3, cex=0.8, font=2)
-	text(1, 0.33, label=toupper(folder), font=2, cex=1.25)
-}
-
-folder <- "v19"
-par(mfrow=c(4,2))
-#lapply(dir("./", pattern="v\\d*"), plotBarcodeError)
-
-lapply(c("v4", "v35", "v13", "v15", "v16", "v19"), plotBarcodePrimerError)
-par(mfrow=c(1,1))
-```
-
-We see that the median error rate does increase with the number of mismatches to the barcodes and primers. Considering the total length of the barcodes and primers does not vary much across the regions, there does't seem to be a consistent association between the error rate of the fragment and the oligos. Let's check it out.
-
-```{r}
-getFragment_BPErrorRates <- function(folder, length){
-  bp.length <- length[folder]
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-#	fragment.error <- mean(composite$error)
-	
-	bc.primer <- composite$barcode + composite$primer
-#	bp.error <- mean(bc.primer/bp.length)
-#	return(c(fragment.error, bp.error))
-  return(cbind(composite$error, bc.primer/bp.length))
-}
-
-oligos.file <- scan("../pacbio.oligos", what="", sep="\n", quiet=T)
-primers <- oligos.file[grepl("primer", oligos.file)]
-region <- gsub(".*(v\\d*)$", "\\1", primers)
-length <- nchar(gsub("primer\t(.*)\t(.*)\t.*", "\\1\\2", primers))+10
-names(length) <- region
-
-regions <- dir("./", pattern="v.*")
-errors <- lapply(regions, getFragment_BPErrorRates, length)
-
-errors.table <- matrix(errors[[1]], ncol=2, byrow=F)
-for(r in 2:length(length)){
-  errors.table <- rbind(errors.table, matrix(errors[[r]], ncol=2, byrow=F))
-}
-colnames(errors.table) <- c("fragment", "oligos")
-
-cor.test(errors.table[, "fragment"], errors.table[,"oligos"])
-
-#   Pearson's product-moment correlation
-# 
-# data:  errors.table[, "fragment"] and errors.table[, "oligos"]
-# t = 87.4716, df = 48369, p-value < 2.2e-16
-# alternative hypothesis: true correlation is not equal to 0
-# 95 percent confidence interval:
-#  0.3618482 0.3772373
-# sample estimates:
-#       cor 
-# 0.3695681 
-
-```
-
-The last command shows us that our correlation is modest, but significant (R=0.37; P<<0.001). This is likely because the combined length of the two barcodes and primers varies between 44 and 49 nucleotides. Therefore, if we have a 1 nt mismatch, the error rate will vary between 2.0 and 2.2%. So it isn't precise enough to give us a way to assess the overall error rate; however, it does apear to be a likely candidate to help us screen out bad sequences.  
 
 A significant factor in PacBio's consensus sequencing is that repeated rounds of sequencing builds one's confidence in the overall base calls. Using the subread data we have already calcualted the coverage as well as the total length sequenced. We will now assess the error rate as a function of the sequence coverage and the number of bases sequenced. The results should be pretty similar so we'll focus primarily on the level of coverage.
 
