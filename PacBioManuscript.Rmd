@@ -544,7 +544,7 @@ errorMinQualityScore <- function(folder){
 
   binned <- aggregate(error$error, by=list(round(aveq$minQ)), mean)
   binned <- binned[binned$Group.1 <= 70, ]
-  points(binned, type="l", col=clrs[folder], lwd=2)
+  points(binned$Group.1, binned$x, type="l", col=clrs[folder], lwd=2)
 }
 
 pdf(file="ErrorMinQ.pdf")
@@ -578,7 +578,7 @@ fractionMinQualityScore <- function(folder){
   binned <- aggregate(error$error, by=list(round(aveq$minQ)), length)
 
   remaining <- 1-cumsum(binned$x)/sum(binned$x)
-  points(remaining, type="l", col=clrs[folder], lwd=2)
+  points(binned$Group.1, remaining, type="l", col=clrs[folder], lwd=2)
 }
 
 pdf(file="fractionMinQ.pdf")
@@ -592,10 +592,186 @@ dev.off()
 
 ```
 
-It was difficult to pinpoint a threshold minimum average quality score based on the error rates alone as each of the curves resembled a hockey stick. When we calculated the fraction of reads remaining for different thresholds, we observed a slight inflection in the curve at a minimum average quality score near 55. Requiring that the a sequence not have a 50-bp region with an average quality score below 55 allows us to keep a reasonable number of reads while maintaining an error rate below 1%.
+It was difficult to pinpoint a threshold minimum average quality score based on the error rates alone as each of the curves resembled a hockey stick. When we calculated the fraction of reads remaining for different thresholds, we observed a slight inflection in the curve at a minimum average quality score near 55. Let's see what happens when we look at the aggregate error rate of those reads with at least the threshold minimum average quality score
+
+```{r}
 
 
+#regions <- dir("./", pattern="v\\d.*")
+regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
+clrs <- rainbow(length(regions))
+pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
+names(clrs) <- regions
 
+aggregateErrorMinQualityScore <- function(folder){
+  write(folder, "")
+  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
+  aveq <- aveq[,-1]  
+  colnames(aveq) <- c("aveQ", "minQ")
+
+  
+  remaining.error <- rep(0, max(aveq$minQ)+1)
+  qscores <- 0:max(aveq$minQ)
+
+  remaining.error <- unlist(lapply(qscores, function(x){mean(error[aveq$minQ >= x,"error"])}))
+  names(remaining.error) <- qscores
+  
+  points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
+}
+
+pdf(file="remainingError.pdf")
+par(mar=c(5,5,0.5, 0.5))
+plot(1, xlim=c(10,75), ylim=c(0,0.04), type="n", yaxt="n", xlab="", ylab="")
+lapply(regions, aggregateErrorMinQualityScore)
+title(xlab="Minimum average quality score\nwithin a 50-nt window across the full sequence", ylab="Error rate of sequences above threshold (%)")
+axis(2, las=2, at=seq(0,0.04,0.01), label=seq(0,4,1))
+legend(x=10, y=0.30, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
+dev.off()
+
+```
+
+We still don't see much of a break point. Let's try calculating the average quality score for the entire read...
+
+```{r}
+#regions <- dir("./", pattern="v\\d.*")
+regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
+clrs <- rainbow(length(regions))
+pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
+names(clrs) <- regions
+
+errorAveQualityScore <- function(folder){
+  write(folder, "")
+  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
+  aveq <- aveq[,-1]
+  colnames(aveq) <- c("aveQ", "minQ")
+
+  binned <- aggregate(error$error, by=list(round(aveq$aveQ)), mean)
+  binned <- binned[binned$Group.1 <= 70, ]
+  points(binned$Group.1, binned$x, type="l", col=clrs[folder], lwd=2)
+}
+
+pdf(file="ErrorAveQ.pdf")
+par(mar=c(5,5,0.5, 0.5))
+plot(1, xlim=c(10,75), ylim=c(0,0.10), type="n", yaxt="n", xlab="", ylab="")
+lapply(regions, errorAveQualityScore)
+title(xlab="Average quality score", ylab="Error Rate (%)")
+axis(2, las=2, at=seq(0,0.1,0.02), label=seq(0,10,2))
+legend(x=60, y=0.10, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
+dev.off()
+```
+
+Great - again, as we increase the threshold, we decrease the error rate. Let's see how the fraction of reads remaining changes as we increase the threshold:
+
+```{r}
+
+#regions <- dir("./", pattern="v\\d.*")
+regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
+clrs <- rainbow(length(regions))
+pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
+names(clrs) <- regions
+
+fractionAveQualityScore <- function(folder){
+  write(folder, "")
+  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
+  aveq <- aveq[,-1]
+  colnames(aveq) <- c("aveQ", "minQ")
+
+  binned <- aggregate(error$error, by=list(round(aveq$aveQ)), length)
+
+  remaining <- 1-cumsum(binned$x)/sum(binned$x)
+  points(binned$Group.1, remaining, type="l", col=clrs[folder], lwd=2)
+}
+
+pdf(file="fractionAveQ.pdf")
+par(mar=c(5,5,0.5, 0.5))
+plot(1, xlim=c(10,75), ylim=c(0,1), type="n", yaxt="n", xlab="", ylab="")
+lapply(regions, fractionAveQualityScore)
+title(xlab="Average quality score", ylab="Sequences above threshold (%)")
+axis(2, las=2, at=seq(0,1,0.2), label=seq(0,100,20))
+legend(x=10, y=0.30, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
+dev.off()
+
+```
+
+The distribution here looks a little tighter across the different regions with something of an inflection around 60%, which corresponds to an average quality score of 55 to 65 for the regions (except for V4 and V1-V9). Let's see what happens when we look at the aggregate error rate of those reads with at least the threshold average quality score:
+
+```{r}
+
+#regions <- dir("./", pattern="v\\d.*")
+regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
+clrs <- rainbow(length(regions))
+pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
+names(clrs) <- regions
+
+aggregateErrorMinQualityScore <- function(folder){
+  write(folder, "")
+  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
+  aveq <- aveq[,-1]  
+  colnames(aveq) <- c("aveQ", "minQ")
+
+  
+  remaining.error <- rep(0, max(aveq$minQ)+1)
+  qscores <- 0:max(aveq$aveQ)
+
+  remaining.error <- unlist(lapply(qscores, function(x){mean(error[aveq$minQ >= x,"error"])}))
+  names(remaining.error) <- qscores
+  
+  points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
+}
+
+pdf(file="remainingError.pdf")
+par(mar=c(5,5,0.5, 0.5))
+plot(1, xlim=c(10,75), ylim=c(0,0.04), type="n", yaxt="n", xlab="", ylab="")
+lapply(regions, aggregateErrorMinQualityScore)
+title(xlab="Minimum average quality score\nwithin a 50-nt window across the full sequence", ylab="Error rate of sequences above threshold (%)")
+axis(2, las=2, at=seq(0,0.04,0.01), label=seq(0,4,1))
+legend(x=10, y=0.30, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
+dev.off()
+
+```
+
+Meh. Nothing much there. Let's propose we use an average quality score threshold of 60 since it produces the most consistent fraction of reads retained and error rate across the different regions. If we do this we get the following error rates:
+
+```{r}
+
+#regions <- dir("./", pattern="v\\d.*")
+regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
+
+getErrorRateFromAveQ <- function(folder, threshold=60){
+  write(folder, "")
+  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
+  aveq <- aveq[,-1]  
+  colnames(aveq) <- c("aveQ", "minQ")
+
+  rates <- error[aveq$minQ >= threshold,]
+  
+  original.error <- mean(error[,"error"])
+  remaining.error <- mean(rates[,"error"])
+  fraction.kept <- nrow(rates)/nrow(error)
+
+  return(c(original.error, remaining.error, fraction.kept))
+}
+
+results <- matrix(unlist(lapply(regions, getErrorRateFromAveQ)), ncol=3, byrow=T)
+rownames(results) <- regions
+colnames(results) <- c("original.error", "remaining.error", "fraction.kept")
+
+#    original.error remaining.error fraction.kept
+#v4     0.009008476     0.003129422     0.7897945
+#v13    0.033327642     0.019663989     0.5451635
+#v35    0.028413909     0.006071157     0.4590979
+#v15    0.020436277     0.004383447     0.4343025
+#v16    0.036096867     0.014667380     0.3133779
+#v19    0.028188489     0.006732380     0.1955123
+
+```
+
+Here we see that we have reduced the error rate by 21 to 59% when we require the average quality score for the read to be at least 60. In addition, we notice that the fraction of the reads we keep decreases as we increase the length of the fragment.
 
 
 
