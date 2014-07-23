@@ -441,40 +441,45 @@ We see that the median error rate does increase with the number of mismatches to
 getFragment_BPErrorRates <- function(folder, length){
   bp.length <- length[folder]
 	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-	fragment.error <- mean(composite$error)
+#	fragment.error <- mean(composite$error)
 	
 	bc.primer <- composite$barcode + composite$primer
-	bp.error <- mean(bc.primer/bp.length)
-	return(c(fragment.error, bp.error))
+#	bp.error <- mean(bc.primer/bp.length)
+#	return(c(fragment.error, bp.error))
+  return(cbind(composite$error, bc.primer/bp.length))
 }
 
-oligos.file <- scan("pacbio.oligos", what="", sep="\n", quiet=T)
+oligos.file <- scan("../pacbio.oligos", what="", sep="\n", quiet=T)
 primers <- oligos.file[grepl("primer", oligos.file)]
 region <- gsub(".*(v\\d*)$", "\\1", primers)
 length <- nchar(gsub("primer\t(.*)\t(.*)\t.*", "\\1\\2", primers))+10
 names(length) <- region
 
 regions <- dir("./", pattern="v.*")
-errors <- unlist(lapply(regions, getFragment_BPErrorRates, length))
-errors <- matrix(errors, ncol=2, byrow=T)
-rownames(errors) <- regions
-colnames(errors) <- c("fragment", "oligos")
+errors <- lapply(regions, getFragment_BPErrorRates, length)
 
-cor.test(errors[,"fragment"], errors[,"oligos"])
+errors.table <- matrix(errors[[1]], ncol=2, byrow=F)
+for(r in 2:length(length)){
+  errors.table <- rbind(errors.table, matrix(errors[[r]], ncol=2, byrow=F))
+}
+colnames(errors.table) <- c("fragment", "oligos")
 
-#	Pearson's product-moment correlation
-#
-#data:  errors[, "fragment"] and errors[, "oligos"]
-#t = -1.0267, df = 6, p-value = 0.3442
-#alternative hypothesis: true correlation is not equal to 0
-#95 percent confidence interval:
-# -0.8576225  0.4371967
-#sample estimates:
+cor.test(errors.table[, "fragment"], errors.table[,"oligos"])
+
+#   Pearson's product-moment correlation
+# 
+# data:  errors.table[, "fragment"] and errors.table[, "oligos"]
+# t = 87.4716, df = 48369, p-value < 2.2e-16
+# alternative hypothesis: true correlation is not equal to 0
+# 95 percent confidence interval:
+#  0.3618482 0.3772373
+# sample estimates:
 #       cor 
-#-0.3865714 
+# 0.3695681 
+
 ```
 
-The last command shows us that our correlation is not significant (P=0.34). This is likely because the combined length of the two barcodes and primers varies between 44 and 49 nucleotides. Therefore, if we have a 1 nt mismatch, the error rate will vary between 2.0 and 2.2%. So it isn't precise enough to give us a way to assess the overall error rate; however, it does apear to be a likely candidate to help us screen out bad sequences.  
+The last command shows us that our correlation is modest, but significant (R=0.37; P<<0.001). This is likely because the combined length of the two barcodes and primers varies between 44 and 49 nucleotides. Therefore, if we have a 1 nt mismatch, the error rate will vary between 2.0 and 2.2%. So it isn't precise enough to give us a way to assess the overall error rate; however, it does apear to be a likely candidate to help us screen out bad sequences.  
 
 A significant factor in PacBio's consensus sequencing is that repeated rounds of sequencing builds one's confidence in the overall base calls. Using the subread data we have already calcualted the coverage as well as the total length sequenced. We will now assess the error rate as a function of the sequence coverage and the number of bases sequenced. The results should be pretty similar so we'll focus primarily on the level of coverage.
 
