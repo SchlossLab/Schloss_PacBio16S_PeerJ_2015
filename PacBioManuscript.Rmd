@@ -271,10 +271,24 @@ total <- sum(sub.matrix)
 errors <- sub.matrix
 diag(errors[1:4,1:4]) <- 0
 error.rate <- 100 * sum(errors) / total				#1.925717
-apply(errors, 2, sum)[-5]/matches
-#         rA          rT          rG          rC 
-#0.008275158 0.009553617 0.012739700 0.012211228 
+
+subst.bias <- apply(errors[1:4,1:4], 2, sum)/apply(sub.matrix[1:4,1:4], 2, sum)
+subst.bias/sum(subst.bias)
+#       rA        rT        rG        rC 
+#0.2247412 0.2748158 0.2392554 0.2611875 
 #these are more or less equal to each other
+
+insert.bias <- (sub.matrix[,"rGap"]/apply(sub.matrix, 1, sum))[1:4]
+insert.bias/sum(insert.bias)
+#       qA        qT        qG        qC 
+#0.2364246 0.2432987 0.2425315 0.2777452 
+#these are more or less equal to each other
+
+delete.bias <- (sub.matrix["qGap",]/apply(sub.matrix, 2, sum))[1:4]
+delete.bias/sum(delete.bias)
+#            rA        rT       rG        rC
+#qGap 0.1167635 0.0978054 0.442078 0.3433531
+#interestingly the G's and C's are more likely to be deleted than the As or Ts
 
 substitutions <- sum(errors[1:4,1:4])/sum(errors)	#0.3656617
 insertions <- sum(errors[,5])/sum(errors)			#0.450299
@@ -282,7 +296,7 @@ deletions <- sum(errors[5,])/sum(errors)			#0.167206
 ambiguous <- sum(errors[6,])/sum(errors)			#0.02157014
 ```
 
-These results indicate that there is no base-specific bias in the errors and that the overall error rate is 1.93%. Of this error, 36.5% is from substitutions, 45% is from insertions, 16.7% is from deletions, and 2.2% is from ambiguous base calls.
+These results indicate that that the overall error rate is 1.93%. Of this error, 36.5% is from substitutions, 45% is from insertions, 16.7% is from deletions, and 2.2% is from ambiguous base calls. There does not appear to be a base bias for subustitutions or insertions; however, there is a tendency towards deleting G's and C's.
 
 Let's look to see whether there are any associations between the type of error and the quality score.
 
