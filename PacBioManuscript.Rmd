@@ -434,6 +434,96 @@ summary(errors.table)
 The last two commands shows us that there is a significant correlation between the barcode/primer error rate and the error rate of the rest of the fragment (R=0.45; P<<0.001) and that the average error rates are comparable. Based on this result, it is clear taht we want to minimize the number of mismatches to the barcodes and primers.
 
 
+A significant factor in PacBio's consensus sequencing is that repeated rounds of sequencing builds one's confidence in the overall base calls. Using the subread data we have already calcualted the coverage as well as the total length sequenced. We will now assess the error rate as a function of the sequence coverage and the number of bases sequenced. The results should be pretty similar so we'll focus primarily on the level of coverage.
+
+```{r}
+
+#regions <- dir("./", pattern="v\\d.*")
+regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
+clrs <- rainbow(length(regions))
+pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
+names(clrs) <- regions
+
+plotLines <- function(folder){
+  write(folder, "")
+  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+  coverage <- read.table(file=paste(folder, "/", folder, ".ccs.coverage", sep=""), header=T, row.names=1)
+
+  
+	error.by.depth <- aggregate(error$error, by=list(coverage$freq), function(x){c(mean=mean(x), quantile(x, prob=c(0.025, 0.975)), n=length(x))})
+
+  error.by.depth <- error.by.depth[error.by.depth$x[,"n"]>=50,] #exclude any coverage values where we don't have at least 50 observations
+  fold.coverage <- error.by.depth[, "Group.1"]
+	error.by.depth <- error.by.depth$x
+  
+	mean <- error.by.depth[,"mean"]
+#	lci <- error.by.depth[,"2.5%"]
+#	uci <- error.by.depth[,"97.5%"]
+#	N <- error.by.depth[, "n"]
+#	percent.n <- N/cumsum(N)
+	points(mean~fold.coverage, type="l", lwd=2, col=clrs[folder])
+}
+
+pdf("coverageError.pdf")
+par(mar=c(5,5,0.5, 0.5))
+plot(1, xlim=c(0,60), ylim=c(0,0.08), type="n", xlab="", ylab="", yaxt="n")
+title(xlab="Coverage", ylab="Error rate (%)")
+axis(2, at=seq(0,0.1, 0.02), label=seq(0,10, 2), las=2)
+lapply(regions, plotLines)
+legend(x=40, y=0.08, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
+dev.off()
+
+```
+
+This plot shows us that the error rates appear to plateau around 10-fold coverage. It is interesting that beyond that, the error rate really doesn't improve much. Let's find out the actual average error rate for each region when we only use reads with more than 10-fold coverage:
+
+```{r}
+
+errorAtCoverageCutoff <- function(folder){
+  write(folder, "")
+  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+  coverage <- read.table(file=paste(folder, "/", folder, ".ccs.coverage", sep=""), header=T, row.names=1)
+  
+  total.seqs <- nrow(error)
+	orig.error <- mean(error$error)
+	
+  deep <- coverage$freq >= 10
+	coverage <- coverage[deep,]
+  error <- error[deep,]
+
+  covered.seqs <- nrow(coverage)
+
+	error <- mean(error$error)
+	frac.kept <- covered.seqs / total.seqs
+	return(c(orig.error=orig.error, error=error, kept=frac.kept))
+}
+
+regions <- dir("./", pattern="v\\d.*")
+output <- unlist(lapply(regions, errorAtCoverageCutoff))
+output <- matrix(output, ncol=3, byrow=T)
+rownames(output) <- regions
+colnames(output) <- c("orig", "final", "kept")
+
+o <- order(output[,"orig"])
+output[o,]
+
+#           orig       final      kept
+#v4  0.009008476 0.003933203 0.7588753
+#v15 0.020436277 0.014950212 0.6154854
+#v19 0.028188489 0.021484882 0.5190563
+#v35 0.028413909 0.018121912 0.5712087
+#v13 0.033327642 0.024590742 0.6007752
+#v16 0.036096867 0.025843854 0.4083612
+
+
+error.reduction <- (1-sort(output[,"final"]/output[,"orig"]))*100
+error.reduction
+
+#       v4       v13       v15       v19       v35       v16
+#51.713740 31.071796 27.080588 26.858299 26.635537 26.201676
+```
+
+From this we see that there really is no clear pattern between the length of the region and the error rate or the fraction of sequences that we kept. The reduction in error rate varied between 26.2 (V16) and 51.7% (V4).
 
 
 
@@ -495,67 +585,6 @@ sort(fraction.kept, decreasing=T)
 ```
 
 
-A significant factor in PacBio's consensus sequencing is that repeated rounds of sequencing builds one's confidence in the overall base calls. Using the subread data we have already calcualted the coverage as well as the total length sequenced. We will now assess the error rate as a function of the sequence coverage and the number of bases sequenced. The results should be pretty similar so we'll focus primarily on the level of coverage.
-
-```{r}
-plotLines <- function(folder){
-  write(folder, "")
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-
-	error <- aggregate(composite$error, by=list(composite$freq), function(x){c(mean=mean(x), quantile(x, prob=c(0.025, 0.975)), n=length(x))})
-	coverage <- error[, "Group.1"]
-	error <- error$x
-	mean <- error[,"mean"]
-	lci <- error[,"2.5%"]
-	uci <- error[,"97.5%"]
-	N <- error[, "n"]
-	percent.n <- N/cumsum(N)
-	points(mean~coverage, type="l", lwd=1)
-
-}
-
-plot(1, xlim=c(0,70), ylim=c(0,0.08), type="n", xlab="", ylab="", yaxt="n")
-title(xlab="Coverage", ylab="Error rate (%)")
-axis(2, at=seq(0,0.1, 0.02), label=seq(0,10, 2), las=2)
-
-lapply(dir("./", pattern="v.*"), plotLines)
-```
-
-This plot shows us that the error rates appear to plateau around 10-fold coverage. It is interesting that beyond that, the error rate really doesn't improve much. Let's find out the actual average error rate for each region when we only use reads with 10-fold coverage:
-
-```{r}
-
-errorAtCoverageCutoff <- function(folder){
-  write(folder, "")
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-	total.seqs <- nrow(composite)
-	orig.error <- mean(composite$error)
-	
-	composite <- composite[composite$freq >= 10,]
-	covered.seqs <- nrow(composite)
-
-	error <- mean(composite$error)
-	frac.kept <- covered.seqs / total.seqs
-	return(c(orig.error=orig.error, error=error, kept=frac.kept))
-}
-
-regions <- dir("./", pattern="v.*")
-output <- unlist(lapply(regions, errorAtCoverageCutoff))
-output <- matrix(output, ncol=3, byrow=T)
-rownames(output) <- regions
-colnames(output) <- c("orig", "final", "kept")
-
-o <- order(output[,"orig"])
-output[o,]
-
-error.reduction <- (1-sort(output[,"final"]/output[,"orig"]))*100
-error.reduction
-
-#       v4       v13       v15       v19       v35       v16
-#51.713740 31.071796 27.080588 26.858299 26.635537 26.201676
-```
-
-From this we see that there really is no clear pattern between the length of the region and the error rate or the fraction of sequences that we kept. The reduction in error rate varied between 26.2 (V16) and 51.7% (V4).
 
 Next we'll consider the relationship between the sequencing error rate and the average quality score for the read. This should be proportional to the level of coverage.
 
