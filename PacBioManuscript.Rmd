@@ -702,7 +702,40 @@ dev.off()
 
 ```
 
-It was difficult to pinpoint a threshold minimum average quality score based on the error rates alone. Let's try calculating the average quality score for the entire read...
+From this it was difficult to pinpoint a threshold minimum average quality score based on the error rates alone. Let's look at the aggregate error rate for the sequences above the threshold quality score of interest:
+
+```{r}
+#regions <- dir("./", pattern="v\\d.*")
+regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
+clrs <- rainbow(length(regions))
+pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
+names(clrs) <- regions
+
+aggregateErrorMinQualityScore <- function(folder){
+  write(folder, "")
+  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+
+  
+  remaining.error <- rep(0, max(composite$minQ)+1)
+  qscores <- 0:max(composite$minQ)
+
+  remaining.error <- unlist(lapply(qscores, function(x){mean(composite[composite$minQ >= x,"error"])}))
+  names(remaining.error) <- qscores
+  
+  points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
+}
+
+pdf(file="remainingErrorMin.pdf")
+par(mar=c(5,5,0.5, 0.5))
+plot(1, xlim=c(10,75), ylim=c(0,0.02), type="n", yaxt="n", xlab="", ylab="")
+lapply(regions, aggregateErrorMinQualityScore)
+title(xlab="Minimum average quality score\nwithin 50-nt windows from across the full sequence", ylab="Error rate of sequences above threshold (%)")
+axis(2, las=2, at=seq(0,0.02,0.005), label=seq(0,2,0.5))
+legend(x=55, y=0.02, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
+dev.off()
+```
+
+Again, there's no clear break point. Let's try calculating the average quality score for the entire read instead...
 
 ```{r}
 #regions <- dir("./", pattern="v\\d.*")
@@ -763,7 +796,41 @@ dev.off()
 
 ```
 
-The distribution here looks a little tighter across the different regions with something of an inflection around 60%, which corresponds to an average quality score of 55 to 65 for the regions (except for V4 and V1-V9). Let's propose we use an average quality score threshold of 60 since it produces the most consistent fraction of reads retained and error rate across the different regions. If we do this we get the following error rates:
+The distribution here looks a little tighter across the different regions with something of an inflection around 60%, which corresponds to an average quality score of 55 to 65 for the regions (except for V4 and V1-V9). Let's see what the error rate is for reads with an average quality score above our thersholds:
+
+```{r}
+
+#regions <- dir("./", pattern="v\\d.*")
+regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
+clrs <- rainbow(length(regions))
+pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
+names(clrs) <- regions
+
+aggregateErrorAveQualityScore <- function(folder){
+  write(folder, "")
+  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+
+  
+  remaining.error <- rep(0, max(composite$aveQ)+1)
+  qscores <- 0:max(composite$aveQ)
+
+  remaining.error <- unlist(lapply(qscores, function(x){mean(composite[composite$aveQ >= x,"error"])}))
+  names(remaining.error) <- qscores
+  
+  points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
+}
+
+pdf(file="remainingErrorAve.pdf")
+par(mar=c(5,5,0.5, 0.5))
+plot(1, xlim=c(10,75), ylim=c(0,0.02), type="n", yaxt="n", xlab="", ylab="")
+lapply(regions, aggregateErrorAveQualityScore)
+title(xlab="Average quality score\nacross the full sequence", ylab="Error rate of sequences above threshold (%)")
+axis(2, las=2, at=seq(0,0.02,0.005), label=seq(0,2,0.5))
+legend(x=55, y=0.02, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
+dev.off()
+```
+
+Interestingly, we see that the error rates begin to decline significantly as we increase the threshold past 60. This also corresponds to the steep reduction in the number of remaining reads. Let's propose we use an average quality score threshold of 60 since it produces the most consistent fraction of reads retained and error rate across the different regions. If we do this we get the following error rates:
 
 ```{r}
 
@@ -846,10 +913,10 @@ oligosQScore <- function(folder){
 	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
 	mismatch <- composite$barcode + composite$primer
-	good0 <- mismatch == 0 & composite$minQ>= 55
-	composite.good0 <- composite[good0,]
+	good <- mismatch == 0 & composite$aveQ>= 60
+	composite.good <- composite[good,]
 
-	good1 <- mismatch <= 1 & composite$minQ >= 55
+	good1 <- mismatch <= 1 & composite$aveQ >= 60
 	composite.good1 <- composite[good1,]
 
 	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite), 
@@ -874,7 +941,7 @@ coverageQScore <- function(folder){
 	write(folder, "")
 	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-	good <- composite$freq >= 10 & composite$minQ>= 55
+	good <- composite$freq >= 10 & composite$minQ>= 60
 	composite.good <- composite[good,]
 
 	return(c(mean(composite[,"error"]), mean(composite.good[,"error"]), nrow(composite.good)/nrow(composite) ))
@@ -901,10 +968,10 @@ allFilters <- function(folder){
 	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
 	mismatch <- composite$barcode + composite$primer
-	good0 <- mismatch == 0 & composite$minQ>= 55 & composite$freq >= 10
+	good0 <- mismatch == 0 & composite$minQ>= 60 & composite$freq >= 10
 	composite.good0 <- composite[good0,]
 
-	good1 <- mismatch <= 1 & composite$minQ >= 55 & composite$freq >= 10
+	good1 <- mismatch <= 1 & composite$minQ >= 60 & composite$freq >= 10
 	composite.good1 <- composite[good1,]
 
 	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite), 
