@@ -1111,11 +1111,11 @@ do
     for REP in 1 2 3
     do
         mothur "#set.dir(input=./$REGION, output=./$REGION);
-            get.groups(fasta=$REGION.trim.unique.fasta, group=$REGION.good.groups, name=$REGION.trim.unique.good.filter.names, groups=mock$REP.$REGION);
-            system(mv $REGION/$REGION.trim.unique.good.filter.unique.names $REGION/$REGION.mock$REP.unique.names);
-            system(mv $REGION/$REGION.trim.unique.good.filter.unique.fasta $REGION/$REGION.mock$REP.unique.fasta);
-            seq.error(fasta=$REGION.mock$REP.unique.fasta, name=$REGION.mock$REP.unique.names, reference=HMP_MOCK.filter.fasta, aligned=T, processors=8)"
-        
+            get.groups(fasta=$REGION.trim.unique.good.filter.unique.fasta, group=$REGION.good.pick.groups, name=$REGION.trim.unique.good.filter.names, groups=mock$REP.$REGION);
+            system(mv $REGION/$REGION.trim.unique.good.filter.pick.names $REGION/$REGION.mock$REP.unique.names);
+            system(mv $REGION/$REGION.trim.unique.good.filter.unique.pick.fasta $REGION/$REGION.mock$REP.unique.fasta);
+            seq.error(fasta=$REGION.mock$REP.unique.fasta, name=$REGION.mock$REP.unique.names, reference=HMP_MOCK.filter.fasta, aligned=T, processors=8)"            
+
         mothur "#set.dir(input=./$REGION, output=./$REGION);
             get.groups(fasta=$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, group=$REGION.good.pick.groups, name=$REGION.trim.unique.good.filter.unique.precluster.pick.names, groups=mock$REP.$REGION);
             system(mv $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.pick.names $REGION/$REGION.mock$REP.precluster.names);
