@@ -841,11 +841,11 @@ getErrorRateFromAveQ <- function(folder, threshold=60){
   write(folder, "")
   composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-  rates <- composite[composite$minQ >= threshold,]
+  rates <- composite[composite$aveQ >= threshold,]
   
   original.error <- mean(composite[,"error"])
   remaining.error <- mean(rates[,"error"])
-  fraction.kept <- nrow(rates)/nrow(error)
+  fraction.kept <- nrow(rates)/nrow(composite)
 
   return(c(original.error, remaining.error, fraction.kept))
 }
@@ -855,25 +855,20 @@ rownames(results) <- regions
 colnames(results) <- c("original.error", "remaining.error", "fraction.kept")
 
 #    original.error remaining.error fraction.kept
-#v4     0.005741810     0.002282200    0.78698225
-#v13    0.014883360     0.006557198    0.12305003
-#v35    0.013968573     0.003762152    0.15115654
-#v15    0.009367667     0.002781731    0.28850637
-#v16    0.014569803     0.004622321    0.03128922
-#v19    0.013413156     0.003587509    0.04088219
+#v4     0.005741810     0.002923691     0.8667229
+#v13    0.014883360     0.009899221     0.7571106
+#v35    0.013968573     0.009427016     0.7676517
+#v15    0.009367667     0.004816332     0.6967633
+#v16    0.014569803     0.009527474     0.6560197
+#v19    0.013413156     0.005936197     0.4978217
 
 
 
 ```
 
-Here we see that we have reduced the error rate by 56 to 75% when we require the average quality score for the read to be at least 60. In addition, we notice that, in general, the fraction of the reads we keep decreases as we increase the length of the fragment.
-
-
-
-
-
-
-At this point we are kind of out of tricks to reduce the error rate further beyond combining methods. Let's go back and merge our approaches - allow no or one mismatch to the barcodes and primers, require 10-fold coverage, and an average quality score of 65. We are also interested in whether any of these specification are redundant with each other.
+Here we see that we have reduced the error rate by 56 to 75% when we require the average quality score for the read to be at least 60. In addition, we notice that the fraction of the reads we keep decreases as we increase the length of the fragment.  
+  
+At this point we are kind of out of tricks to reduce the error rate further beyond combining methods. Let's go back and merge our approaches - allow no or one mismatch to the barcodes and primers, require 10-fold coverage, and an average quality score of 60. We are also interested in whether any of these specification are redundant with each other.
 
 ```{r}
 
@@ -914,7 +909,7 @@ oligosQScore <- function(folder){
 
 	mismatch <- composite$barcode + composite$primer
 	good <- mismatch == 0 & composite$aveQ>= 60
-	composite.good <- composite[good,]
+	composite.good0 <- composite[good,]
 
 	good1 <- mismatch <= 1 & composite$aveQ >= 60
 	composite.good1 <- composite[good1,]
@@ -923,43 +918,43 @@ oligosQScore <- function(folder){
 										mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
 }
 
-regions <- dir("./", pattern="v.*")
+regions <- dir("./", pattern="^v.*")
 oligos.qscore <- matrix(unlist(lapply(regions, oligosQScore)), ncol=5, byrow=T)
 rownames(oligos.qscore) <- regions
 colnames(oligos.qscore) <- c("original", "0.error", "0.frac", "1.error", "1.frac")
 oligos.qscore
 #       original     0.error    0.frac     1.error    1.frac
-#v13 0.014883360 0.007335174 0.4568849 0.007656937 0.6449210
-#v15 0.009367667 0.002236401 0.3719210 0.002718334 0.5614124
-#v16 0.014569803 0.004243318 0.3304668 0.004264359 0.4797297
-#v19 0.013413156 0.003444504 0.2436828 0.003889155 0.3496950
-#v35 0.013968573 0.004661911 0.4942488 0.005017634 0.6420103
-#v4  0.005741810 0.001594760 0.5881636 0.002036243 0.8031326
+#v13 0.014883360 0.009153895 0.4954853 0.009700915 0.7024831
+#v15 0.009367667 0.003217812 0.4057167 0.003993206 0.6213535
+#v16 0.014569803 0.007589961 0.4072482 0.008358922 0.6038084
+#v19 0.013413156 0.004870705 0.3162939 0.005294429 0.4586117
+#v35 0.013968573 0.008365403 0.5501681 0.008690839 0.7207574
+#v4  0.005741810 0.001715135 0.5916338 0.002215499 0.8096980
 
 
 coverageQScore <- function(folder){
 	write(folder, "")
 	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-	good <- composite$freq >= 10 & composite$minQ>= 60
+	good <- composite$freq >= 10 & composite$aveQ>= 60
 	composite.good <- composite[good,]
 
 	return(c(mean(composite[,"error"]), mean(composite.good[,"error"]), nrow(composite.good)/nrow(composite) ))
 
 }
 
-regions <- dir("./", pattern="v.*")
+regions <- dir("./", pattern="^v.*")
 coverage.qscore <- matrix(unlist(lapply(regions, coverageQScore)), ncol=3, byrow=T)
 rownames(coverage.qscore) <- regions
 colnames(coverage.qscore) <- c("original", "error", "frac")
 coverage.qscore
 #       original       error      frac
-#v13 0.014883360 0.007981498 0.6194131
-#v15 0.009367667 0.003382451 0.5420765
-#v16 0.014569803 0.005981643 0.4023342
-#v19 0.013413156 0.004333439 0.3174557
-#v35 0.013968573 0.005746871 0.6007786
-#v4  0.005741810 0.002461436 0.7820765
+#v13 0.014883360 0.010013647 0.6514673
+#v15 0.009367667 0.004775956 0.5793190
+#v16 0.014569803 0.010487021 0.4588452
+#v19 0.013413156 0.005815805 0.3860006
+#v35 0.013968573 0.009707464 0.6549283
+#v4  0.005741810 0.002636544 0.7850778
 
 
 
@@ -968,10 +963,10 @@ allFilters <- function(folder){
 	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
 	mismatch <- composite$barcode + composite$primer
-	good0 <- mismatch == 0 & composite$minQ>= 60 & composite$freq >= 10
+	good0 <- mismatch == 0 & composite$aveQ>= 60 & composite$freq >= 10
 	composite.good0 <- composite[good0,]
 
-	good1 <- mismatch <= 1 & composite$minQ >= 60 & composite$freq >= 10
+	good1 <- mismatch <= 1 & composite$aveQ >= 60 & composite$freq >= 10
 	composite.good1 <- composite[good1,]
 
 	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite), 
@@ -979,56 +974,25 @@ allFilters <- function(folder){
 
 }
 
-regions <- dir("./", pattern="v.*")
+regions <- dir("./", pattern="^v.*")
 all.filters <- matrix(unlist(lapply(regions, allFilters)), ncol=5, byrow=T)
 rownames(all.filters) <- regions
 colnames(all.filters) <- c("original", "0.error", "0.frac", "1.error", "1.frac")
 all.filters
+
 #       original     0.error    0.frac     1.error    1.frac
-#v13 0.014883360 0.007514957 0.4108352 0.007803994 0.5792325
-#v15 0.009367667 0.002143636 0.3271963 0.002635042 0.4905422
-#v16 0.014569803 0.004104780 0.2635135 0.004196239 0.3746929
-#v19 0.013413156 0.003394943 0.2079582 0.003873570 0.2974150
-#v35 0.013968573 0.004717181 0.4434613 0.005107118 0.5685719
-#v4  0.005741810 0.001413481 0.5459107 0.001830115 0.7350872
+#v13 0.014883360 0.009299146 0.4286682 0.009827404 0.6083521
+#v15 0.009367667 0.003078476 0.3450189 0.003905562 0.5210593
+#v16 0.014569803 0.007738039 0.2923833 0.008814923 0.4250614
+#v19 0.013413156 0.004797594 0.2460064 0.005266467 0.3578275
+#v35 0.013968573 0.008613200 0.4813307 0.008979207 0.6190055
+#v4  0.005741810 0.001515500 0.5470831 0.001993325 0.7376665
+
 ```
 
-When we take a look at the output from oligos.qscore, oligos.coverage, coverage.qscore, and all.filters it becomes apparent that the oligos.qscore strategy reduces the error rates the most, while having a comparable effect on the number of sequences passing the filter relative to the other methods. When we look at the choice of allowing either no or one difference to the oligos, we find a negligible difference between the error rates of the two options. However, we retain considerably more sequences by allowing a single mismatch to the oligos. So, in the end our strategy to reduce the sequencing error rate is to allow a total of one mismatch to the barcodes and primers and using the sliding window threshold of 55. Let's take a look at the overall error rate for each region with this filter.
-
-```{r}
-
-oligosQScorePlot <- function(folder, position){
-  write(folder, "")
-	write(position, "")
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-
-	mismatch <- composite$barcode + composite$primer
-	good <- mismatch <= 1 & composite$minQ >= 55
-	composite.good <- composite[good,]
-	
-	error.ci <- quantile(composite.good[,"error"], probs=c(0.025, 0.975))
-	error.mean <- mean(composite.good[,"error"])
-	
-	stripchart(at=position, composite.good[,"error"], vertical=T, method="jitter", jitter=0.2, pch=19, col="gray", add=T)
-	segments(x0=position-0.3, x1=position+0.3, y0=error.mean, lwd=4)
-	segments(x0=position-0.3, x1=position+0.3, y0=error.ci[1], lwd=2)
-	segments(x0=position-0.3, x1=position+0.3, y0=error.ci[2], lwd=2)
-	text(x=position, y=error.mean, label=format(100*error.mean, digits=2, nsmall=2), pos=3, cex=0.8)
-}
-
-regions <- c("v4", "v35", "v13", "v15", "v16", "v19")
-
-plot(1, xlim=c(0.5,6.5), ylim=c(0,0.1), xlab="", ylab="", yaxt="n", xaxt="n", type="n")
-
-mapply(oligosQScorePlot, regions, 1:6)
-
-regions <- toupper(regions)
-regions <- gsub("V(\\d)(\\d)", "V\\1-V\\2", regions)
-axis(1, at=1:6, label=regions, tick=F)
-axis(2, las=2, at=seq(0,0.1,0.02), label=seq(0,10,2))
-title(ylab="Error rate (%)", xlab="Region within 16S rRNA gene")
-```
-
+When we take a look at the output from oligos.qscore, oligos.coverage, coverage.qscore, and all.filters it becomes apparent that the oligos.qscore strategy reduces the error rates the most, while having a comparable effect on the number of sequences passing the filter relative to the other methods. When we look at the choice of allowing either no or one difference to the oligos, we find a negligible difference between the error rates of the two options. However, we retain considerably more sequences by allowing a single mismatch to the oligos. So, in the end our strategy to reduce the sequencing error rate is to allow a total of one mismatch to the barcodes and primers and using the average quality score threshold of 60.
+ 
+ 
 Having settled in on a pipeline, we would now like to run that protocol from the beginning on all of our samples. Let's create some new folders and make links to the original fasta files:
 
 ```{r engine='bash'}
@@ -1051,7 +1015,7 @@ unzip Silva.bacteria.zip
 mv silva.bacteria/silva.bacteria.fasta ./
 ```
 
-To recap, the pipeline consists of removing any fragment that has more than one mismatch to the barcodes or primers, contains an ambiguous basecall, has a 50 bp window with an average quality score below 55, has a homopolymer longer than 8 nt, and does not align correctly to the region of interest.  
+To recap, the pipeline consists of removing any fragment that has more than one mismatch to the barcodes or primers, contains an ambiguous basecall, has an average quality score below 60, has a homopolymer longer than 8 nt, and does not align correctly to the region of interest.  
 
   
   
@@ -1062,7 +1026,7 @@ Let's run this using trim.seqs in mothur on each of the files. While we're at it
 for REGION in v*
 do
     cd $REGION
-    mothur "#trim.seqs(fasta=$REGION.fasta, qfile=$REGION.qual, oligos=$REGION.oligos, checkorient=T, tdiffs=1, maxambig=0, maxhomop=8, qwindowsize=50, qwindowaverage=55, processors=8);
+    mothur "#trim.seqs(fasta=$REGION.fasta, qfile=$REGION.qual, oligos=$REGION.oligos, checkorient=T, tdiffs=1, maxambig=0, maxhomop=8, qaverage=60, processors=8);
             unique.seqs(fasta=current); align.seqs(fasta=current, reference=../silva.bacteria.fasta);
             summary.seqs(name=current)"
     cd ../
@@ -1106,14 +1070,14 @@ done
 
 Next we'll want to run pre.cluster using the diffs parameter equal to 1 difference per 100 bp. In the previous step we got those lengths:
 
-| Region | Length |
-|--------|--------|
-| v13    | 489    |  
-| v15    | 879    |  
-| v16    | 1028   |  
-| v19    | 1458   |  
-| v35    | 545    |  
-| v4     | 253    |  
+| Region | Length | diffs |
+|--------|--------|-------|
+| v13    | 489    |  4    |
+| v15    | 879    |  8    |
+| v16    | 1028   | 10    |
+| v19    | 1458   | 14    | 
+| v35    | 545    |  5    |
+| v4     | 253    |  2    |
 
 Once we run pre.cluster, we'll check for chimeras, remove them, cluster the sequences and then make a shared file from them
 
