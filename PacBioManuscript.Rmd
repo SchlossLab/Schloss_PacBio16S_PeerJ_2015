@@ -454,25 +454,25 @@ total.basic.error <- sum(basic.error[,"mismatches"])/sum(basic.error[,"total"])
 
 ```
 
-This analysis shows us several things. First, the number of non-chimeric reads removed with this basic filter increases with the length of the region being considered. Most reads are removed because of the presence of ambiguous base calls or failing to span the entire region being amplified and sequenced. Second, with our basic pipeline we reduced the overall error rate effectively in half - 1.93 to 1.08%. The error rate of each region was reduced by ~30 to 50% without a clear trend with fragment length.
+This analysis shows us several things. First, the number of non-chimeric reads removed with this basic filter increases with the length of the region being considered. Most reads are removed because of the presence of ambiguous base calls or failing to span the entire region being amplified and sequenced. Second, with our basic pipeline we reduced the overall error rate effectively in half - 1.93 to 1.08%. The error rate of each region was reduced by ~30 to 50% without a clear trend with fragment length. Our task is to now continue to reduce the error rates of these regions by more than 10-fold to match previous results obtained using 454 and MiSeq.
 
 
 Because PacBio sequencing is done in a circular manner to produce a conensus sequences, there should be no length effects. Therefore, it stands to reason that the error rate we see in the barcodes and primers, should be the error rate for the entire fragment. If a read has no errors in the barcodes and primers, then we would expect there to be very few errors in the rest of the fragment. If there are a lot of errors, well then we expect a high error rate for the fragment. First, let's plot the error rate for different numbers of mismatches to the barcodes and primers:
 
 ```{r}
 plotBarcodePrimerError <- function(folder){
-  mismatches <- read.table(file=paste(folder, "/", folder, ".mismatches", sep=""), header=F, row.names=1, col.names=c("x", "barcode", "primer"))
-	error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+
+  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
   
-  total.mismatch <- mismatches$barcode + mismatches$primer
+  total.mismatch <- composite$barcode + composite$primer
        
-  error.mismatch <- aggregate(error$error, by=list(total.mismatch), function(x){c(quantile(x, probs=c(0.025, 0.5, 0.975)), length(x))})$x
+  error.mismatch <- aggregate(composite$error, by=list(total.mismatch), function(x){c(quantile(x, probs=c(0.025, 0.5, 0.975)), length(x))})$x
 	colnames(error.mismatch) <- c("lci", "median", "uci", "n")
 	rownames(error.mismatch) <- 0:(nrow(error.mismatch)-1)
 	error.mismatch[, "n"] <- 100 * error.mismatch[, "n"]/sum(error.mismatch[, "n"])
 
 	par(mar=c(5, 5, 0.5, 0.5))
-	stripchart(error$error~total.mismatch, vertical=T, method="jitter", pch=19, col="grey", ylab="", yaxt="n", ylim=c(0,0.33))
+	stripchart(composite$error~total.mismatch, vertical=T, method="jitter", pch=19, col="grey", ylab="", yaxt="n", ylim=c(0,0.33))
 	segments(x0=(1:nrow(error.mismatch))-0.25, x1=(1:nrow(error.mismatch))+0.25, y0=error.mismatch[,"median"], lwd=3)
 	segments(x0=(1:nrow(error.mismatch))-0.25, x1=(1:nrow(error.mismatch))+0.25, y0=error.mismatch[,"lci"], lwd=1)
 	segments(x0=(1:nrow(error.mismatch))-0.25, x1=(1:nrow(error.mismatch))+0.25, y0=error.mismatch[,"uci"], lwd=1)
@@ -484,7 +484,7 @@ plotBarcodePrimerError <- function(folder){
 	text(1, 0.33, label=toupper(folder), font=2, cex=1.25)
 }
 
-pdf(file="test.pdf", height=10, width=8)
+pdf(file="oligo.error.pdf", height=10, width=8)
 par(mfrow=c(3,2))
 lapply(c("v4", "v35", "v13", "v15", "v16", "v19"), plotBarcodePrimerError)
 par(mfrow=c(1,1))
@@ -498,11 +498,10 @@ We see that the median error rate does increase with the number of mismatches to
 getFragment_BPErrorRates <- function(folder, length){
   bp.length <- length[folder]
   
-  mismatches <- read.table(file=paste(folder, "/", folder, ".mismatches", sep=""), header=F, row.names=1, col.names=c("x", "barcode", "primer"))
-  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
   
-	bc.primer <- mismatches$barcode + mismatches$primer
-  return(cbind(error$error, bc.primer/bp.length))
+	bc.primer <- composite$barcode + composite$primer
+  return(cbind(composite$error, bc.primer/bp.length))
 }
 
 oligos.file <- scan("../pacbio.oligos", what="", sep="\n", quiet=T)
@@ -511,7 +510,7 @@ region <- gsub(".*(v\\d*)$", "\\1", primers)
 length <- nchar(gsub("primer\t(.*)\t(.*)\t.*", "\\1\\2", primers))+10
 names(length) <- region
 
-regions <- dir("./", pattern="v.*")
+regions <- dir("./", pattern="^v.*")
 errors <- lapply(regions, getFragment_BPErrorRates, length)
 
 errors.table <- matrix(errors[[1]], ncol=2, byrow=F)
@@ -525,27 +524,29 @@ cor.test(errors.table[, "fragment"], errors.table[,"oligos"])
 #  Pearson's product-moment correlation
 #
 #data:  errors.table[, "fragment"] and errors.table[, "oligos"]
-#t = 124.9934, df = 61936, p-value < 2.2e-16
+#t = 87.4716, df = 48369, p-value < 2.2e-16
 #alternative hypothesis: true correlation is not equal to 0
 #95 percent confidence interval:
-# 0.4425063 0.4550844
+# 0.3618482 0.3772373
 #sample estimates:
 #      cor 
-#0.4488176 
+#0.3695681 
+
+
 
 summary(errors.table)
 #    fragment            oligos       
 # Min.   :0.000000   Min.   :0.00000  
 # 1st Qu.:0.000000   1st Qu.:0.00000  
-# Median :0.004065   Median :0.00000  
-# Mean   :0.020127   Mean   :0.01859  
-# 3rd Qu.:0.023346   3rd Qu.:0.02128  
-# Max.   :1.000000   Max.   :0.21739  
+# Median :0.002242   Median :0.00000  
+# Mean   :0.009275   Mean   :0.01388  
+# 3rd Qu.:0.009629   3rd Qu.:0.02041  
+# Max.   :0.316430   Max.   :0.21277  
 
 
 ```
 
-The last two commands shows us that there is a significant correlation between the barcode/primer error rate and the error rate of the rest of the fragment (R=0.45; P<<0.001) and that the average error rates are comparable. Based on this result, it is clear taht we want to minimize the number of mismatches to the barcodes and primers.
+The last two commands shows us that there is a significant correlation between the barcode/primer error rate and the error rate of the rest of the fragment (R=0.37; P<<0.001) and that the average error rates are comparable. Based on this result, it is clear that we want to minimize the number of mismatches to the barcodes and primers.
 
 
 A significant factor in PacBio's consensus sequencing is that repeated rounds of sequencing builds one's confidence in the overall base calls. Using the subread data we have already calcualted the coverage as well as the total length sequenced. We will now assess the error rate as a function of the sequence coverage and the number of bases sequenced. The results should be pretty similar so we'll focus primarily on the level of coverage.
@@ -560,11 +561,10 @@ names(clrs) <- regions
 
 plotLines <- function(folder){
   write(folder, "")
-  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
-  coverage <- read.table(file=paste(folder, "/", folder, ".ccs.coverage", sep=""), header=T, row.names=1)
-
   
-	error.by.depth <- aggregate(error$error, by=list(coverage$freq), function(x){c(mean=mean(x), quantile(x, prob=c(0.025, 0.975)), n=length(x))})
+  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+  
+	error.by.depth <- aggregate(composite$error, by=list(composite$freq), function(x){c(mean=mean(x), quantile(x, prob=c(0.025, 0.975)), n=length(x))})
 
   error.by.depth <- error.by.depth[error.by.depth$x[,"n"]>=50,] #exclude any coverage values where we don't have at least 50 observations
   fold.coverage <- error.by.depth[, "Group.1"]
@@ -580,11 +580,11 @@ plotLines <- function(folder){
 
 pdf("coverageError.pdf")
 par(mar=c(5,5,0.5, 0.5))
-plot(1, xlim=c(0,60), ylim=c(0,0.08), type="n", xlab="", ylab="", yaxt="n")
+plot(1, xlim=c(0,60), ylim=c(0,0.05), type="n", xlab="", ylab="", yaxt="n")
 title(xlab="Coverage", ylab="Error rate (%)")
-axis(2, at=seq(0,0.1, 0.02), label=seq(0,10, 2), las=2)
+axis(2, at=seq(0,0.05, 0.01), label=seq(0,5, 1), las=2)
 lapply(regions, plotLines)
-legend(x=40, y=0.08, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
+legend(x=40, y=0.05, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
 dev.off()
 
 ```
@@ -595,19 +595,18 @@ This plot shows us that the error rates appear to plateau around 10-fold coverag
 
 errorAtCoverageCutoff <- function(folder){
   write(folder, "")
-  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
-  coverage <- read.table(file=paste(folder, "/", folder, ".ccs.coverage", sep=""), header=T, row.names=1)
   
-  total.seqs <- nrow(error)
-	orig.error <- mean(error$error)
+  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+  
+  total.seqs <- nrow(composite)
+	orig.error <- sum(composite$mismatches)/sum(composite$total)
 	
-  deep <- coverage$freq >= 10
-	coverage <- coverage[deep,]
-  error <- error[deep,]
+  deep <- composite$freq >= 10
+	composite <- composite[deep,]
 
-  covered.seqs <- nrow(coverage)
+  covered.seqs <- nrow(composite)
 
-	error <- mean(error$error)
+	error <- sum(composite$mismatches)/sum(composite$total)
 	frac.kept <- covered.seqs / total.seqs
 	return(c(orig.error=orig.error, error=error, kept=frac.kept))
 }
@@ -622,19 +621,21 @@ o <- order(output[,"orig"])
 output[o,]
 
 #           orig       final      kept
-#v4  0.009008476 0.003933203 0.7588753
-#v15 0.020436277 0.014950212 0.6154854
-#v19 0.028188489 0.021484882 0.5190563
-#v35 0.028413909 0.018121912 0.5712087
-#v13 0.033327642 0.024590742 0.6007752
-#v16 0.036096867 0.025843854 0.4083612
+#v4  0.005832224 0.002812434 0.7875164
+#v15 0.009483316 0.006928824 0.6698613
+#v19 0.013538793 0.009889442 0.5620099
+#v35 0.014237063 0.010492018 0.6627146
+#v16 0.014764301 0.010906203 0.4606880
+#v13 0.015089630 0.010385450 0.6568849
 
 
 error.reduction <- (1-sort(output[,"final"]/output[,"orig"]))*100
 error.reduction
 
-#       v4       v13       v15       v19       v35       v16
-#51.713740 31.071796 27.080588 26.858299 26.635537 26.201676
+#      v4      v13      v19      v15      v35      v16 
+#51.77766 31.17492 26.95477 26.93670 26.30490 26.13126 
+
+
 ```
 
 From this we see that there really is no clear pattern between the length of the region and the error rate or the fraction of sequences that we kept. The reduction in error rate varied between 26.2 (V16) and 51.7% (V4).
@@ -651,12 +652,10 @@ names(clrs) <- regions
 
 errorMinQualityScore <- function(folder){
   write(folder, "")
-  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
-  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
-  aveq <- aveq[,-1]
-  colnames(aveq) <- c("aveQ", "minQ")
 
-  binned <- aggregate(error$error, by=list(round(aveq$minQ)), mean)
+  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+
+  binned <- aggregate(composite$error, by=list(round(composite$minQ)), mean)
   binned <- binned[binned$Group.1 <= 70, ]
   points(binned$Group.1, binned$x, type="l", col=clrs[folder], lwd=2)
 }
@@ -684,12 +683,9 @@ names(clrs) <- regions
 
 fractionMinQualityScore <- function(folder){
   write(folder, "")
-  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
-  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
-  aveq <- aveq[,-1]
-  colnames(aveq) <- c("aveQ", "minQ")
 
-  binned <- aggregate(error$error, by=list(round(aveq$minQ)), length)
+  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+  binned <- aggregate(composite$error, by=list(round(composite$minQ)), length)
 
   remaining <- 1-cumsum(binned$x)/sum(binned$x)
   points(binned$Group.1, remaining, type="l", col=clrs[folder], lwd=2)
@@ -706,46 +702,7 @@ dev.off()
 
 ```
 
-It was difficult to pinpoint a threshold minimum average quality score based on the error rates alone as each of the curves resembled a hockey stick. When we calculated the fraction of reads remaining for different thresholds, we observed a slight inflection in the curve at a minimum average quality score near 55. Let's see what happens when we look at the aggregate error rate of those reads with at least the threshold minimum average quality score
-
-```{r}
-
-
-#regions <- dir("./", pattern="v\\d.*")
-regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
-clrs <- rainbow(length(regions))
-pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
-names(clrs) <- regions
-
-aggregateErrorMinQualityScore <- function(folder){
-  write(folder, "")
-  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
-  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
-  aveq <- aveq[,-1]  
-  colnames(aveq) <- c("aveQ", "minQ")
-
-  
-  remaining.error <- rep(0, max(aveq$minQ)+1)
-  qscores <- 0:max(aveq$minQ)
-
-  remaining.error <- unlist(lapply(qscores, function(x){mean(error[aveq$minQ >= x,"error"])}))
-  names(remaining.error) <- qscores
-  
-  points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
-}
-
-pdf(file="remainingError.pdf")
-par(mar=c(5,5,0.5, 0.5))
-plot(1, xlim=c(10,75), ylim=c(0,0.04), type="n", yaxt="n", xlab="", ylab="")
-lapply(regions, aggregateErrorMinQualityScore)
-title(xlab="Minimum average quality score\nwithin a 50-nt window across the full sequence", ylab="Error rate of sequences above threshold (%)")
-axis(2, las=2, at=seq(0,0.04,0.01), label=seq(0,4,1))
-legend(x=10, y=0.30, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
-dev.off()
-
-```
-
-We still don't see much of a break point. Let's try calculating the average quality score for the entire read...
+It was difficult to pinpoint a threshold minimum average quality score based on the error rates alone. Let's try calculating the average quality score for the entire read...
 
 ```{r}
 #regions <- dir("./", pattern="v\\d.*")
@@ -756,12 +713,10 @@ names(clrs) <- regions
 
 errorAveQualityScore <- function(folder){
   write(folder, "")
-  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
-  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
-  aveq <- aveq[,-1]
-  colnames(aveq) <- c("aveQ", "minQ")
+  
+  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-  binned <- aggregate(error$error, by=list(round(aveq$aveQ)), mean)
+  binned <- aggregate(composite$error, by=list(round(composite$aveQ)), mean)
   binned <- binned[binned$Group.1 <= 70, ]
   points(binned$Group.1, binned$x, type="l", col=clrs[folder], lwd=2)
 }
@@ -788,12 +743,10 @@ names(clrs) <- regions
 
 fractionAveQualityScore <- function(folder){
   write(folder, "")
-  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
-  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
-  aveq <- aveq[,-1]
-  colnames(aveq) <- c("aveQ", "minQ")
 
-  binned <- aggregate(error$error, by=list(round(aveq$aveQ)), length)
+  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+
+  binned <- aggregate(composite$error, by=list(round(composite$aveQ)), length)
 
   remaining <- 1-cumsum(binned$x)/sum(binned$x)
   points(binned$Group.1, remaining, type="l", col=clrs[folder], lwd=2)
@@ -810,45 +763,7 @@ dev.off()
 
 ```
 
-The distribution here looks a little tighter across the different regions with something of an inflection around 60%, which corresponds to an average quality score of 55 to 65 for the regions (except for V4 and V1-V9). Let's see what happens when we look at the aggregate error rate of those reads with at least the threshold average quality score:
-
-```{r}
-
-#regions <- dir("./", pattern="v\\d.*")
-regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
-clrs <- rainbow(length(regions))
-pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
-names(clrs) <- regions
-
-aggregateErrorMinQualityScore <- function(folder){
-  write(folder, "")
-  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
-  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
-  aveq <- aveq[,-1]  
-  colnames(aveq) <- c("aveQ", "minQ")
-
-  
-  remaining.error <- rep(0, max(aveq$minQ)+1)
-  qscores <- 0:max(aveq$aveQ)
-
-  remaining.error <- unlist(lapply(qscores, function(x){mean(error[aveq$minQ >= x,"error"])}))
-  names(remaining.error) <- qscores
-  
-  points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
-}
-
-pdf(file="remainingError.pdf")
-par(mar=c(5,5,0.5, 0.5))
-plot(1, xlim=c(10,75), ylim=c(0,0.04), type="n", yaxt="n", xlab="", ylab="")
-lapply(regions, aggregateErrorMinQualityScore)
-title(xlab="Minimum average quality score\nwithin a 50-nt window across the full sequence", ylab="Error rate of sequences above threshold (%)")
-axis(2, las=2, at=seq(0,0.04,0.01), label=seq(0,4,1))
-legend(x=10, y=0.30, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
-dev.off()
-
-```
-
-Meh. Nothing much there. Let's propose we use an average quality score threshold of 60 since it produces the most consistent fraction of reads retained and error rate across the different regions. If we do this we get the following error rates:
+The distribution here looks a little tighter across the different regions with something of an inflection around 60%, which corresponds to an average quality score of 55 to 65 for the regions (except for V4 and V1-V9). Let's propose we use an average quality score threshold of 60 since it produces the most consistent fraction of reads retained and error rate across the different regions. If we do this we get the following error rates:
 
 ```{r}
 
@@ -857,14 +772,11 @@ regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
 
 getErrorRateFromAveQ <- function(folder, threshold=60){
   write(folder, "")
-  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
-  aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
-  aveq <- aveq[,-1]  
-  colnames(aveq) <- c("aveQ", "minQ")
+  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-  rates <- error[aveq$minQ >= threshold,]
+  rates <- composite[composite$minQ >= threshold,]
   
-  original.error <- mean(error[,"error"])
+  original.error <- mean(composite[,"error"])
   remaining.error <- mean(rates[,"error"])
   fraction.kept <- nrow(rates)/nrow(error)
 
@@ -876,16 +788,18 @@ rownames(results) <- regions
 colnames(results) <- c("original.error", "remaining.error", "fraction.kept")
 
 #    original.error remaining.error fraction.kept
-#v4     0.009008476     0.003129422     0.7897945
-#v13    0.033327642     0.019663989     0.5451635
-#v35    0.028413909     0.006071157     0.4590979
-#v15    0.020436277     0.004383447     0.4343025
-#v16    0.036096867     0.014667380     0.3133779
-#v19    0.028188489     0.006732380     0.1955123
+#v4     0.005741810     0.002282200    0.78698225
+#v13    0.014883360     0.006557198    0.12305003
+#v35    0.013968573     0.003762152    0.15115654
+#v15    0.009367667     0.002781731    0.28850637
+#v16    0.014569803     0.004622321    0.03128922
+#v19    0.013413156     0.003587509    0.04088219
+
+
 
 ```
 
-Here we see that we have reduced the error rate by 21 to 59% when we require the average quality score for the read to be at least 60. In addition, we notice that the fraction of the reads we keep decreases as we increase the length of the fragment.
+Here we see that we have reduced the error rate by 56 to 75% when we require the average quality score for the read to be at least 60. In addition, we notice that, in general, the fraction of the reads we keep decreases as we increase the length of the fragment.
 
 
 
@@ -912,7 +826,7 @@ oligosCoverage <- function(folder){
 	
 }
 
-regions <- dir("./", pattern="v.*")
+regions <- dir("./", pattern="^v.*")
 oligos.coverage <- matrix(unlist(lapply(regions, oligosCoverage)), ncol=5, byrow=T)
 rownames(oligos.coverage) <- regions
 colnames(oligos.coverage) <- c("original", "0.error", "0.frac", "1.error", "1.frac")
