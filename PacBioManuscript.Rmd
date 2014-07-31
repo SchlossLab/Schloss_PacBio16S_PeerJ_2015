@@ -342,6 +342,120 @@ title(ylab="Quality score")
 ```
 
 There is a pretty good separtion between the correct and incorrect (substitutions/insertions) base calls. We will use this later to help us develop a plan for screening out sequences that are of low quality.  
+  
+Let's start by establishing a basic curation method. Let's remove any sequences with a homopolymer length longer than 8, sequences with ambiguous base calls, sequences that don't start and end at the expected positions, and any sequences that were flagged as being chimeras (these aren't sequencing errors).
+
+```{r}
+getMode <- function(x){
+  return(as.numeric(names(sort(table(x), decreasing=T)[1])))
+}
+
+generateComposite <- function(folder){
+	write(folder, "")
+
+  #read everything in
+	coverage <- read.table(file=paste(folder, "/", folder, ".ccs.coverage", sep=""), header=T, row.names=1)
+	mismatches <- read.table(file=paste(folder, "/", folder, ".mismatches", sep=""), header=F, row.names=1)
+	aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
+	error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+	summary <- read.table(file=paste(folder, "/", folder, ".mock.filter.summary", sep=""), header=T, row.names=1)
+
+  #remove chimeras
+	non.chimeras <- error$numparents==1
+
+  coverage <- coverage[non.chimeras,]
+  mismatches <- mismatches[non.chimeras,]
+  aveq <- aveq[non.chimeras,]
+  error <- error[non.chimeras,]
+  summary <- summary[non.chimeras,]
+  
+	#fix some column names
+	colnames(mismatches) <- c("barcode", "primer")
+    aveq <- aveq[,-1]
+    colnames(aveq) <- c("aveQ", "minQ")
+    
+
+	mode.start <- getMode(summary$start)
+	mode.end <- getMode(summary$end)
+
+    good.start <- summary$start == mode.start  #find sequences that start at correct location in alignment
+    good.end <- summary$end == mode.end        #find sequences that end at correct location in alignment
+	good.homop <- summary$polymer <= 8         #find sequences with less than or equal to 8 nt
+    good.ambig <- summary$ambig == 0           #find sequences with no ambiguous base calls
+    
+	good.sequences <- good.start & good.end & good.homop & good.ambig
+
+
+	#create composite data frame of good sequences
+	composite <- cbind(error[good.sequences,], coverage[good.sequences,],
+						mismatches[good.sequences,], aveq[good.sequences,],
+						summary[good.sequences,])
+	write.table(composite, paste(folder, "/", folder, ".composite", sep=""), quote=F, sep="\t")
+  
+  n.seqs <- nrow(summary)
+  lost.start.stop <- 1- sum(good.start & good.end)/n.seqs
+  lost.homop <- 1 - sum(good.homop)/n.seqs
+  lost.ambig <- 1 - sum(good.ambig)/n.seqs
+  lost.total <- 1 - nrow(composite)/n.seqs
+  
+  return(c(lost.start.stop, lost.homop, lost.ambig, lost.total))
+}
+
+getInitError <- function(folder){
+  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+  error <- error[error$numparents==1,]
+  return(c(sum(error$mismatches), sum(error$total)))
+}
+
+getBasicError <- function(folder){
+  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+  return(c(sum(composite$mismatches), sum(composite$total)))
+}
+
+regions <- dir("./", pattern="^v\\d*")
+fraction.lost <- matrix(unlist(lapply(regions, generateComposite)), ncol=4, byrow=T)
+rownames(fraction.lost) <- regions
+colnames(fraction.lost) <- c("start.stop", "homop", "ambig", "total")
+fraction.lost
+
+#    start.stop        homop      ambig      total
+#v4  0.03205128 0.0006275776 0.01739286 0.04410974
+#v13 0.10845623 0.0005600149 0.08381557 0.17304461
+#v35 0.16210726 0.0018959913 0.11565547 0.23469664
+#v15 0.12101535 0.0025580480 0.13183786 0.21979536
+#v16 0.12669288 0.0008737440 0.20008737 0.28877239
+#v19 0.18291262 0.0048543689 0.18485437 0.33145631
+
+
+init.error <- matrix(unlist(lapply(regions, getInitError)), ncol=2, byrow=T)
+rownames(init.error) <- regions
+colnames(init.error) <- c("mismatches", "total")
+init.rates <- init.error[,"mismatches"] / init.error[,"total"]
+init.rates
+#        v13         v15         v16         v19         v35          v4 
+#0.023997519 0.018050725 0.025606045 0.022916201 0.025057346 0.008257847 
+
+
+total.init.error <- sum(init.error[,"mismatches"])/sum(init.error[,"total"])
+#[1] 0.01925717
+
+
+basic.error <- matrix(unlist(lapply(regions, getBasicError)), ncol=2, byrow=T)
+rownames(basic.error) <- regions
+colnames(basic.error) <- c("mismatches", "total")
+basic.rates <- basic.error[,"mismatches"] / basic.error[,"total"]
+basic.rates
+#        v13         v16         v35         v19         v15          v4 
+#0.015089630 0.009483316 0.014764301 0.013538793 0.014237063 0.005832224 
+
+
+total.basic.error <- sum(basic.error[,"mismatches"])/sum(basic.error[,"total"])
+#[1] 0.01079351
+
+```
+
+This analysis shows us several things. First, the number of non-chimeric reads removed with this basic filter increases with the length of the region being considered. Most reads are removed because of the presence of ambiguous base calls or failing to span the entire region being amplified and sequenced. Second, with our basic pipeline we reduced the overall error rate effectively in half - 1.93 to 1.08%. The error rate of each region was reduced by ~30 to 50% without a clear trend with fragment length.
+
 
 Because PacBio sequencing is done in a circular manner to produce a conensus sequences, there should be no length effects. Therefore, it stands to reason that the error rate we see in the barcodes and primers, should be the error rate for the entire fragment. If a read has no errors in the barcodes and primers, then we would expect there to be very few errors in the rest of the fragment. If there are a lot of errors, well then we expect a high error rate for the fragment. First, let's plot the error rate for different numbers of mismatches to the barcodes and primers:
 
@@ -774,61 +888,6 @@ colnames(results) <- c("original.error", "remaining.error", "fraction.kept")
 Here we see that we have reduced the error rate by 21 to 59% when we require the average quality score for the read to be at least 60. In addition, we notice that the fraction of the reads we keep decreases as we increase the length of the fragment.
 
 
-
-Let's remove any sequences with a homopolymer length longer than 8, sequences with ambiguous base calls, sequences that don't start and end at the expected positions, and any sequences that were flagged as being chimeras (these aren't sequencing errors).
-
-```{r}
-getMode <- function(x){
-  return(as.numeric(names(sort(table(x), decreasing=T)[1])))
-}
-
-generateComposite <- function(folder){
-	#read everything in
-	write(folder, "")
-
-	coverage <- read.table(file=paste(folder, "/", folder, ".ccs.coverage", sep=""), header=T, row.names=1)
-	mismatches <- read.table(file=paste(folder, "/", folder, ".mismatches", sep=""), header=F, row.names=1)
-	aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
-	error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
-	summary <- read.table(file=paste(folder, "/", folder, ".mock.filter.summary", sep=""), header=T, row.names=1)
-
-
-	#fix some column names
-	colnames(mismatches) <- c("barcode", "primer")
-    aveq <- aveq[,-1]
-    colnames(aveq) <- c("aveQ", "minQ")
-    
-	#basic screening of sequences
-	non.chimeras <- error$numparents==1
-
-	mode.start <- getMode(summary$start)
-	mode.end <- getMode(summary$end)
-
-    good.start <- summary$start == mode.start  #find sequences that start at correct location in alignment
-    good.end <- summary$end == mode.end        #find sequences that end at correct location in alignment
-	good.homop <- summary$polymer <= 8         #find sequences with less than or equal to 8 nt
-    good.ambig <- summary$ambig == 0           #find sequences with no ambiguous base calls
-    
-	good.sequences <- non.chimeras & good.start & good.end & good.homop & good.ambig
-
-
-	#create composite data frame of good sequences
-	composite <- cbind(error[good.sequences,], coverage[good.sequences,],
-						mismatches[good.sequences,], aveq[good.sequences,],
-						summary[good.sequences,])
-	write.table(composite, paste(folder, "/", folder, ".composite", sep=""), quote=F, sep="\t")
-    
-    return(nrow(composite) / nrow(coverage))
-}
-
-regions <- dir("./", pattern="v\\d*")
-fraction.kept <- unlist(lapply(regions, generateComposite))
-names(fraction.kept) <- regions
-sort(fraction.kept, decreasing=T)
-
-#       v4       v13       v15       v35       v19       v16 
-#0.9486609 0.7465453 0.7421388 0.6689949 0.5680581 0.5444816 
-```
 
 
 
