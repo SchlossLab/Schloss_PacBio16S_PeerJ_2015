@@ -1127,8 +1127,8 @@ done
 
 One of the parameters we'd like to know is the number of OTUs per region and sample. To do this, we will need to rarefy our data to a common number of sequences. Let's count the number of reads across all samples:
 
-```{r}
 
+```{r}
 regions <- dir(path="./", pattern="v\\d+")
 
 counts <- matrix(rep(0, length(regions)*12), nrow=length(regions))
@@ -1151,13 +1151,13 @@ for(r in regions){
 Unfortunately, those counts are kind of depressing:
 
 |   | human1  | human2	| human3	| mock1		| mock2		| mock3		| mouse1	| mouse2	| mouse3	| soil1		| soil2	| soil3	|
-|-------------------------------------------------------------------------------------------------------------------------------------------|
-|v13 | 990		| 768		| 1022		| 693		| 711		| 722		| 410		| 991		| 325		| 756		| 549	| 799	|
-|v15 | 519		| 652		| 1302		| 1337		| 1702		| 1491		| 807		| 606		| 1227		| 1167		| 1349	| 1393	|
-|v16 | 442		| 386		| 530		| 204		| 197		| 198		| 134		| 404		| 234		| 294		| 243	| 180	|
-|v19 | 132		| 46		| 105		| 360		| 262		| 290		| 230		| 94		| 87		| 319		| 375	| 591	|
-|v35 | 982		| 876		| 804		| 831		| 1108		| 1089		| 447		| 444		| 298		| 538		| 295	| 917	|
-|v4	 | 615		| 902		| 568		| 3699		| 4076		| 4828		| 1512		| 972		| 1167		| 722		| 2698	| 1301	|
+|-----------------------------------------------------------------------------------------------------------------------|
+| v13 |  1038 |   810   | 1062   |  750     |  767    |  792    |  546    | 1049    |  365    |  790    |   606 |  870  |
+| v15 |   556 |   700   | 1398   | 1459     | 1866    | 1669    | 1035    |  671    | 1345    | 1259    |  1480 | 1498  |
+| v16 |   492 |   437   |  592   |  270     |  244    |  247    |  262    |  448    |  286    |  358    |   299 |  210  |
+| v19 |   165 |    55   |  134   |  455     |  402    |  357    |  314    |  109    |  117    |  399    |   479 |  710  |
+| v35 |  1050 |   965   |  848   |  979     | 1247    | 1231    |  634    |  606    |  425    |  612    |   357 | 1075  |
+| v4  |   620 |   908   |  572   | 3721     | 4101    | 4857    | 1527    |  979    | 1186    |  728    |  2707 | 1310  |
 
 Let's merge the three replicates for each sample like we did for the error analysis and move forward... First we'll make a mapping file and then we'll run merge.groups in mothur
 
@@ -1202,19 +1202,19 @@ The merged counts:
 
 |     | human | mock   | mouse | soil
 |-------------------------------------
-|v13  | 2780  | 2126   | 1726  | 2104
-|v15  | 2473  | 4530   | 2640  | 3909
-|v16  | 1358  | 599    | 772   | 717
-|v19  | 283   | 912    | 411   | 1285
-|v35  | 2662  | 3028   | 1189  | 1750
-|v4   | 2085  | 12603  | 3651  | 4721
+| v13 | 2910  |  2309  | 1960  | 2266
+| v15 | 2654  |  4994  | 3051  | 4237
+| v16 | 1521  |   761  |  996  |  867
+| v19 |  354  |  1214  |  540  | 1588
+| v35 | 2863  |  3457  | 1665  | 2044
+| v4  | 2100  | 12679  | 3692  | 4745
 
-Let's sub-sample everything to 283 reads per sample
+Let's rarefy everything to 354 reads per sample
 
 ```{r engine="bash"}
 for REGION in v*
 do
-    mothur "#summary.single(shared=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.shared, calc=sobs-coverage, subsample=283, iters=1000)"
+    mothur "#summary.single(shared=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.shared, calc=sobs-coverage, subsample=354, iters=1000)"
 done
 ```
 
@@ -1224,8 +1224,9 @@ Let's remove all of the chimeras we didn't detect and see how many OTUs we would
 for REGION in v*
 do
   grep "2$" $REGION/$REGION.mock*error.summary | cut -f 2 -d ":" | cut -f 1 > $REGION/$REGION.extra.chimeras
-  cat $REGION/$REGION.mock?.precluster.names > $REGION/$REGION.precluster.names
-  mothur "#remove.seqs(fasta=$REGION/$REGION.mock.precluster.fasta, name=$REGION/$REGION.precluster.names, accnos=$REGION/$REGION.extra.chimeras);
+  cat $REGION/$REGION.mock?.precluster.fasta > $REGION/$REGION.mock.precluster.fasta
+  cat $REGION/$REGION.mock?.precluster.names > $REGION/$REGION.mock.precluster.names
+  mothur "#remove.seqs(fasta=$REGION/$REGION.mock.precluster.fasta, name=$REGION/$REGION.mock.precluster.names, accnos=$REGION/$REGION.extra.chimeras);
           dist.seqs(cutoff=0.15); cluster(); summary.single(subsample=283, calc=sobs, label=0.03)"
 done
 ```
@@ -1244,11 +1245,11 @@ done
 Now we'd like to go ahead and classify all of our sequences using both the RDP and greengenes training sets:
 
 ```{r engine='bash'}
-wget http://www.mothur.org/w/images/5/59/Trainset9_032012.pds.zip
+wget -N http://www.mothur.org/w/images/5/59/Trainset9_032012.pds.zip
 unzip -o Trainset9_032012.pds.zip
 mv trainset9_032012.pds.tax trainset9_032012.pds_rdp.tax
 
-wget http://www.mothur.org/w/images/9/9d/Gg_13_5_99.taxonomy.tgz
+wget -N http://www.mothur.org/w/images/9/9d/Gg_13_5_99.taxonomy.tgz
 tar xvzf Gg_13_5_99.taxonomy.tgz
 mv gg_13_5_99.pds.tax gg_13_5_99.pds_gg.tax
 
