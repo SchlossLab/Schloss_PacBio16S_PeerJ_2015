@@ -396,7 +396,7 @@ generateComposite <- function(folder){
   lost.start.stop <- 1- sum(good.start & good.end)/n.seqs
   lost.homop <- 1 - sum(good.homop)/n.seqs
   lost.ambig <- 1 - sum(good.ambig)/n.seqs
-  lost.total <- 1 - nrow(composite)/n.seqs
+  lost.total <- 1 - sum(good.sequences)/n.seqs
   
   return(c(lost.start.stop, lost.homop, lost.ambig, lost.total))
 }
