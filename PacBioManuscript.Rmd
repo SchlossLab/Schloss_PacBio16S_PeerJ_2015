@@ -861,9 +861,6 @@ colnames(results) <- c("original.error", "remaining.error", "fraction.kept")
 #v15    0.009367667     0.004816332     0.6967633
 #v16    0.014569803     0.009527474     0.6560197
 #v19    0.013413156     0.005936197     0.4978217
-
-
-
 ```
 
 Here we see that we have reduced the error rate by 56 to 75% when we require the average quality score for the read to be at least 60. In addition, we notice that the fraction of the reads we keep decreases as we increase the length of the fragment.  
@@ -1311,7 +1308,6 @@ for(r in regions){
   gg <- getDepths(ggMock)
   write.table(cbind("rdp" = rdp, "gg" = gg), file=paste(r, "/mock.tax.compare", sep=""), quote=F)  
 }
-
 ```
 
 Now we'd like to break this down by sample type. First we'll count the number of times each sequence shows up in each group using mothur:
