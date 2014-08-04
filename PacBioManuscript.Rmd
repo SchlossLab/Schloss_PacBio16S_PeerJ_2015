@@ -1122,11 +1122,44 @@ do
 done
 ```
 
-One of the parameters we'd like to know is the number of OTUs per region and sample. To do this, we will need to rarefy our data to a common number of sequences. Let's count the number of reads across all samples:
-
+Let's see what the error rates were:
 
 ```{r}
+summarizeError <- function(folder, method){
+  file1 <- paste(folder, "/", folder, ".mock1.", method, ".error.summary", sep="")
+  file2 <- paste(folder, "/", folder, ".mock2.", method, ".error.summary", sep="")
+  file3 <- paste(folder, "/", folder, ".mock3.", method, ".error.summary", sep="")
+  
+  summary <- rbind(read.table(file=file1, header=T, row.names=1), read.table(file=file2, header=T, row.names=1), read.table(file=file3, header=T, row.names=1))
+  nochim <- summary[summary$numparents==1,]
+  error <- sum(nochim$weight * nochim$mismatches) / sum(nochim$weight * nochim$total)
+  return(error)
+}
+
 regions <- dir(path="./", pattern="v\\d+")
+
+unique <- unlist(lapply(regions, summarizeError, "unique"))
+precluster <- unlist(lapply(regions, summarizeError, "precluster"))
+error <- cbind(unique, precluster)
+rownames(error) <- regions
+
+#         unique  precluster
+#v4  0.001746057 0.000943217
+#v35 0.009064385 0.007661003
+#v13 0.008320245 0.007029193
+#v15 0.003644766 0.001727743
+#v16 0.006742346 0.005426787
+#v19 0.004917835 0.003397170
+```
+
+We see that even with applying the preclustering the error rates do not approach what we have previously observed with 454 or MiSeq-generated data.
+
+
+
+One of the parameters we'd like to know is the number of OTUs per region and sample. To do this, we will need to rarefy our data to a common number of sequences. Let's count the number of reads across all samples:
+
+```{r}
+regions <- dir(path="./", pattern="^v\\d+")
 
 counts <- matrix(rep(0, length(regions)*12), nrow=length(regions))
 rownames(counts) <- regions
