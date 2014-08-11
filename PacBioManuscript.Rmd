@@ -1457,3 +1457,23 @@ Let's build some dot-plots to show how well the various regions classified for e
 
   legend(x=63, y=12, legend=c("RDP (gen.)", "greengenes (gen.+sp.)", "greengenes (sp.)"), pch=c(21,19,21), col=c("black", "black", "black"), pt.bg=c("white", "black", "gray"), bg="white")
 ```
+
+It is commonly said that the error profile in PacBio-generated sequence data are random. As we saw above, the substitution preference was random. However, if the errors are truly random, then we would expect to have a bunch of singleton error sequences, not sequences with errors that show up multiple times. Let's see what type of error profile we have. Because they have the most reads, let's consider the v4, v35, and v15 mock community samples from before the pre.cluster step:
+
+```{r, engine='bash'}
+for REGION in v4 v35 v15
+do
+  mothur "#get.groups(fasta=v4.trim.unique.good.filter.unique.fasta, name=v4.trim.unique.good.filter.names, group=v4.good.groups, groups=mock1.v4-mock2.v4-mock3.v4);
+          degap.seqs();
+          seq.error(fasta=current, name=current, reference=HMP_MOCK.filter.fasta, aligned=F, processors=8)"
+done
+```
+
+regions <- c("v4", "v15", "v35")
+
+rep1 <- v4/v4.mock1.unique.error.summary
+rep2 <- v4/v4.mock2.unique.error.summary
+rep3 <- v4/v4.mock3.unique.error.summary
+
+
+```
