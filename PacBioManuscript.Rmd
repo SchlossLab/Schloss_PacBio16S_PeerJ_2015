@@ -1325,7 +1325,8 @@ for REGION in v*
 do
   cat $REGION/$REGION.mock?.precluster.fasta > $REGION/$REGION.mock.precluster.fasta
   mothur "#classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=trainset9_032012.pds.fasta, taxonomy=trainset9_032012.pds_rdp.tax, processors=8);
-	         classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta, reference=gg_13_8_99.fasta, taxonomy=gg_13_8_99.pds_gg.tax, processors=8)"
+	         classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=gg_13_8_99.fasta, taxonomy=gg_13_8_99.pds_gg.tax, processors=8)
+           classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=silva.nr_v119.ng.fasta, taxonomy=silva.nr_v119.tax, processors=8)"
 done
 
 ```
@@ -1461,19 +1462,21 @@ Let's build some dot-plots to show how well the various regions classified for e
 It is commonly said that the error profile in PacBio-generated sequence data are random. As we saw above, the substitution preference was random. However, if the errors are truly random, then we would expect to have a bunch of singleton error sequences, not sequences with errors that show up multiple times. Let's see what type of error profile we have. Because they have the most reads, let's consider the v4, v35, and v15 mock community samples from before the pre.cluster step:
 
 ```{r, engine='bash'}
-for REGION in v4 v35 v15
+for REGION in $(ls -d v*)
 do
-  mothur "#get.groups(fasta=v4.trim.unique.good.filter.unique.fasta, name=v4.trim.unique.good.filter.names, group=v4.good.groups, groups=mock1.v4-mock2.v4-mock3.v4);
+  mothur "#get.groups(fasta=$REGION/$REGION.trim.unique.good.filter.unique.fasta, name=$REGION/$REGION.trim.unique.good.filter.names, group=$REGION/$REGION.good.groups, groups=mock1.$REGION-mock2.$REGION-mock3.$REGION);
           degap.seqs();
-          seq.error(fasta=current, name=current, reference=HMP_MOCK.filter.fasta, aligned=F, processors=8)"
+          seq.error(fasta=current, name=current, reference=$REGION/HMP_MOCK.filter.fasta, aligned=F, processors=8)"
 done
 ```
 
+... on into R ...
+
+```{r}
 regions <- c("v4", "v15", "v35")
-
-rep1 <- v4/v4.mock1.unique.error.summary
-rep2 <- v4/v4.mock2.unique.error.summary
-rep3 <- v4/v4.mock3.unique.error.summary
-
-
+error <- read.table(file="v13/v13.trim.unique.good.filter.unique.pick.ng.error.summary", header=T, row.names=1)
+error.nochim <- error[error$numparents==1 & error$error!=0,]
+one.off <- error.nochim[error.nochim$mismatches==1,]
+table(one.off$weight)
 ```
+
