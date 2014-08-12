@@ -1210,8 +1210,7 @@ Here's what we get out when we run the above code again on the meged groups:
 
 
 ```{r}
-
-regions <- dir(path="./", pattern="v\\d+")
+regions <- dir(path="./", pattern="^v\\d+")
 
 counts <- matrix(rep(0, length(regions)*4), nrow=length(regions))
 rownames(counts) <- regions
