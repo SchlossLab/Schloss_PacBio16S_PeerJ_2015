@@ -1484,6 +1484,9 @@ Let's build some dot-plots to show how well the various regions classified for e
   dev.off()
 ```
 
+
+
+
 It is commonly said that the error profile in PacBio-generated sequence data are random. As we saw above, the substitution preference was random. However, if the errors are truly random, then we would expect to have a bunch of singleton error sequences, not sequences with errors that show up multiple times. Let's see what type of error profile we have. Because they have the most reads, let's consider the v4, v35, and v15 mock community samples from before the pre.cluster step:
 
 ```{r, engine='bash'}
@@ -1498,10 +1501,26 @@ done
 ... on into R ...
 
 ```{r}
-regions <- c("v4", "v15", "v35")
-error <- read.table(file="v13/v13.trim.unique.good.filter.unique.pick.ng.error.summary", header=T, row.names=1)
-error.nochim <- error[error$numparents==1 & error$error!=0,]
+error <- read.table(file="v4.trim.unique.good.filter.unique.pick.ng.error.summary", header=T, row.names=1)
+error.nochim <- error[error$numparents==1,]
 one.off <- error.nochim[error.nochim$mismatches==1,]
-table(one.off$weight)
+one.off.sum <- sum(one.off$weight)
+v4.table <- table(one.off$weight)
+v4.total <- sum(error$weight)
+
+
+
+error <- read.table(file="v35.trim.unique.good.filter.unique.pick.ng.error.summary", header=T, row.names=1)
+error.nochim <- error[error$numparents==1,]
+one.off <- error.nochim[error.nochim$mismatches==1,]
+v35.table <- table(one.off$weight)
+v35.total <- sum(error$weight)
+
+
+error <- read.table(file="v15.trim.unique.good.filter.unique.pick.ng.error.summary", header=T, row.names=1)
+error.nochim <- error[error$numparents==1,]
+one.off <- error.nochim[error.nochim$mismatches==1,]
+v15.table <- table(one.off$weight)
+v15.total <- sum(error$weight)
 ```
 
