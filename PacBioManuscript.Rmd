@@ -1281,7 +1281,7 @@ getOTUCounts <- function(region){
   return(c(perfect[1L,2], nochims[1,3], observed[2,4], observed[4,4], observed[3,4], observed[1,4]))
 }
 
-regions <- dir(path="./", pattern="v\\d+")
+regions <- dir(path="./", pattern="^v\\d+")
 
 otu.table <- t(sapply(regions, getOTUCounts))
 colnames(otu.table) <- c("perfect", "no.chims", "obs.mock", "soil", "mouse", "human")
@@ -1362,7 +1362,7 @@ for(r in regions){
   gg <- getDepths(ggFileName)
 
   silvaFileName <- paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.nr_v119.wang.taxonomy", sep="")
-  silva <- getDepths(silvaFileName)-1 #we have the root on these as a taxonomic level
+  silva <- getDepths(silvaFileName)
   
   write.table(cbind("rdp" = rdp, "gg" = gg), file=paste(r, "/", r, ".tax.compare", sep=""), quote=F)
   
@@ -1374,7 +1374,7 @@ for(r in regions){
   gg <- getDepths(ggMock)
 
   silvaMock <- paste(r, "/", r, ".mock.precluster.nr_v119.wang.taxonomy", sep="")
-  silva <- getDepths(silvaMock)-1 #we have the root on these as a taxonomic level
+  silva <- getDepths(silvaMock)
 
   write.table(cbind("rdp" = rdp, "gg" = gg, "silva"= silva), file=paste(r, "/mock.tax.compare", sep=""), quote=F)  
 }
