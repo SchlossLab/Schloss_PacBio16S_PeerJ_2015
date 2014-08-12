@@ -1390,7 +1390,6 @@ done
 ```
 
 ```{r}
-
 getDepthByLibrary <- function(region){
   count.file <- paste(region, "/", region, ".trim.unique.good.filter.unique.precluster.pick.count_table", sep="")
   count.table <- read.table(file=count.file, header=T, row.names=1)
@@ -1462,25 +1461,27 @@ Let's build some dot-plots to show how well the various regions classified for e
   rownames(gg.sp) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
 
 
+  pdf(file="classification.pdf", width=7, height=7)
   par(mar=c(5, 5, 0.5, 1))
-  dotchart(rdp, xlim=c(0,100), col="black", xlab="Unique reads that classified\nto genus or species level (%)", pch=19)
-  points(x=gg[,"Mock"], y=25:30, pch=15, col="black")
-  points(x=gg[,"Human"], y=22:17, pch=15, col="black")
-  points(x=gg[,"Mouse"], y=14:9, pch=15, col="black")
-  points(x=gg[,"Soil"], y=6:1, pch=15, col="black")
+  dotchart(gg, xlim=c(0,100), col="black", xlab="Unique reads that classified\nto genus or species level (%)", pch=19)
+  points(x=rdp[,"Mock"], y=25:30, pch=15, col="black")
+  points(x=rdp[,"Human"], y=17:22, pch=15, col="black")
+  points(x=rdp[,"Mouse"], y=9:14, pch=15, col="black")
+  points(x=rdp[,"Soil"], y=1:6, pch=15, col="black")
 
   points(x=silva[,"Mock"], y=25:30, pch=17, col="black")
-  points(x=silva[,"Human"], y=22:17, pch=17, col="black")
-  points(x=silva[,"Mouse"], y=14:9, pch=17, col="black")
-  points(x=silva[,"Soil"], y=6:1, pch=17, col="black")
+  points(x=silva[,"Human"], y=17:22, pch=17, col="black")
+  points(x=silva[,"Mouse"], y=9:14, pch=17, col="black")
+  points(x=silva[,"Soil"], y=1:6, pch=17, col="black")
 
 
   points(x=gg.sp[,"Mock"], y=25:30, pch=21, bg="gray")
-  points(x=gg.sp[,"Human"], y=22:17, pch=21, bg="gray")
-  points(x=gg.sp[,"Mouse"], y=14:9, pch=21, bg="gray")
-  points(x=gg.sp[,"Soil"], y=6:1, pch=21, bg="gray")
+  points(x=gg.sp[,"Human"], y=17:22, pch=21, bg="gray")
+  points(x=gg.sp[,"Mouse"], y=9:14, pch=21, bg="gray")
+  points(x=gg.sp[,"Soil"], y=1:6, pch=21, bg="gray")
 
-  legend(x=63, y=12, legend=c("RDP (gen.)", "SILVA (gen.)", "greengenes (gen.+sp.)", "greengenes (sp.)"), pch=c(19, 17, 17, 21), col="black", pt.bg=c("black", "black", "black", "gray"), bg="white")
+  legend(x=63, y=12, legend=c("RDP (gen.)", "SILVA (gen.)", "greengenes (gen.+sp.)", "greengenes (sp.)"), pch=c(15, 17, 19, 21), col="black", pt.bg=c("black", "black", "black", "gray"), bg="white")
+  dev.off()
 ```
 
 It is commonly said that the error profile in PacBio-generated sequence data are random. As we saw above, the substitution preference was random. However, if the errors are truly random, then we would expect to have a bunch of singleton error sequences, not sequences with errors that show up multiple times. Let's see what type of error profile we have. Because they have the most reads, let's consider the v4, v35, and v15 mock community samples from before the pre.cluster step:
