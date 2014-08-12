@@ -1524,3 +1524,21 @@ v15.table <- table(one.off$weight)
 v15.total <- sum(error$weight)
 ```
 
+Let's plot the number of expected errors, assuming they're random, if the fragment is 1458 nt long...
+
+```{r}
+x <- 0:20
+e1 <- 0.0049
+e2 <- 0.0034
+e3 <- 0.002
+e4 <- 0.001
+
+pdf(file="error.rate.pdf")
+plot(x, dbinom(x, 1458, e1), type="l", ylim=c(0,0.35), xlab="Number of errors", ylab="% of full-length 16S rRNA gene sequences", yaxt="n", lwd=3)
+points(x, dbinom(x, 1458, e2), type="l", col="red", lwd=3)
+points(x, dbinom(x, 1458, e3), type="l", col="blue", lwd=3)
+points(x, dbinom(x, 1458, e4), type="l", col="darkgreen", lwd=3)
+axis(2, at=seq(0,0.35,0.05), label=seq(0,35,5), las=1)
+legend(x=12, y=0.30, legend=c("0.49%", "0.34%", "0.20%","0.10%"), lwd=3, col=c("black", "red", "blue", "green"))
+dev.off()
+```
