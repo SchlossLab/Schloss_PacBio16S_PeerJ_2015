@@ -1328,7 +1328,6 @@ do
 	         classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=gg_13_8_99.fasta, taxonomy=gg_13_8_99.pds_gg.tax, processors=8)
            classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=silva.nr_v119.ng.fasta, taxonomy=silva.nr_v119.tax, processors=8)"
 done
-
 ```
         
 Let's see what fraction of each dataset classifies to each taxonomic level by both classification databases
@@ -1352,7 +1351,7 @@ getDepths <- function(taxFileName, cutoff=80){
   return(depths)
 }
 
-regions <- dir(path="./", pattern="v\\d+")
+regions <- dir(path="./", pattern="^v\\d+")
 
 for(r in regions){
   rdpFileName <- paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.pds_rdp.wang.taxonomy", sep="")
@@ -1364,7 +1363,7 @@ for(r in regions){
   silvaFileName <- paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.nr_v119.wang.taxonomy", sep="")
   silva <- getDepths(silvaFileName)
   
-  write.table(cbind("rdp" = rdp, "gg" = gg), file=paste(r, "/", r, ".tax.compare", sep=""), quote=F)
+  write.table(cbind("rdp" = rdp, "gg" = gg, "silva"=silva), file=paste(r, "/", r, ".tax.compare", sep=""), quote=F)
   
   
   rdpMock <- paste(r, "/", r, ".mock.precluster.pds_rdp.wang.taxonomy", sep="")
@@ -1396,7 +1395,7 @@ getDepthByLibrary <- function(region){
   count.file <- paste(region, "/", region, ".trim.unique.good.filter.unique.precluster.pick.count_table", sep="")
   count.table <- read.table(file=count.file, header=T, row.names=1)
   
-  depth.file <- paste(region, "/",  "mock.tax.compare", sep="")
+  depth.file <- paste(region, "/", region, ".tax.compare", sep="")
   depth.table <- read.table(file=depth.file, header=T, row.names=1)
   depth.table$rdp <- factor(depth.table$rdp, levels=0:7)
   depth.table$gg <- factor(depth.table$gg, levels=0:7)
@@ -1435,9 +1434,9 @@ composite[37:48,] <- getDepthByLibrary("v15")
 composite[49:60,] <- getDepthByLibrary("v16")
 composite[61:72,] <- getDepthByLibrary("v19")
 
-composite$region <- c(rep("v4", 8), rep("v35", 8), rep("v13", 8), rep("v15", 8), rep("v16", 8), rep("v19", 8))
-composite$database <- rep(c(rep("rdp", 4), rep("gg", 4)), 6)
-composite$sample <- rep(c("mock", "human", "mouse", "soil"), 12)
+composite$region <- c(rep("v4", 12), rep("v35", 12), rep("v13", 12), rep("v15", 12), rep("v16", 12), rep("v19", 12))
+composite$database <- rep(c(rep("rdp", 4), rep("gg", 4), rep("silva", 4)), 6)
+composite$sample <- rep(c("mock", "human", "mouse", "soil"), 18)
 composite$total <- composite[,"6"] + composite[,"7"]
 write.table(file="taxonomy.depth.analysis", composite, quote=F)
 ```
@@ -1454,23 +1453,34 @@ Let's build some dot-plots to show how well the various regions classified for e
                "Mouse"=data[data$database=="gg" & data$sample=="mouse", "total"], "Soil"=data[data$database=="gg" & data$sample=="soil", "total"])
   rownames(gg) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
 
+  silva <- cbind("Mock"=data[data$database=="silva" & data$sample=="mock", "total"], "Human"=data[data$database=="silva" & data$sample=="human", "total"],
+               "Mouse"=data[data$database=="silva" & data$sample=="mouse", "total"], "Soil"=data[data$database=="silva" & data$sample=="soil", "total"])
+  rownames(silva) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
+
   gg.sp <- cbind("Mock"=data[data$database=="gg" & data$sample=="mock", "X7"], "Human"=data[data$database=="gg" & data$sample=="human", "X7"],
                "Mouse"=data[data$database=="gg" & data$sample=="mouse", "X7"], "Soil"=data[data$database=="gg" & data$sample=="soil", "X7"])
   rownames(gg.sp) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
 
+
   par(mar=c(5, 5, 0.5, 1))
-  dotchart(rdp, xlim=c(0,100), col="black", xlab="Unique reads that classified\nto genus or species level (%)")
-  points(x=gg[,"Mock"], y=25:30, pch=19, col="black")
-  points(x=gg[,"Human"], y=22:17, pch=19, col="black")
-  points(x=gg[,"Mouse"], y=14:9, pch=19, col="black")
-  points(x=gg[,"Soil"], y=6:1, pch=19, col="black")
+  dotchart(rdp, xlim=c(0,100), col="black", xlab="Unique reads that classified\nto genus or species level (%)", pch=19)
+  points(x=gg[,"Mock"], y=25:30, pch=15, col="black")
+  points(x=gg[,"Human"], y=22:17, pch=15, col="black")
+  points(x=gg[,"Mouse"], y=14:9, pch=15, col="black")
+  points(x=gg[,"Soil"], y=6:1, pch=15, col="black")
+
+  points(x=silva[,"Mock"], y=25:30, pch=17, col="black")
+  points(x=silva[,"Human"], y=22:17, pch=17, col="black")
+  points(x=silva[,"Mouse"], y=14:9, pch=17, col="black")
+  points(x=silva[,"Soil"], y=6:1, pch=17, col="black")
+
 
   points(x=gg.sp[,"Mock"], y=25:30, pch=21, bg="gray")
   points(x=gg.sp[,"Human"], y=22:17, pch=21, bg="gray")
   points(x=gg.sp[,"Mouse"], y=14:9, pch=21, bg="gray")
   points(x=gg.sp[,"Soil"], y=6:1, pch=21, bg="gray")
 
-  legend(x=63, y=12, legend=c("RDP (gen.)", "greengenes (gen.+sp.)", "greengenes (sp.)"), pch=c(21,19,21), col=c("black", "black", "black"), pt.bg=c("white", "black", "gray"), bg="white")
+  legend(x=63, y=12, legend=c("RDP (gen.)", "SILVA (gen.)", "greengenes (gen.+sp.)", "greengenes (sp.)"), pch=c(19, 17, 17, 21), col="black", pt.bg=c("black", "black", "black", "gray"), bg="white")
 ```
 
 It is commonly said that the error profile in PacBio-generated sequence data are random. As we saw above, the substitution preference was random. However, if the errors are truly random, then we would expect to have a bunch of singleton error sequences, not sequences with errors that show up multiple times. Let's see what type of error profile we have. Because they have the most reads, let's consider the v4, v35, and v15 mock community samples from before the pre.cluster step:
