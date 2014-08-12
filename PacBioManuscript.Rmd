@@ -1193,7 +1193,7 @@ Unfortunately, those counts are kind of depressing:
 Let's merge the three replicates for each sample like we did for the error analysis and move forward... First we'll make a mapping file and then we'll run merge.groups in mothur
 
 ```{r}
-regions <- dir(path="./", pattern="v\\d+")
+regions <- dir(path="./", pattern="^v\\d+")
 for(r in regions){
   write.table(cbind(paste(colnames(counts), ".", r, sep=""), gsub("\\d", "", colnames(counts))), file=paste(r, "/merge.groups", sep=""), quote=F, row.names=F, col.names=F, sep="\t")
 }
