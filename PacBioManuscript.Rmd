@@ -1136,7 +1136,7 @@ summarizeError <- function(folder, method){
   return(error)
 }
 
-regions <- dir(path="./", pattern="v\\d+")
+regions <- dir(path="./", pattern="^v\\d+")
 
 unique <- unlist(lapply(regions, summarizeError, "unique"))
 precluster <- unlist(lapply(regions, summarizeError, "precluster"))
@@ -1144,12 +1144,13 @@ error <- cbind(unique, precluster)
 rownames(error) <- regions
 
 #         unique  precluster
-#v4  0.001746057 0.000943217
-#v35 0.009064385 0.007661003
 #v13 0.008320245 0.007029193
 #v15 0.003644766 0.001727743
 #v16 0.006742346 0.005426787
 #v19 0.004917835 0.003397170
+#v35 0.009064385 0.007661003
+#v4  0.001746057 0.000943217
+
 ```
 
 We see that even with applying the preclustering the error rates do not approach what we have previously observed with 454 or MiSeq-generated data.
@@ -1360,6 +1361,10 @@ for(r in regions){
 
   ggFileName <- paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.pds_gg.wang.taxonomy", sep="")
   gg <- getDepths(ggFileName)
+
+  silvaFileName <- paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.nr_v119.wang.taxonomy", sep="")
+  silva <- getDepths(silvaFileName)-1 #we have the root on these as a taxonomic level
+  
   write.table(cbind("rdp" = rdp, "gg" = gg), file=paste(r, "/", r, ".tax.compare", sep=""), quote=F)
   
   
@@ -1368,7 +1373,11 @@ for(r in regions){
 
   ggMock <- paste(r, "/", r, ".mock.precluster.pds_gg.wang.taxonomy", sep="")
   gg <- getDepths(ggMock)
-  write.table(cbind("rdp" = rdp, "gg" = gg), file=paste(r, "/mock.tax.compare", sep=""), quote=F)  
+
+  silvaMock <- paste(r, "/", r, ".mock.precluster.nr_v119.wang.taxonomy", sep="")
+  silva <- getDepths(silvaMock)-1 #we have the root on these as a taxonomic level
+
+  write.table(cbind("rdp" = rdp, "gg" = gg, "silva"= silva), file=paste(r, "/mock.tax.compare", sep=""), quote=F)  
 }
 ```
 
@@ -1388,10 +1397,11 @@ getDepthByLibrary <- function(region){
   count.file <- paste(region, "/", region, ".trim.unique.good.filter.unique.precluster.pick.count_table", sep="")
   count.table <- read.table(file=count.file, header=T, row.names=1)
   
-  depth.file <- paste(region, "/", region, ".tax.compare", sep="")
+  depth.file <- paste(region, "/",  "mock.tax.compare", sep="")
   depth.table <- read.table(file=depth.file, header=T, row.names=1)
   depth.table$rdp <- factor(depth.table$rdp, levels=0:7)
   depth.table$gg <- factor(depth.table$gg, levels=0:7)
+  depth.table$silva <- factor(depth.table$silva, levels=0:7)
   
   mock.depth <- depth.table[count.table$mock > 0,]
   human.depth <- depth.table[count.table$human > 0,]
@@ -1408,18 +1418,23 @@ getDepthByLibrary <- function(region){
   mouse.rdp <- 100*summary(mouse.depth$rdp)/nrow(mouse.depth)
   soil.rdp <- 100*summary(soil.depth$rdp)/nrow(soil.depth)
   
-  return(rbind(mock.rdp, human.rdp, mouse.rdp, soil.rdp, mock.gg, human.gg, mouse.gg, soil.gg))
+  mock.silva <- 100*summary(mock.depth$silva)/nrow(mock.depth)
+  human.silva <- 100*summary(human.depth$silva)/nrow(human.depth)
+  mouse.silva <- 100*summary(mouse.depth$silva)/nrow(mouse.depth)
+  soil.silva <- 100*summary(soil.depth$silva)/nrow(soil.depth)
+
+  return(rbind(mock.rdp, human.rdp, mouse.rdp, soil.rdp, mock.gg, human.gg, mouse.gg, soil.gg, mock.silva, human.silva, mouse.silva, soil.silva))
 }
 
 #composite <-array(0, dim=c(8,6,8))
-composite <- data.frame(matrix(rep(0, 8*6*8), ncol=8))
+composite <- data.frame(matrix(rep(0, 8*6*12), ncol=8))
 colnames(composite) <- 0:7
-composite[1:8,] <- getDepthByLibrary("v4");
-composite[9:16,] <- getDepthByLibrary("v35")
-composite[17:24,] <- getDepthByLibrary("v13")
-composite[25:32,] <- getDepthByLibrary("v15")
-composite[33:40,] <- getDepthByLibrary("v16")
-composite[41:48,] <- getDepthByLibrary("v19")
+composite[1:12,] <- getDepthByLibrary("v4");
+composite[13:24,] <- getDepthByLibrary("v35")
+composite[25:36,] <- getDepthByLibrary("v13")
+composite[37:48,] <- getDepthByLibrary("v15")
+composite[49:60,] <- getDepthByLibrary("v16")
+composite[61:72,] <- getDepthByLibrary("v19")
 
 composite$region <- c(rep("v4", 8), rep("v35", 8), rep("v13", 8), rep("v15", 8), rep("v16", 8), rep("v19", 8))
 composite$database <- rep(c(rep("rdp", 4), rep("gg", 4)), 6)
