@@ -1539,6 +1539,6 @@ points(x, dbinom(x, 1458, e2), type="l", col="red", lwd=3)
 points(x, dbinom(x, 1458, e3), type="l", col="blue", lwd=3)
 points(x, dbinom(x, 1458, e4), type="l", col="darkgreen", lwd=3)
 axis(2, at=seq(0,0.35,0.05), label=seq(0,35,5), las=1)
-legend(x=12, y=0.30, legend=c("0.49%", "0.34%", "0.20%","0.10%"), lwd=3, col=c("black", "red", "blue", "green"))
+legend(x=12, y=0.30, legend=c("0.49%", "0.34%", "0.20%","0.10%"), lwd=3, col=c("black", "red", "blue", "darkgreen"))
 dev.off()
 ```
