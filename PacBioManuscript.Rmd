@@ -122,162 +122,68 @@ that were isolated from soil and human and mouse feces.
 
 
 ## Materials and Methods
-**Community DNA.**  We utilized genomic DNA isolated from four communities.
-These same DNA extracts were previously used to develop an Illumina MiSeq-based
-sequencing strategy [ref].  Briefly, we used a “Mock Community” composed of
-genomic DNA from 21 bacterial isolates: *Acinetobacter baumannii* ATCC 17978,
-*Actinomyces odontolyticus* ATCC 17982, *Bacillus cereus* ATCC 10987,
-*Bacteroides vulgatus* ATCC 8482, *Clostridium beijerinckii* ATCC 51743,
-*Deinococcus radiodurans* ATCC 13939, *Enterococcus faecalis* ATCC 47077,
-*Escherichia coli* ATCC 70096, *Helicobacter pylori* ATCC 700392, *Lactobacillus
-gasseri* ATCC 33323, *Listeria monocytogenes* ATCC BAA-679, *Neisseria
-meningitidis* ATCC BAA-335, *Porphyromonas gingivalis* ATCC 33277,
-*Propionibacterium acnes* DSM 16379, *Pseudomonas aeruginosa* ATCC 47085,
-*Rhodobacter sphaeroides* ATCC 17023, *Staphylococcus aureus* ATCC BAA-1718,
-*Staphylococcus epidermidis* ATCC 12228, *Streptococcus agalactiae* ATCC BAA-611,
-*Streptococcus mutans* ATCC 700610, *Streptococcus pneumoniae* ATCC BAA-334. The
-mock community DNA is available through BEI resources (v3.1, HM-278D). Genomic
-DNAs from the three other communities were obtained using the MO BIO PowerSoil
-DNA extraction kit. The human and mouse fecal samples were obtained using
-protocols that were reviewed and approved by the University Committee on Use and
-Care of Animals and the Institutional Review Board at the University of
-Michigan.
+### Community DNA
+We utilized genomic DNA isolated from four communities. These same DNA extracts
+were previously used to develop an Illumina MiSeq-based sequencing strategy
+[ref].  Briefly, we used a “Mock Community” composed of genomic DNA from 21
+bacterial isolates: *Acinetobacter baumannii* ATCC 17978, *Actinomyces
+odontolyticus* ATCC 17982, *Bacillus cereus* ATCC 10987, *Bacteroides vulgatus*
+ATCC 8482, *Clostridium beijerinckii* ATCC 51743, *Deinococcus radiodurans* ATCC
+13939, *Enterococcus faecalis* ATCC 47077, *Escherichia coli* ATCC 70096,
+*Helicobacter pylori* ATCC 700392, *Lactobacillus gasseri* ATCC 33323, *Listeria
+monocytogenes* ATCC BAA-679, *Neisseria meningitidis* ATCC BAA-335,
+*Porphyromonas gingivalis* ATCC 33277, *Propionibacterium acnes* DSM 16379,
+*Pseudomonas aeruginosa* ATCC 47085, *Rhodobacter sphaeroides* ATCC 17023,
+*Staphylococcus aureus* ATCC BAA-1718, *Staphylococcus epidermidis* ATCC 12228,
+*Streptococcus agalactiae* ATCC BAA-611, *Streptococcus mutans* ATCC 700610,
+*Streptococcus pneumoniae* ATCC BAA-334. The mock community DNA is available
+through BEI resources (v3.1, HM-278D). Genomic DNAs from the three other
+communities were obtained using the MO BIO PowerSoil DNA extraction kit. The
+human and mouse fecal samples were obtained using protocols that were reviewed
+and approved by the University Committee on Use and Care of Animals and the
+Institutional Review Board at the University of Michigan.
 
-**Library generation and sequencing.** The DNAs were each amplified in triplicate
-using barcoded primers targeting the V4, V1-V3, V3-V5, V1-V5, V1-V6, and V1-V9
-(Table 1). The primers were synthesized so that the 5’ end of the forward and
-reverse primers were each tagged with a 5-nt barcode sequence to allow
-multiplexing of samples within a single sequencing run. Methods describing PCR,
-amplicon cleanup, and pooling were described previously [ref]. The SMRTbell
-adapters were ligated onto the PCR products and sequenced at the University of
-Michigan DNA Sequencing Core using the P4-C2 chemistry on a PacBio RS II SMRT
-DNA Sequencing System.
+### Library generation and sequencing
+The DNAs were each amplified in triplicate using barcoded primers targeting the
+V4, V1-V3, V3-V5, V1-V5, V1-V6, and V1-V9 (Table 1). The primers were
+synthesized so that the 5’ end of the forward and reverse primers were each
+tagged with a 5-nt barcode sequence to allow multiplexing of samples within a
+single sequencing run. Methods describing PCR, amplicon cleanup, and pooling
+were described previously [ref]. The SMRTbell adapters were ligated onto the PCR
+products and sequenced at the University of Michigan DNA Sequencing Core using
+the P4-C2 chemistry on a PacBio RS II SMRT DNA Sequencing System.
 
-
-
-**Data analysis.** All sequencing data were curated using mothur (v 1.34) and
-analyzed using the R programming language [refs]. Several specific features were
-incorporated to facilitate the analysis of PacBio sequence data. First, because
-non-ambiguous base calls are assigned to Phred quality scores of zero, the
-consensus fastq files were parsed so that scores of zero were interpreted as
-corresponding to an ambiguous base call (i.e. N) in the fastq.info command using
-the pacbio=T option. Second, because the consensus sequence can be generated in
-the correct and reverse complement orientations, a checkorient option was added
-to the trim.seqs command in order to identify the proper orientation. These
-features were incorporated into mothur v.1.30. We identified chimeras and
-assessed error rates in the mock community as described previously using the
-seq.error command in mothur [refs]. Detailed methods are available as a public
-online repository (http://github.com/pschloss/PacBio_16S) and the original data
-and all derivatives can be obtained at FigShare. A standard operating procedure
-for analyzing PacBio data is available on the mothur wiki
+### Data analysis
+All sequencing data were curated using mothur (v 1.34) and analyzed using the R
+programming language [refs]. Several specific features were incorporated to
+facilitate the analysis of PacBio sequence data. First, because non-ambiguous
+base calls are assigned to Phred quality scores of zero, the consensus fastq
+files were parsed so that scores of zero were interpreted as corresponding to an
+ambiguous base call (i.e. N) in the fastq.info command using the pacbio=T
+option. Second, because the consensus sequence can be generated in the correct
+and reverse complement orientations, a checkorient option was added to the
+trim.seqs command in order to identify the proper orientation. These features
+were incorporated into mothur v.1.30. We identified chimeras and assessed error
+rates in the mock community as described previously using the seq.error command
+in mothur [refs]. Detailed methods are available as a public online repository
+(http://github.com/SchlossLab/PacBio_16S) and the original data and all
+derivatives can be obtained at FigShare. A standard operating procedure for
+analyzing PacBio data is available on the mothur wiki
 (http://www.mothur.org/wiki/PacBio_SOP).
 
 
 
+## Results and Discussion
 
+### The PacBio error profile
 
-
-
-
-```{r}
-coverage <- function(folder){
-  suffix <- ".subreads.fasta"
-
-	file <- paste(folder, "/", folder, suffix, sep="")
-	data <- scan(file, what="", quiet=T)
-
-	headers <- data[grepl("^>", data)]
-	headers <- substr(headers, 2, length(headers))
-
-	id <- gsub(".*/(\\d*)/.*", "\\1", headers)
-	start <- as.numeric(gsub(".*/(\\d*)_\\d*", "\\1", headers))
-	end <- as.numeric(gsub(".*/\\d*_(\\d*)", "\\1", headers))
-
-	freq <- table(id)
-	length <- aggregate(end-start, by=list(id), sum)
-
-	data <- matrix(rep(NA, 2*length(freq)), ncol=2)
-	colnames(data) <- c("freq", "length")
-	rownames(data) <- names(freq)
-	data[,"freq"] <- freq[]
-	data[,"length"] <- length$x
-	write.table(data[order(as.numeric(rownames(data))),], file=paste(folder, "/", folder, ".coverage", sep=""), quote=F)
-    return(folder)
-}
-
-lapply(dir(), coverage)
-```
-
-
-Let's go back and extract the coverage data for each of the sequences using another R script:
-
-```{r}
-getCoverage <- function(region){
-  write(region, "")
-	file <- paste(region, "/", list.files(region, pattern="v\\d*.mock?.fasta"), sep="")
-	fasta <- scan(file, what="", quiet=T)
-	seqNames <- fasta[grepl(">", fasta)]
-	seqNames <- gsub(".*/(\\d*)/.*", "\\1", seqNames)
-
-	coverage <- read.table(file=paste("subreads.fasta/", region, "/", region, ".coverage", sep=""), header=T)
-	mock.coverage <- coverage[(seqNames),]
-
-	write.table(mock.coverage, file=paste(region, "/", region, ".ccs.coverage", sep=""))
-}
-
-lapply(dir("./", pattern="v\\d*"), getCoverage)
-```
-
-Let's also calculate the average quality score for all of the trimmed sequences as well as the minimum average quality score over a 50 bp window:
-
-```{r}
-getAverageScore <- function(scoreString){
-  scoreVector <- as.numeric(unlist(strsplit(scoreString, " ")))
-    scoreVector[scoreVector > 72] <- 72
-	return(mean(scoreVector))
-}
-
-getMinRollingAverage <- function(scoreString, windowSize){
-	scoreVector <- as.numeric(unlist(strsplit(scoreString, " ")))
-	scoreVector[scoreVector > 72] <- 72
-	min.avg <- 0
-
-	if(length(scoreVector) > windowSize){
-		avg <- filter(scoreVector, rep(1/windowSize, windowSize), side=1)
-		min.avg <- min(avg, na.rm=T)
-	}
-	return(min.avg)
-}
-
-reportAverageScores <- function(folder, windowSize = 50){
-	write(folder, "")
-	qual <- scan(file=paste(folder, "/", folder, ".mock.qual", sep=""), what="", sep="\n", quiet=T)
-	seq.names <- qual[1:length(qual) %% 2 == 1]
-	seq.names <- gsub(".*/(\\d*)/.*", "\\1", seq.names)
-	seq.scores <- qual[1:length(qual) %% 2 == 0]
-
-	ave.scores <- unlist(lapply(seq.scores, getAverageScore))
-	min.scores <- unlist(lapply(seq.scores, getMinRollingAverage, windowSize))
-
-	report <- cbind(ave.scores, min.scores)
-	rownames(report) <- seq.names
-	colnames(report) <- c("ave", "min")
-
-	write.table(report, paste(folder, "/", folder, ".mock.qreport", sep=""), quote=F)
-}
-
-lapply(dir("./", pattern="v\\d*"), reportAverageScores)
-```
-
-
-We now have all of the data summaries we need to start looking at the relationship between different factors and the sequencing error rates. We begin by looking at the different types of errors in our data.
-
-```{r}
-regions <- dir("./", pattern="v.*")
+```{r error_profile, echo=TRUE, eval=TRUE, tidy=TRUE}
+# May want to put this in its own chunk since it's used throughout
+regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
 
 sub.matrix <- read.table(file=paste(regions[1], "/", regions[1], ".mock.filter.error.matrix", sep=""), header=T, row.names=1)[-7,]
 for(i in 2:length(regions)){
-  sub.matrix <- sub.matrix + read.table(file=paste(regions[i], "/", regions[i], ".mock.filter.error.matrix", sep=""), header=T, row.names=1)[-7,]
+	sub.matrix <- sub.matrix + read.table(file=paste(regions[i], "/", regions[i], ".mock.filter.error.matrix", sep=""), header=T, row.names=1)[-7,]
 }
 
 matches <- c(sub.matrix[1,1], sub.matrix[2,2], sub.matrix[3,3], sub.matrix[4,4])
@@ -310,16 +216,11 @@ deletions <- sum(errors[5,])/sum(errors)			#0.167206
 ambiguous <- sum(errors[6,])/sum(errors)			#0.02157014
 ```
 
-These results indicate that that the overall error rate is 1.93%. Of this error, 36.5% is from substitutions, 45% is from insertions, 16.7% is from deletions, and 2.2% is from ambiguous base calls. There does not appear to be a base bias for subustitutions or insertions; however, there is a tendency towards deleting G's and C's.
-
-Let's look to see whether there are any associations between the type of error and the quality score.
-
-```{r}
-regions <- dir("./", pattern="v.*")
+```{r FigureErrorQualityScore, echo=T, eval=T}
 
 error.quality <- read.table(file=paste(regions[1], "/", regions[1], ".mock.filter.error.quality", sep=""), header=T, row.names=1)[-7,]
 for(i in 2:length(regions)){
-  error.quality <- error.quality + read.table(file=paste(regions[i], "/", regions[i], ".mock.filter.error.quality", sep=""), header=T, row.names=1)[-7,]
+	error.quality <- error.quality + read.table(file=paste(regions[i], "/", regions[i], ".mock.filter.error.quality", sep=""), header=T, row.names=1)[-7,]
 }
 error.quality["72",] <- error.quality["72",] + error.quality["80",]
 error.quality <- error.quality[1:72,]
@@ -355,166 +256,92 @@ axis(1, at=c(1,2,3,4), label=c("Matches", "Substitutions", "Insertions", "Deleti
 title(ylab="Quality score")
 ```
 
-There is a pretty good separtion between the correct and incorrect (substitutions/insertions) base calls. We will use this later to help us develop a plan for screening out sequences that are of low quality.  
+To build a sequence curation pipeline, we first needed to characterize the error
+rate associated with sequencing the 16S rRNA gene. We observed a sequencing
+error rate of 1.9% across the regions within the gene that we tested.
+Insertions, deletions, and substitutions accounted for 45.0, 16.7, and 36.6% of
+the errors, respectively. Ambiguous base calls accounted for 2.2% of the errors.
+The substitution errors were equally likely and all four bases were equally
+likely to cause insertion errors. Interestingly, guanines (44.2%) and cytosines
+(34.3%) were more likely to be deleted than adenines (11.7%) or thymidines
+(9.8%). When we considered the Phred quality score of each base call, we
+observed a median quality score of 72 for correct base calls and scores of 22
+and 20 for substitutions and insertions, respectively (Figure
+ErrorQualityScore). Although there was a broad distribution of quality scores
+with each type of base call, the errors could largely be distinguished from the
+correct base calls.
 
-Let's start by establishing a basic curation method. Let's remove any sequences with a homopolymer length longer than 8, sequences with ambiguous base calls, sequences that don't start and end at the expected positions, and any sequences that were flagged as being chimeras (these aren't sequencing errors).
+
+### A basic sequence curation procedure.
 
 ```{r}
-getMode <- function(x){
-  return(as.numeric(names(sort(table(x), decreasing=T)[1])))
-}
-
-generateComposite <- function(folder){
-	write(folder, "")
-
-  #read everything in
-	coverage <- read.table(file=paste(folder, "/", folder, ".ccs.coverage", sep=""), header=T, row.names=1)
-	mismatches <- read.table(file=paste(folder, "/", folder, ".mismatches", sep=""), header=F, row.names=1)
-	aveq <- read.table(file=paste(folder, "/", folder, ".mock.qreport", sep=""), header=F, skip=1)
-	error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
-	summary <- read.table(file=paste(folder, "/", folder, ".mock.filter.summary", sep=""), header=T, row.names=1)
-
-  #remove chimeras
-	non.chimeras <- error$numparents==1
-
-  coverage <- coverage[non.chimeras,]
-  mismatches <- mismatches[non.chimeras,]
-  aveq <- aveq[non.chimeras,]
-  error <- error[non.chimeras,]
-  summary <- summary[non.chimeras,]
-
-	#fix some column names
-	colnames(mismatches) <- c("barcode", "primer")
-	aveq <- aveq[,-1]
-	colnames(aveq) <- c("aveQ", "minQ")
-
-	mode.start <- getMode(summary$start)
-	mode.end <- getMode(summary$end)
-
-	good.start <- summary$start == mode.start  #find sequences that start at correct location in alignment
-	good.end <- summary$end == mode.end        #find sequences that end at correct location in alignment
-	good.homop <- summary$polymer <= 8         #find sequences with less than or equal to 8 nt
-	good.ambig <- summary$ambig == 0           #find sequences with no ambiguous base calls
-
-	good.sequences <- good.start & good.end & good.homop & good.ambig
-
-	#create composite data frame of good sequences
-	composite <- cbind(error[good.sequences,], coverage[good.sequences,],
-						mismatches[good.sequences,], aveq[good.sequences,],
-						summary[good.sequences,])
-	write.table(composite, paste(folder, "/", folder, ".composite", sep=""), quote=F, sep="\t")
-
-  n.seqs <- nrow(summary)
-  lost.start.stop <- 1- sum(good.start & good.end)/n.seqs
-  lost.homop <- 1 - sum(good.homop)/n.seqs
-  lost.ambig <- 1 - sum(good.ambig)/n.seqs
-  lost.total <- 1 - sum(good.sequences)/n.seqs
-
-  return(c(lost.start.stop, lost.homop, lost.ambig, lost.total))
-}
-
 getInitError <- function(folder){
-  error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
-  error <- error[error$numparents==1,]
-  return(c(sum(error$mismatches), sum(error$total)))
+	error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+	error <- error[error$numparents==1,]
+	return(sum(error$mismatches)/sum(error$total))
 }
-
-getBasicError <- function(folder){
-  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-  return(c(sum(composite$mismatches), sum(composite$total)))
-}
-
-regions <- dir("./", pattern="^v\\d*")
-fraction.lost <- matrix(unlist(lapply(regions, generateComposite)), ncol=4, byrow=T)
-rownames(fraction.lost) <- regions
-colnames(fraction.lost) <- c("start.stop", "homop", "ambig", "total")
-fraction.lost
-
-#    start.stop        homop      ambig      total
-#v4  0.03205128 0.0006275776 0.01739286 0.04410974
-#v13 0.10845623 0.0005600149 0.08381557 0.17304461
-#v35 0.16210726 0.0018959913 0.11565547 0.23469664
-#v15 0.12101535 0.0025580480 0.13183786 0.21979536
-#v16 0.12669288 0.0008737440 0.20008737 0.28877239
-#v19 0.18291262 0.0048543689 0.18485437 0.33145631
-
 
 init.error <- matrix(unlist(lapply(regions, getInitError)), ncol=2, byrow=T)
 rownames(init.error) <- regions
 colnames(init.error) <- c("mismatches", "total")
 init.rates <- init.error[,"mismatches"] / init.error[,"total"]
-init.rates
+total.init.error <- sum(init.error[,"mismatches"])/sum(init.error[,"total"])
+
 #        v13         v15         v16         v19         v35          v4
 #0.023997519 0.018050725 0.025606045 0.022916201 0.025057346 0.008257847
-
-
-total.init.error <- sum(init.error[,"mismatches"])/sum(init.error[,"total"])
 #[1] 0.01925717
 
+
+getBasicError <- function(folder){
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+	good <- composite[composite$reason == "g",]
+	return(sum(good$mismatches)/sum(good$total))
+}
 
 basic.error <- matrix(unlist(lapply(regions, getBasicError)), ncol=2, byrow=T)
 rownames(basic.error) <- regions
 colnames(basic.error) <- c("mismatches", "total")
 basic.rates <- basic.error[,"mismatches"] / basic.error[,"total"]
-basic.rates
+total.basic.error <- sum(basic.error[,"mismatches"])/sum(basic.error[,"total"])
+
 #        v13         v16         v35         v19         v15          v4
 #0.015089630 0.009483316 0.014764301 0.013538793 0.014237063 0.005832224
-
-
-total.basic.error <- sum(basic.error[,"mismatches"])/sum(basic.error[,"total"])
 #[1] 0.01079351
 
+
+# Need to redo this section. Make a supplemental table?
+# fraction.lost <- matrix(unlist(lapply(regions, generateComposite)), ncol=4, byrow=T)
+# rownames(fraction.lost) <- regions
+# colnames(fraction.lost) <- c("start.stop", "homop", "ambig", "total")
+#
+#    start.stop        homop      ambig      total
+# v4  0.03205128 0.0006275776 0.01739286 0.04410974
+# v13 0.10845623 0.0005600149 0.08381557 0.17304461
+# v35 0.16210726 0.0018959913 0.11565547 0.23469664
+# v15 0.12101535 0.0025580480 0.13183786 0.21979536
+# v16 0.12669288 0.0008737440 0.20008737 0.28877239
+# v19 0.18291262 0.0048543689 0.18485437 0.33145631
 ```
 
-This analysis shows us several things. First, the number of non-chimeric reads removed with this basic filter increases with the length of the region being considered. Most reads are removed because of the presence of ambiguous base calls or failing to span the entire region being amplified and sequenced. Second, with our basic pipeline we reduced the overall error rate effectively in half - 1.93 to 1.08%. The error rate of each region was reduced by ~30 to 50% without a clear trend with fragment length. Our task is to now continue to reduce the error rates of these regions by more than 10-fold to match previous results obtained using 454 and MiSeq.
+To establish a simple curation procedure, we culled any sequence that contained
+an ambiguous base call, had a string of the same base repeated 9 or more times,
+did not start and end at the expected alignment coordinates for that region
+of the 16S rRNA gene, or that was chimeric. This reduced the experiment-wide
+error rate from 1.93 to 1.08% across the six regions we considered. This basic
+procedure resulted in the removal of between 4.4 (V4) and 33.1 (V1-V9)% of the
+reads and the percentage of reads removed increased with the length of the
+fragment (Figure PipelineError). For each region, the number of reads removed
+because of the presence of ambiguous base calls was similar to the number of
+reads that were removed for not fully aligning to the correct region within the
+16S rRNA gene. The latter class of errors was generally due to sequence
+truncations that could not be explained.  
 
 
-Because PacBio sequencing is done in a circular manner to produce a conensus sequences, there should be no length effects. Therefore, it stands to reason that the error rate we see in the barcodes and primers, should be the error rate for the entire fragment. If a read has no errors in the barcodes and primers, then we would expect there to be very few errors in the rest of the fragment. If there are a lot of errors, well then we expect a high error rate for the fragment. First, let's plot the error rate for different numbers of mismatches to the barcodes and primers:
+### Identifying correlates of increased sequencing error
 
-```{r}
-plotBarcodePrimerError <- function(folder){
-
-  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-
-  total.mismatch <- composite$barcode + composite$primer
-
-  error.mismatch <- aggregate(composite$error, by=list(total.mismatch), function(x){c(quantile(x, probs=c(0.025, 0.5, 0.975)), length(x))})$x
-	colnames(error.mismatch) <- c("lci", "median", "uci", "n")
-	rownames(error.mismatch) <- 0:(nrow(error.mismatch)-1)
-	error.mismatch[, "n"] <- 100 * error.mismatch[, "n"]/sum(error.mismatch[, "n"])
-
-	par(mar=c(5, 5, 0.5, 0.5))
-	stripchart(composite$error~total.mismatch, vertical=T, method="jitter", pch=19, col="grey", ylab="", yaxt="n", ylim=c(0,0.33))
-	segments(x0=(1:nrow(error.mismatch))-0.25, x1=(1:nrow(error.mismatch))+0.25, y0=error.mismatch[,"median"], lwd=3)
-	segments(x0=(1:nrow(error.mismatch))-0.25, x1=(1:nrow(error.mismatch))+0.25, y0=error.mismatch[,"lci"], lwd=1)
-	segments(x0=(1:nrow(error.mismatch))-0.25, x1=(1:nrow(error.mismatch))+0.25, y0=error.mismatch[,"uci"], lwd=1)
-
-	title(xlab="Total number of mismatches to\nbarcodes and primers", ylab="Error rate (%)")
-	axis(2, at=seq(0, 0.4, 0.1), label=seq(0,40,10), las=2)
-	mtext(1, at=seq(1:nrow(error.mismatch)), text=format(error.mismatch[,"n"], digits=1), line=-1, cex=0.5)
-	text(x=1:nrow(error.mismatch), y=error.mismatch[,"median"], label=format(100*error.mismatch[,"median"], digits=2), pos=3, cex=0.8, font=2)
-	text(1, 0.33, label=toupper(folder), font=2, cex=1.25)
-}
-
-pdf(file="oligo.error.pdf", height=10, width=8)
-par(mfrow=c(3,2))
-lapply(c("v4", "v35", "v13", "v15", "v16", "v19"), plotBarcodePrimerError)
-par(mfrow=c(1,1))
-dev.off()
-
-```
-
-We see that the median error rate does increase with the number of mismatches to the barcodes and primers. Considering the total length of the barcodes and primers does not vary much across the regions, there does't seem to be a consistent association between the error rate of the fragment and the oligos. Let's check it out.
-
-```{r}
-getFragment_BPErrorRates <- function(folder, length){
-  bp.length <- length[folder]
-
-  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-
-	bc.primer <- composite$barcode + composite$primer
-  return(cbind(composite$error, bc.primer/bp.length))
-}
+```{r barcodePrimerAnalysis}
+# need to look at total barcode / primer error rate correlation to full length
+# sequence error rate
 
 oligos.file <- scan("../pacbio.oligos", what="", sep="\n", quiet=T)
 primers <- oligos.file[grepl("primer", oligos.file)]
@@ -522,108 +349,71 @@ region <- gsub(".*(v\\d*)$", "\\1", primers)
 length <- nchar(gsub("primer\t(.*)\t(.*)\t.*", "\\1\\2", primers))+10
 names(length) <- region
 
-regions <- dir("./", pattern="^v.*")
+getFragment_BPErrorRates <- function(folder, length){
+	bp.length <- length[folder]
+
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+	composite <- composite[composite$reason == "g",]
+	bc.primer <- composite$barcode + composite$primer
+
+	return(cbind(composite$error, bc.primer/bp.length))
+}
+
 errors <- lapply(regions, getFragment_BPErrorRates, length)
 
 errors.table <- matrix(errors[[1]], ncol=2, byrow=F)
 for(r in 2:length(length)){
-  errors.table <- rbind(errors.table, matrix(errors[[r]], ncol=2, byrow=F))
+	errors.table <- rbind(errors.table, matrix(errors[[r]], ncol=2, byrow=F))
 }
 colnames(errors.table) <- c("fragment", "oligos")
 
 cor.test(errors.table[, "fragment"], errors.table[,"oligos"])
-
-#  Pearson's product-moment correlation
-#
-#data:  errors.table[, "fragment"] and errors.table[, "oligos"]
-#t = 87.4716, df = 48369, p-value < 2.2e-16
-#alternative hypothesis: true correlation is not equal to 0
-#95 percent confidence interval:
-# 0.3618482 0.3772373
-#sample estimates:
-#      cor
-#0.3695681
-
-
-
-summary(errors.table)
-#    fragment            oligos
-# Min.   :0.000000   Min.   :0.00000  
-# 1st Qu.:0.000000   1st Qu.:0.00000  
-# Median :0.002242   Median :0.00000  
-# Mean   :0.009275   Mean   :0.01388  
-# 3rd Qu.:0.009629   3rd Qu.:0.02041  
-# Max.   :0.316430   Max.   :0.21277  
-
-
 ```
 
-The last two commands shows us that there is a significant correlation between the barcode/primer error rate and the error rate of the rest of the fragment (R=0.37; P<<0.001) and that the average error rates are comparable. Based on this result, it is clear that we want to minimize the number of mismatches to the barcodes and primers.
-
-
-A significant factor in PacBio's consensus sequencing is that repeated rounds of sequencing builds one's confidence in the overall base calls. Using the subread data we have already calcualted the coverage as well as the total length sequenced. We will now assess the error rate as a function of the sequence coverage and the number of bases sequenced. The results should be pretty similar so we'll focus primarily on the level of coverage.
-
-```{r}
-
-#regions <- dir("./", pattern="v\\d.*")
-regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
+```{r FigureCoverageAnalysis}
 clrs <- rainbow(length(regions))
 pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
 names(clrs) <- regions
 
 plotLines <- function(folder){
-  write(folder, "")
-
-  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+	composite <- composite[composite$reason=="g",]
 	error.by.depth <- aggregate(composite$error, by=list(composite$freq), function(x){c(mean=mean(x), quantile(x, prob=c(0.025, 0.975)), n=length(x))})
 
-  error.by.depth <- error.by.depth[error.by.depth$x[,"n"]>=50,] #exclude any coverage values where we don't have at least 50 observations
-  fold.coverage <- error.by.depth[, "Group.1"]
+	error.by.depth <- error.by.depth[error.by.depth$x[,"n"]>=50,] #exclude any coverage values where we don't have at least 50 observations
+	fold.coverage <- error.by.depth[, "Group.1"]
 	error.by.depth <- error.by.depth$x
 
 	mean <- error.by.depth[,"mean"]
-#	lci <- error.by.depth[,"2.5%"]
-#	uci <- error.by.depth[,"97.5%"]
-#	N <- error.by.depth[, "n"]
-#	percent.n <- N/cumsum(N)
 	points(mean~fold.coverage, type="l", lwd=2, col=clrs[folder])
 }
 
-pdf("coverageError.pdf")
 par(mar=c(5,5,0.5, 0.5))
 plot(1, xlim=c(0,60), ylim=c(0,0.05), type="n", xlab="", ylab="", yaxt="n")
 title(xlab="Coverage", ylab="Error rate (%)")
 axis(2, at=seq(0,0.05, 0.01), label=seq(0,5, 1), las=2)
 lapply(regions, plotLines)
 legend(x=40, y=0.05, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
-dev.off()
-
 ```
 
-This plot shows us that the error rates appear to plateau around 10-fold coverage. It is interesting that beyond that, the error rate really doesn't improve much. Let's find out the actual average error rate for each region when we only use reads with more than 10-fold coverage:
-
-```{r}
-
+```{r fixedCoverageErrorRateAnalysis}
 errorAtCoverageCutoff <- function(folder){
-  write(folder, "")
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+	composite <- composite[composite$reason == "g"]
 
-  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-
-  total.seqs <- nrow(composite)
+	total.seqs <- nrow(composite)
 	orig.error <- sum(composite$mismatches)/sum(composite$total)
 
-  deep <- composite$freq >= 10
+	deep <- composite$freq >= 10
 	composite <- composite[deep,]
 
-  covered.seqs <- nrow(composite)
+	covered.seqs <- nrow(composite)
 
 	error <- sum(composite$mismatches)/sum(composite$total)
 	frac.kept <- covered.seqs / total.seqs
 	return(c(orig.error=orig.error, error=error, kept=frac.kept))
 }
 
-regions <- dir("./", pattern="v\\d.*")
 output <- unlist(lapply(regions, errorAtCoverageCutoff))
 output <- matrix(output, ncol=3, byrow=T)
 rownames(output) <- regions
@@ -646,95 +436,74 @@ error.reduction
 
 #      v4      v13      v19      v15      v35      v16
 #51.77766 31.17492 26.95477 26.93670 26.30490 26.13126
-
-
 ```
 
-From this we see that there really is no clear pattern between the length of the region and the error rate or the fraction of sequences that we kept. The reduction in error rate varied between 26.2 (V16) and 51.7% (V4).
-
-
-Next we'll consider the relationship between the sequencing error rate and the average quality score for the read. This should be proportional to the level of coverage. We'll plot the minimum average quality score from the 50-nt sliding window analysis we did above.
-
-```{r}
-#regions <- dir("./", pattern="v\\d.*")
-regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
+```{r FigureMinimumSlidingWindow}
 clrs <- rainbow(length(regions))
 pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
 names(clrs) <- regions
 
 errorMinQualityScore <- function(folder){
-  write(folder, "")
+	write(folder, "")
 
-  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-  binned <- aggregate(composite$error, by=list(round(composite$minQ)), mean)
-  binned <- binned[binned$Group.1 <= 70, ]
-  points(binned$Group.1, binned$x, type="l", col=clrs[folder], lwd=2)
+	binned <- aggregate(composite$error, by=list(round(composite$minQ)), mean)
+	binned <- binned[binned$Group.1 <= 70, ]
+	points(binned$Group.1, binned$x, type="l", col=clrs[folder], lwd=2)
 }
 
-pdf(file="ErrorMinQ.pdf")
 par(mar=c(5,5,0.5, 0.5))
 plot(1, xlim=c(10,75), ylim=c(0,0.10), type="n", yaxt="n", xlab="", ylab="")
 lapply(regions, errorMinQualityScore)
 title(xlab="Minimum average quality score\nwithin a 50-nt window across the full sequence", ylab="Error Rate (%)")
 axis(2, las=2, at=seq(0,0.1,0.02), label=seq(0,10,2))
 legend(x=60, y=0.10, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
-dev.off()
-
 ```
 
-Great - as we increase the threshold, we decrease the error rate. The next question is what to pick as our threshold. Let's see how the fraction of reads remaining changes as we increase the threshold:
-
+<!--
 ```{r}
-
-#regions <- dir("./", pattern="v\\d.*")
-regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
 clrs <- rainbow(length(regions))
 pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
 names(clrs) <- regions
 
 fractionMinQualityScore <- function(folder){
-  write(folder, "")
+write(folder, "")
 
-  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-  binned <- aggregate(composite$error, by=list(round(composite$minQ)), length)
+composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+binned <- aggregate(composite$error, by=list(round(composite$minQ)), length)
 
-  remaining <- 1-cumsum(binned$x)/sum(binned$x)
-  points(binned$Group.1, remaining, type="l", col=clrs[folder], lwd=2)
+remaining <- 1-cumsum(binned$x)/sum(binned$x)
+points(binned$Group.1, remaining, type="l", col=clrs[folder], lwd=2)
 }
 
-pdf(file="fractionMinQ.pdf")
 par(mar=c(5,5,0.5, 0.5))
 plot(1, xlim=c(10,75), ylim=c(0,1), type="n", yaxt="n", xlab="", ylab="")
 lapply(regions, fractionMinQualityScore)
 title(xlab="Minimum average quality score\nwithin a 50-nt window across the full sequence", ylab="Sequences above threshold (%)")
 axis(2, las=2, at=seq(0,1,0.2), label=seq(0,100,20))
 legend(x=10, y=0.30, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
-dev.off()
-
 ```
 
 From this it was difficult to pinpoint a threshold minimum average quality score based on the error rates alone. Let's look at the aggregate error rate for the sequences above the threshold quality score of interest:
 
 ```{r}
-#regions <- dir("./", pattern="v\\d.*")
-regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
 clrs <- rainbow(length(regions))
 pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
 names(clrs) <- regions
 
 aggregateErrorMinQualityScore <- function(folder){
-  write(folder, "")
-  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+write(folder, "")
+composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
 
-  remaining.error <- rep(0, max(composite$minQ)+1)
-  qscores <- 0:max(composite$minQ)
+remaining.error <- rep(0, max(composite$minQ)+1)
+qscores <- 0:max(composite$minQ)
 
-  remaining.error <- unlist(lapply(qscores, function(x){mean(composite[composite$minQ >= x,"error"])}))
-  names(remaining.error) <- qscores
+remaining.error <- unlist(lapply(qscores, function(x){mean(composite[composite$minQ >= x,"error"])}))
+names(remaining.error) <- qscores
 
-  points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
+points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
 }
 
 pdf(file="remainingErrorMin.pdf")
@@ -750,20 +519,18 @@ dev.off()
 Again, there's no clear break point. Let's try calculating the average quality score for the entire read instead...
 
 ```{r}
-#regions <- dir("./", pattern="v\\d.*")
-regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
 clrs <- rainbow(length(regions))
 pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
 names(clrs) <- regions
 
 errorAveQualityScore <- function(folder){
-  write(folder, "")
+write(folder, "")
 
-  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-  binned <- aggregate(composite$error, by=list(round(composite$aveQ)), mean)
-  binned <- binned[binned$Group.1 <= 70, ]
-  points(binned$Group.1, binned$x, type="l", col=clrs[folder], lwd=2)
+binned <- aggregate(composite$error, by=list(round(composite$aveQ)), mean)
+binned <- binned[binned$Group.1 <= 70, ]
+points(binned$Group.1, binned$x, type="l", col=clrs[folder], lwd=2)
 }
 
 pdf(file="ErrorAveQ.pdf")
@@ -779,22 +546,19 @@ dev.off()
 Great - again, as we increase the threshold, we decrease the error rate. Let's see how the fraction of reads remaining changes as we increase the threshold:
 
 ```{r}
-
-#regions <- dir("./", pattern="v\\d.*")
-regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
 clrs <- rainbow(length(regions))
 pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
 names(clrs) <- regions
 
 fractionAveQualityScore <- function(folder){
-  write(folder, "")
+write(folder, "")
 
-  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-  binned <- aggregate(composite$error, by=list(round(composite$aveQ)), length)
+binned <- aggregate(composite$error, by=list(round(composite$aveQ)), length)
 
-  remaining <- 1-cumsum(binned$x)/sum(binned$x)
-  points(binned$Group.1, remaining, type="l", col=clrs[folder], lwd=2)
+remaining <- 1-cumsum(binned$x)/sum(binned$x)
+points(binned$Group.1, remaining, type="l", col=clrs[folder], lwd=2)
 }
 
 pdf(file="fractionAveQ.pdf")
@@ -811,25 +575,22 @@ dev.off()
 The distribution here looks a little tighter across the different regions with something of an inflection around 60%, which corresponds to an average quality score of 55 to 65 for the regions (except for V4 and V1-V9). Let's see what the error rate is for reads with an average quality score above our thersholds:
 
 ```{r}
-
-#regions <- dir("./", pattern="v\\d.*")
-regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
 clrs <- rainbow(length(regions))
 pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
 names(clrs) <- regions
 
 aggregateErrorAveQualityScore <- function(folder){
-  write(folder, "")
-  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+write(folder, "")
+composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
 
-  remaining.error <- rep(0, max(composite$aveQ)+1)
-  qscores <- 0:max(composite$aveQ)
+remaining.error <- rep(0, max(composite$aveQ)+1)
+qscores <- 0:max(composite$aveQ)
 
-  remaining.error <- unlist(lapply(qscores, function(x){mean(composite[composite$aveQ >= x,"error"])}))
-  names(remaining.error) <- qscores
+remaining.error <- unlist(lapply(qscores, function(x){mean(composite[composite$aveQ >= x,"error"])}))
+names(remaining.error) <- qscores
 
-  points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
+points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
 }
 
 pdf(file="remainingErrorAve.pdf")
@@ -845,21 +606,17 @@ dev.off()
 Interestingly, we see that the error rates begin to decline significantly as we increase the threshold past 60. This also corresponds to the steep reduction in the number of remaining reads. Let's propose we use an average quality score threshold of 60 since it produces the most consistent fraction of reads retained and error rate across the different regions. If we do this we get the following error rates:
 
 ```{r}
-
-#regions <- dir("./", pattern="v\\d.*")
-regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
-
 getErrorRateFromAveQ <- function(folder, threshold=60){
-  write(folder, "")
-  composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+write(folder, "")
+composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-  rates <- composite[composite$aveQ >= threshold,]
+rates <- composite[composite$aveQ >= threshold,]
 
-  original.error <- mean(composite[,"error"])
-  remaining.error <- mean(rates[,"error"])
-  fraction.kept <- nrow(rates)/nrow(composite)
+original.error <- mean(composite[,"error"])
+remaining.error <- mean(rates[,"error"])
+fraction.kept <- nrow(rates)/nrow(composite)
 
-  return(c(original.error, remaining.error, fraction.kept))
+return(c(original.error, remaining.error, fraction.kept))
 }
 
 results <- matrix(unlist(lapply(regions, getErrorRateFromAveQ)), ncol=3, byrow=T)
@@ -882,22 +639,21 @@ At this point we are kind of out of tricks to reduce the error rate further beyo
 ```{r}
 
 oligosCoverage <- function(folder){
-  write(folder, "")
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+write(folder, "")
+composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-	mismatch <- composite$barcode + composite$primer
-	good0 <- mismatch == 0 & composite$freq >= 10
-	composite.good0 <- composite[good0,]
+mismatch <- composite$barcode + composite$primer
+good0 <- mismatch == 0 & composite$freq >= 10
+composite.good0 <- composite[good0,]
 
-	good1 <- mismatch <= 1 & composite$freq >= 10
-	composite.good1 <- composite[good1,]
+good1 <- mismatch <= 1 & composite$freq >= 10
+composite.good1 <- composite[good1,]
 
-	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
-										mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
+return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
+mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
 
 }
 
-regions <- dir("./", pattern="^v.*")
 oligos.coverage <- matrix(unlist(lapply(regions, oligosCoverage)), ncol=5, byrow=T)
 rownames(oligos.coverage) <- regions
 colnames(oligos.coverage) <- c("original", "0.error", "0.frac", "1.error", "1.frac")
@@ -913,21 +669,20 @@ oligos.coverage
 
 
 oligosQScore <- function(folder){
-	write(folder, "")
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+write(folder, "")
+composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-	mismatch <- composite$barcode + composite$primer
-	good <- mismatch == 0 & composite$aveQ>= 60
-	composite.good0 <- composite[good,]
+mismatch <- composite$barcode + composite$primer
+good <- mismatch == 0 & composite$aveQ>= 60
+composite.good0 <- composite[good,]
 
-	good1 <- mismatch <= 1 & composite$aveQ >= 60
-	composite.good1 <- composite[good1,]
+good1 <- mismatch <= 1 & composite$aveQ >= 60
+composite.good1 <- composite[good1,]
 
-	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
-										mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
+return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
+mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
 }
 
-regions <- dir("./", pattern="^v.*")
 oligos.qscore <- matrix(unlist(lapply(regions, oligosQScore)), ncol=5, byrow=T)
 rownames(oligos.qscore) <- regions
 colnames(oligos.qscore) <- c("original", "0.error", "0.frac", "1.error", "1.frac")
@@ -942,17 +697,16 @@ oligos.qscore
 
 
 coverageQScore <- function(folder){
-	write(folder, "")
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+write(folder, "")
+composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-	good <- composite$freq >= 10 & composite$aveQ>= 60
-	composite.good <- composite[good,]
+good <- composite$freq >= 10 & composite$aveQ>= 60
+composite.good <- composite[good,]
 
-	return(c(mean(composite[,"error"]), mean(composite.good[,"error"]), nrow(composite.good)/nrow(composite) ))
+return(c(mean(composite[,"error"]), mean(composite.good[,"error"]), nrow(composite.good)/nrow(composite) ))
 
 }
 
-regions <- dir("./", pattern="^v.*")
 coverage.qscore <- matrix(unlist(lapply(regions, coverageQScore)), ncol=3, byrow=T)
 rownames(coverage.qscore) <- regions
 colnames(coverage.qscore) <- c("original", "error", "frac")
@@ -968,22 +722,21 @@ coverage.qscore
 
 
 allFilters <- function(folder){
-	write(folder, "")
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+write(folder, "")
+composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-	mismatch <- composite$barcode + composite$primer
-	good0 <- mismatch == 0 & composite$aveQ>= 60 & composite$freq >= 10
-	composite.good0 <- composite[good0,]
+mismatch <- composite$barcode + composite$primer
+good0 <- mismatch == 0 & composite$aveQ>= 60 & composite$freq >= 10
+composite.good0 <- composite[good0,]
 
-	good1 <- mismatch <= 1 & composite$aveQ >= 60 & composite$freq >= 10
-	composite.good1 <- composite[good1,]
+good1 <- mismatch <= 1 & composite$aveQ >= 60 & composite$freq >= 10
+composite.good1 <- composite[good1,]
 
-	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
-										mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
+return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
+mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
 
 }
 
-regions <- dir("./", pattern="^v.*")
 all.filters <- matrix(unlist(lapply(regions, allFilters)), ncol=5, byrow=T)
 rownames(all.filters) <- regions
 colnames(all.filters) <- c("original", "0.error", "0.frac", "1.error", "1.frac")
@@ -1001,13 +754,58 @@ all.filters
 
 When we take a look at the output from oligos.qscore, oligos.coverage, coverage.qscore, and all.filters it becomes apparent that the oligos.qscore strategy reduces the error rates the most, while having a comparable effect on the number of sequences passing the filter relative to the other methods. When we look at the choice of allowing either no or one difference to the oligos, we find a negligible difference between the error rates of the two options. However, we retain considerably more sequences by allowing a single mismatch to the oligos. So, in the end our strategy to reduce the sequencing error rate is to allow a total of one mismatch to the barcodes and primers and using the average quality score threshold of 60.
 
+-->
+
+In contrast to the 454 Roche and Illumina-based platforms where the sequencing
+quality decays with length, the consensus sequencing approach employed by the
+PacBio sequencer is thought to generate a uniform distribution of errors. This
+makes it impossible to simply trim sequences to high quality regions. Therefore,
+we sought to identify characteristics within sequences that would allow us to
+identify and remove those sequences with errors using three different
+approaches. First, we hypothesized that errors in the barcode and primer would
+be correlated with the error rate for the entire sequence. We observed a modest
+correlation between the error rate within the barcode and primer sequences and
+the error rate of the fragment of interest (R=0.37, P<0.001). This indicated
+that sequences with errors in their barcodes or primers were more likely to have
+errors in the rest of the fragment. There was a small difference in the error
+rate when we allowed zero or one mismatch to the barcodes and primers; however,
+the more stringent requirement of zero mismatches removed a large fraction of
+the reads from the dataset (Figure BarcodePrimerError). Second, we hypothesized
+that increased sequencing coverage should yield lower error rates. We found that
+once we had obtained 10-fold coverage of the fragments, the error rate did not
+change appreciably (Figure ErrorSequenceCoverage). When we compared the error
+rates of reads with at least 10-fold coverage to those with less coverage, we
+reduced the error rate by 26-31% for each region except the V4 region for which
+the error rate was reduced by 52%. Third, based on the earlier analysis
+associating errors with quality scores, we used two quality score-based
+approaches for identifying reads with errors. We calculated the minimum average
+quality score across all 50-nt window within each sequence and we also
+calculated the average quality score across each sequence. We then associated
+both with the error rate of the reads with values above defined thresholds as
+well as the fraction of sequences that would be retained if each threshold were
+selected. By the sliding window approach we did not observe any clear break
+points indicating that one quality score would be better than another. In
+contrast, by the whole sequence quality score average we observed a decrease in
+the error rate and the fraction of sequences retained when the threshold was
+increased above 60 (Figure QualityScoreAverage). When we used this threshold, we
+were able to reduce the error rate by 56 to 75% (Figure ErrorSequenceCoverage).
+We noted that the fraction of reads retained decreased as the length of the
+fragment increased with retention of 86.7% of the V4 reads and 49.8% of the
+V1-V9 reads (Figure ErrorSequenceCoverage). These results demonstrated that each
+of the approaches we evaluated, including culling reads with: mismatches to the
+expected barcodes and primers, less than 10-fold sequencing coverage, and an
+average quality score less than 60, we were able to make meaningful reductions
+in the error rates. With these observations, it was possible to develop a
+sequence curation pipeline to minimize the sequencing error rate. We then
+implemented the basic curation pipeline along with permutations of these three
+thresholds. We observed similar error rates when we required 1 or fewer
+mismatches to the barcodes and primers and an average quality score above 60 as
+when we also required a minimum 10-fold coverage. The overall error rate was
+reduced to 0.63% and an additional 19 (V4) to 54 (V1-V9)% of the reads were
+removed (Figure ErrorSequenceCoverage).
 
 
-
-
-
-
-Let's see what the error rates were:
+### Pre-clustering sequences to further reduce sequencing noise
 
 ```{r}
 summarizeError <- function(folder, method){
@@ -1020,8 +818,6 @@ summarizeError <- function(folder, method){
   error <- sum(nochim$weight * nochim$mismatches) / sum(nochim$weight * nochim$total)
   return(error)
 }
-
-regions <- dir(path="./", pattern="^v\\d+")
 
 unique <- unlist(lapply(regions, summarizeError, "unique"))
 precluster <- unlist(lapply(regions, summarizeError, "precluster"))
@@ -1038,15 +834,44 @@ rownames(error) <- regions
 
 ```
 
-We see that even with applying the preclustering the error rates do not approach what we have previously observed with 454 or MiSeq-generated data.
+Previously, we implemented a pre-clustering algorithm where sequences are sorted
+by their abundance in decreasing order and rare sequences are clustered with a
+more abundant sequence if the rare sequences have fewer mismatches than a
+defined threshold when compared to the more abundant sequence. The recommended
+threshold was a 1-nt difference per 100-bp of sequence data. For example, the
+threshold for 250 bp fragment from the V4 region would be 2 nt or 14 for the
+1458 bp V1-V9 fragments. This approach removes residual PCR and sequencing
+errors while not overwhelming the resolution needed to identify OTUs that are
+based on a 3% distance threshold. Needless to say, this approach would limit
+one’s ability to detect 3 nt differences between V1-V9 sequences. When we apply
+this approach to our PacBio data, we observed a reduction in the error rate
+between 15 (V1-V3 and 	V3-V5) and 53% (V1-V5). The final error rates varied
+between 0.09 (V4) and 0.77% (V3-V5); the full-length, V1-V9, fragments had an
+error rate of 0.34% (Figure ErrorSequenceCoverage). These error rates are 4-5
+times higher than what we have previously observed using the Roche 454 and
+Illumina MiSeq platforms [refs].
 
 
 
-One of the parameters we'd like to know is the number of OTUs per region and sample. To do this, we will need to rarefy our data to a common number of sequences. Let's count the number of reads across all samples:
+### Effects of error rates on OTU assignments
+
+
+The sequencing error rate is known to affect the number of OTUs that are
+observed. For each region, we calculated the number of OTUs we would have
+observed in the mock community if there were no PCR or sequencing errors or
+chimeras, the number of OTUs if there were no chimeras, and the number of OTUs
+observed using the pipeline described above and UCHIME to identify and cull
+chimeras (Table OTU). We also calculated the number of OTUs in the soil, mouse,
+and human samples using the same pipeline with chimera detection and removal.
+Because we wanted to compare all datasets using the same number of reads and
+because a large number of reads from the V1-V9 dataset were removed for quality
+problems, we rarefied all datasets to 354 sequences per dataset. Among the mock
+community samples the number of OTUs increased with error rate. Although the
+variation in the number of OTUs is affected by the error rate, it is also
+affected by the specificity of the PCR primers and the sequence variation within
+the region being amplified.
 
 ```{r}
-regions <- dir(path="./", pattern="^v\\d+")
-
 counts <- matrix(rep(0, length(regions)*12), nrow=length(regions))
 rownames(counts) <- regions
 colnames(counts) <- c("human1", "human2", "human3", "mock1", "mock2", "mock3", "mouse1", "mouse2", "mouse3", "soil1", "soil2", "soil3")
@@ -1078,7 +903,6 @@ Unfortunately, those counts are kind of depressing:
 Let's merge the three replicates for each sample like we did for the error analysis and move forward... First we'll make a mapping file and then we'll run merge.groups in mothur
 
 ```{r}
-regions <- dir(path="./", pattern="^v\\d+")
 for(r in regions){
   write.table(cbind(paste(colnames(counts), ".", r, sep=""), gsub("\\d", "", colnames(counts))), file=paste(r, "/merge.groups", sep=""), quote=F, row.names=F, col.names=F, sep="\t")
 }
@@ -1095,8 +919,6 @@ Here's what we get out when we run the above code again on the meged groups:
 
 
 ```{r}
-regions <- dir(path="./", pattern="^v\\d+")
-
 counts <- matrix(rep(0, length(regions)*4), nrow=length(regions))
 rownames(counts) <- regions
 colnames(counts) <- c("human", "mock","mouse", "soil")
@@ -1134,8 +956,6 @@ getOTUCounts <- function(region){
   return(c(perfect[1L,2], nochims[1,3], observed[2,4], observed[4,4], observed[3,4], observed[1,4]))
 }
 
-regions <- dir(path="./", pattern="^v\\d+")
-
 otu.table <- t(sapply(regions, getOTUCounts))
 colnames(otu.table) <- c("perfect", "no.chims", "obs.mock", "soil", "mouse", "human")
 
@@ -1148,7 +968,10 @@ colnames(otu.table) <- c("perfect", "no.chims", "obs.mock", "soil", "mouse", "hu
 ```
 
 
-Let's see what fraction of each dataset classifies to each taxonomic level by both classification databases
+
+
+
+### Increasing sequence length improves classification
 
 ```{r}
 countGoodBootstraps <- function(nameConf, cutoff=80){
@@ -1168,8 +991,6 @@ getDepths <- function(taxFileName, cutoff=80){
   names(depths) <- seqNames
   return(depths)
 }
-
-regions <- dir(path="./", pattern="^v\\d+")
 
 for(r in regions){
   rdpFileName <- paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.pds_rdp.wang.taxonomy", sep="")
@@ -1304,6 +1125,27 @@ Let's build some dot-plots to show how well the various regions classified for e
   dev.off()
 ```
 
+We classified all of the sequence data we generated using the naïve Bayesian
+classifier using the RDP, SILVA, and greengenes reference taxonomies (Figure
+Classification). In general, increasing the length of the region improved the
+ability to assign the sequence to a genus or species. Interestingly, each of the
+samples we analyzed varied in their ability to assign sequences to the depth of
+genus or species and the reference database that did the best job of classifying
+the sequences varied by sample type. For example, the SILVA reference did the
+best for the human fecal samples and the RDP did the best for the mouse feces
+and soil samples. An advantage of the greengenes database is that it contains
+information for 2,514 species-level lineages for 11% of the reference sequences;
+the other databases only provide taxonomic data to the genus level. Although
+there was a modest association between the length of the fragment and the
+ability to classify sequences to the species-level for the human samples, there
+was no such association for the mouse and soil samples. In fact, at most 6.0% of
+the soil sequences and 4.6% of the mouse sequences could be classified to a
+genus. These results indicate that the ability to classify sequences to the
+genus or species level is a function of read length, sample type, and the
+reference database.  
+
+
+### Sequencing errors are not random
 
 
 # Not sure this is needed...
@@ -1370,151 +1212,25 @@ dev.off()
 ```
 
 
-## Results and Discussion
-**The PacBio error profile.** To build a sequence curation pipeline, we first
-needed to characterize the error rate associated with sequencing the 16S rRNA
-gene. We observed a sequencing error rate of 1.9% across the regions within the
-gene that we tested. Insertions, deletions, and substitutions accounted for
-45.0, 16.7, and 36.6% of the errors, respectively. Ambiguous base calls
-accounted for 2.2% of the errors. The substitution errors were equally likely
-and all four bases were equally likely to cause insertion errors. Interestingly,
-guanines (44.2%) and cytosines (34.3%) were more likely to be deleted than
-adenines (11.7%) or thymidines (9.8%). When we considered the Phred quality
-score of each base call, we observed a median quality score of 72 for correct
-base calls and scores of 22 and 20 for substitutions and insertions,
-respectively (Figure ErrorQualityScore). Although there was a broad distribution
-of quality scores with each type of base call, the errors could largely be
-distinguished from the correct base calls.
+Although there was no obvious bias in the substitution, insertion, or deletion
+patterns, during the pre-clustering analysis we noted that the frequency
+distribution of sequences observed was not uniform. This indicated a lack of
+randomness in the error profile. Because we were able to obtain a large number
+of reads from the V1-V5 (N=5109 sequences), V4 (N=12684), and V3-V5 (N=3677)
+datasets, we investigated the mock communities from these regions further. We
+identified all of the sequences that had a 1-nt difference to the true sequence.
+A majority of these sequences only appeared once; however, we observed sequences
+that appeared 19 (V1-V5), 60 (V4), and 14 (V3-V5) times. Manual inspection of
+these sequences indicated that they were not intra-genomic chimeras, but a
+single base substitution, deletion, and insertion, respectively. The presence of
+these errors at relative abundances between 0.37 and 0.47% indicates that
+removing singleton sequences or OTUs will give a false sense of sequence
+curation since many errors will be observed more than once. Furthermore,
+recently described oligotyping methods would need to be reassessed since those
+methods assume that every base in a sequence is equally likely to be incorrect.
 
-**A basic sequence curation procedure.** To establish a simple curation
-procedure, we culled any sequence that contained an ambiguous base call, had a
-string of the same base repeated 9 or more times, or did not start and end at
-the expected alignment coordinates for that region of the 16S rRNA gene. This
-reduced the experiment-wide error rate from 1.93 to 1.08% across the six regions
-we considered. This basic procedure resulted in the removal of between 4.4 (V4)
-and 33.1 (V1-V9)% of the reads and the percentage of reads removed increased
-with the length of the fragment (Figure PipelineError). For each region, the
-number of reads removed because of the presence of ambiguous base calls was
-similar to the number of reads that were removed for not fully aligning to the
-correct region within the 16S rRNA gene. The latter class of errors was
-generally due to sequence truncations that could not be explained.
 
-**Identifying correlates of increased sequencing error.** In contrast to the 454
-Roche and Illumina-based platforms where the sequencing quality decays with
-length, the consensus sequencing approach employed by the PacBio sequencer is
-thought to generate a uniform distribution of errors. This makes it impossible
-to simply trim sequences to high quality regions. Therefore, we sought to
-identify characteristics within sequences that would allow us to identify and
-remove those sequences with errors using three different approaches. First, we
-hypothesized that errors in the barcode and primer should be correlated with the
-error rate for the entire sequence. We observed a modest correlation between the
-error rate within the barcode and primer sequences and the error rate of the
-fragment of interest (R=0.37, P<0.001). This indicated that sequences with
-errors in their barcodes or primers were more likely to have errors in the rest
-of the fragment. There was a small difference in the error rate when we allowed
-zero or one mismatch to the barcodes and primers; however, the more stringent
-requirement of zero mismatches removed a large fraction of the reads from the
-dataset (Figure BarcodePrimerError). Second, we hypothesized that increased
-sequencing coverage should yield lower error rates. We found that once we had
-obtained 10-fold coverage of the fragments, the error rate did not change
-appreciably (Figure ErrorSequenceCoverage). When we compared the error rates of
-reads with at least 10-fold coverage to those with less coverage, we reduced the
-error rate by 26-31% for each region except the V4 region for which the error
-rate was reduced by 52%. Third, based on the earlier analysis associating errors
-with quality scores, we used two quality score-based approaches for identifying
-reads with errors. We calculated the minimum average quality score across all
-50-nt window within each sequence and we also calculated the average quality
-score across each sequence. We then associated both with the error rate of the
-reads with values above defined thresholds as well as the fraction of sequences
-that would be retained if each threshold were selected. By the sliding window
-approach we did not observe any clear break points indicating that one quality
-score would be better than another. In contrast, by the whole sequence quality
-score average we observed a decrease in the error rate and the fraction of
-sequences retained when the threshold was increased above 60 (Figure
-QualityScoreAverage). When we used this threshold, we were able to reduce the
-error rate by 56 to 75% (Figure ErrorSequenceCoverage). We noted that the
-fraction of reads retained decreased as the length of the fragment increased
-with retention of 86.7% of the V4 reads and 49.8% of the V1-V9 reads (Figure
-ErrorSequenceCoverage). These results demonstrated that each of the approaches
-we evaluated, including culling reads with: mismatches to the expected barcodes
-and primers, less than 10-fold sequencing coverage, and an average quality score
-less than 60, we were able to make meaningful reductions in the error rates.
-With these observations, it was possible to develop a sequence curation pipeline
-to minimize the sequencing error rate. We then implemented the basic curation
-pipeline along with permutations of these three thresholds. We observed similar
-error rates when we required 1 or fewer mismatches to the barcodes and primers
-and an average quality score above 60 as when we also required a minimum 10-fold
-coverage. The overall error rate was reduced to 0.63% and an additional 19 (V4)
-to 54 (V1-V9)% of the reads were removed (Figure ErrorSequenceCoverage).
 
-**Pre-clustering sequences to further reduce sequencing noise.**  Previously, we
-implemented a pre-clustering algorithm where sequences are sorted by their
-abundance in decreasing order and rare sequences are clustered with a more
-abundant sequence if the rare sequences have fewer mismatches than a defined
-threshold when compared to the more abundant sequence. The recommended threshold
-was a 1-nt difference per 100-bp of sequence data. For example, the threshold
-for 250 bp fragment from the V4 region would be 2 nt or 14 for the 1458 bp V1-V9
-fragments. This approach removes residual PCR and sequencing errors while not
-overwhelming the resolution needed to identify OTUs that are based on a 3%
-distance threshold. Needless to say, this approach would limit one’s ability to
-detect 3 nt differences between V1-V9 sequences. When we apply this approach to
-our PacBio data, we observed a reduction in the error rate between 15 (V1-V3 and
-V3-V5) and 53% (V1-V5). The final error rates varied between 0.09 (V4) and 0.77%
-(V3-V5); the full-length, V1-V9, fragments had an error rate of 0.34% (Figure
-ErrorSequenceCoverage). These error rates are 4-5 times higher than what we have
-previously observed using the Roche 454 and Illumina MiSeq platforms [refs].
-
-**Sequencing errors are not random.** Although there was no obvious bias in the
-substitution, insertion, or deletion patterns, during the pre-clustering
-analysis we noted that the frequency distribution of sequences observed was not
-uniform. This indicated a lack of randomness in the error profile. Because we
-were able to obtain a large number of reads from the V1-V5 (N=5109 sequences),
-V4 (N=12684), and V3-V5 (N=3677) datasets, we investigated the mock communities
-from these regions further. We identified all of the sequences that had a 1-nt
-difference to the true sequence. A majority of these sequences only appeared
-once; however, we observed sequences that appeared 19 (V1-V5), 60 (V4), and 14
-(V3-V5) times. Manual inspection of these sequences indicated that they were not
-intra-genomic chimeras, but a single base substitution, deletion, and insertion,
-respectively. The presence of these errors at relative abundances between 0.37
-and 0.47% indicates that removing singleton sequences or OTUs will give a false
-sense of sequence curation since many errors will be observed more than once.
-Furthermore, recently described oligotyping methods would need to be reassessed
-since those methods assume that every base in a sequence is equally likely to be
-incorrect.
-
-**Effects of error rates on OTU assignments.** The sequencing error rate is
-known to affect the number of OTUs that are observed. For each region, we
-calculated the number of OTUs we would have observed in the mock community if
-there were no PCR or sequencing errors or chimeras, the number of OTUs if there
-were no chimeras, and the number of OTUs observed using the pipeline described
-above and UCHIME to identify and cull chimeras (Table OTU). We also calculated
-the number of OTUs in the soil, mouse, and human samples using the same pipeline
-with chimera detection and removal. Because we wanted to compare all datasets
-using the same number of reads and because a large number of reads from the
-V1-V9 dataset were removed for quality problems, we rarefied all datasets to 354
-sequences per dataset. Among the mock community samples the number of OTUs
-increased with error rate. Although the variation in the number of OTUs is
-affected by the error rate, it is also affected by the specificity of the PCR
-primers and the sequence variation within the region being amplified.
-
-**Increasing sequence length improves classification.** We classified all of the
-sequence data we generated using the naïve Bayesian classifier using the RDP,
-SILVA, and greengenes reference taxonomies (Figure Classification). In general,
-increasing the length of the region improved the ability to assign the sequence
-to a genus or species. Interestingly, each of the samples we analyzed varied in
-their ability to assign sequences to the depth of genus or species and the
-reference database that did the best job of classifying the sequences varied by
-sample type. For example, the SILVA reference did the best for the human fecal
-samples and the RDP did the best for the mouse feces and soil samples. An
-advantage of the greengenes database is that it contains information for 2,514
-species-level lineages for 11% of the reference sequences; the other databases
-only provide taxonomic data to the genus level. Although there was a modest
-association between the length of the fragment and the ability to classify
-sequences to the species-level for the human samples, there was no such
-association for the mouse and soil samples. In fact, at most 6.0% of the soil
-sequences and 4.6% of the mouse sequences could be classified to a genus. These
-results indicate that the ability to classify sequences to the genus or species
-level is a function of read length, sample type, and the reference database.
 
 
 ## Conclusions
@@ -1564,8 +1280,16 @@ Research Resources Repository, NIAID, NIH as part of the Human Microbiome
 Project.
 
 
-Funding statement
-This study was supported by grants from the NIH (R01HG005975, R01GM099514 and P30DK034933 to PDS and U54HG004973 to SKH).
-
+## Funding statement
+This study was supported by grants from the NIH (R01HG005975, R01GM099514 and
+P30DK034933 to PDS and U54HG004973 to SKH).
 
 References
+
+
+
+
+Figures
+
+```{r FigureErrorQualityScore, echo=F, eval=T, results='asis'}
+```
