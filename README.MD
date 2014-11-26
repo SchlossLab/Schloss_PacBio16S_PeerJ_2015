@@ -11,7 +11,8 @@ following commands:
 We ran 10 SMRT cells and their data were located in the following folders that
 were housed within a folder called `raw_data`:
 
-<code>  B01_1_Cell2_PacBioRun109_PSchloss311_p15  
+```
+B01_1_Cell2_PacBioRun109_PSchloss311_p15  
 C01_1_Cell3_PacBioRun109_PSchloss315_p16  
 D01_1_Cell4_PacBioRun108_PSchloss310_p13  
 D01_1_Cell4_PacBioRun109_PSchloss316_p4  
@@ -19,6 +20,7 @@ E01_1_Cell5_PacBioRun108_PSchloss311_p15
 E01_1_Cell5_PacBioRun109_PSchloss317_p19  
 F01_1_Cell6_PacBioRun108_PSchloss312_p35  
 H01_1_Cell8_PacBioRun112_PSchloss319_p19</code>
+```
 
 If you substitute the "\_p" for "\_v" you'll see what region each run
 represented. There were two V15 runs and two V19 runs. These regions were
