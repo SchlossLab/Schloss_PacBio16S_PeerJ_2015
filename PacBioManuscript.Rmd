@@ -176,11 +176,6 @@ for analyzing PacBio data is available on the mothur wiki
 
 
 
-For each of these sub-reads' fasta files, we'd like to know the number of
-sub-reads per sequence as well as the length of the pooled subreads. We can run
-this with an R script:
-
-
 
 
 
