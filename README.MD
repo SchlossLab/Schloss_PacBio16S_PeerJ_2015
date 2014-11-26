@@ -19,24 +19,27 @@ D01_1_Cell4_PacBioRun109_PSchloss316_p4
 E01_1_Cell5_PacBioRun108_PSchloss311_p15  
 E01_1_Cell5_PacBioRun109_PSchloss317_p19  
 F01_1_Cell6_PacBioRun108_PSchloss312_p35  
-H01_1_Cell8_PacBioRun112_PSchloss319_p19</code>
+H01_1_Cell8_PacBioRun112_PSchloss319_p19
 ```
 
 If you substitute the "\_p" for "\_v" you'll see what region each run
 represented. There were two V15 runs and two V19 runs. These regions were
 amplified with the following primer sets:
 
-<code>	V19	AGRGTTTGATYMTGGCTCAG	GGYTACCTTGTTACGACTT  
+```
+V19	AGRGTTTGATYMTGGCTCAG	GGYTACCTTGTTACGACTT  
 V16	AGRGTTTGATYMTGGCTCAG	ACRACACGAGCTGACGAC  
 V15	AGRGTTTGATYMTGGCTCAG	CCCGTCAATTCMTTTRAGT  
 V13	AGRGTTTGATYMTGGCTCAG	ATTACCGCGGCTGCTGG  
 V35	CCTACGGGAGGCAGCAG	CCCGTCAATTCMTTTRAGT  
-V4	 GTGCCAGCMGCCGCGGTAA	GGACTACHVGGGTWTCTAAT</code>
+V4	 GTGCCAGCMGCCGCGGTAA	GGACTACHVGGGTWTCTAAT
+```
 
 We also put sequencing indices at the 5' and 3' of the inserts to correspond to
 the different samples:
 
-<code>	mock1	ccaac	ccaac  
+```
+mock1	ccaac	ccaac  
 mock2	ggttg	ccaac  
 mock3	ttggt	ccaac  
 mouse1	aggtg	ccaac  
@@ -47,12 +50,14 @@ human2	acagt	ccaac
 human3	cactg	ccaac  
 soil1	aacca	ccaac  
 soil2	tgtca	ccaac  
-soil3	aaacc	ccaac</code>
+soil3	aaacc	ccaac
+```
 
 
 Putting it all together in an oligos file (pacbio.oligos), we get...
 
-<code>	primer	AGRGTTTGATYMTGGCTCAG	GGYTACCTTGTTACGACTT	v19  
+```
+primer	AGRGTTTGATYMTGGCTCAG	GGYTACCTTGTTACGACTT	v19  
 primer	AGRGTTTGATYMTGGCTCAG	ACRACACGAGCTGACGAC	v16  
 primer	AGRGTTTGATYMTGGCTCAG	CCCGTCAATTCMTTTRAGT	v15  
 primer	AGRGTTTGATYMTGGCTCAG	ATTACCGCGGCTGCTGG	v13  
@@ -69,4 +74,5 @@ barcode	acagt	ccaac	human2
 barcode	cactg	ccaac	human3  
 barcode	aacca	ccaac	soil1  
 barcode	tgtca	ccaac	soil2  
-barcode	aaacc	ccaac	soil3</code>
+barcode	aaacc	ccaac	soil3
+```

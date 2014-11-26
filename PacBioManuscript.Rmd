@@ -1,127 +1,195 @@
 ---
-title: "Sequencing 16S rRNA gene fragments using the Pacific Biosciences DNA sequencer"
+title: "Sequencing 16S rRNA gene fragments using the PacBio SMRT DNA sequencing system"
 author: "Patrick D. Schloss"
 date: "July 21, 2014"
-output: html_document
+output:
+	word_document:
+		keep_md: true
 ---
 
-##Pipeline development
-We were interested in the ability of PacBio to sequence varying sized regions from the 16S rRNA gene we fragments from the gene using DNA from a defined mock community, feces from a human and mouse, and soil. This notebook provides the mothur code and scripts that we used to process the results of our analysis. 
+**Running title:** 16S rRNA genes sequencing with PacBio
 
-We ran 10 SMRT cells and their data were located in the following folders that were housed within a folder called `raw_data`:  
-<code>  B01_1_Cell2_PacBioRun109_PSchloss311_p15  
-	C01_1_Cell3_PacBioRun109_PSchloss315_p16  
-	D01_1_Cell4_PacBioRun108_PSchloss310_p13  
-	D01_1_Cell4_PacBioRun109_PSchloss316_p4  
-	E01_1_Cell5_PacBioRun108_PSchloss311_p15  
-	E01_1_Cell5_PacBioRun109_PSchloss317_p19  
-	F01_1_Cell6_PacBioRun108_PSchloss312_p35  
-    H01_1_Cell8_PacBioRun112_PSchloss319_p19</code>
+**Authors:** Patrick D. Schloss^1#^, Sarah L. Westcott^1^, Matthew L. Jenior^1^,
+and Sarah K. Highlander^2^
 
-If you substitute the "\_p" for "\_v" you'll see what region each run represented. There were two V15 runs and two V19 runs. These regions were amplified with the following primer sets:
+* Correspondence:	pschloss@umich.edu
+734.647.5801
+Department of Microbiology and Immunology
+University of Michigan
+5618 Medical Sciences II
+1500 W. Medical Center Dr.
+Ann Arbor, MI  48109
 
-<code>	V19	AGRGTTTGATYMTGGCTCAG	GGYTACCTTGTTACGACTT  
-	V16	AGRGTTTGATYMTGGCTCAG	ACRACACGAGCTGACGAC  
-	V15	AGRGTTTGATYMTGGCTCAG	CCCGTCAATTCMTTTRAGT  
-	V13	AGRGTTTGATYMTGGCTCAG	ATTACCGCGGCTGCTGG  
-	V35	CCTACGGGAGGCAGCAG	CCCGTCAATTCMTTTRAGT  
-	V4	 GTGCCAGCMGCCGCGGTAA	GGACTACHVGGGTWTCTAAT</code>
-
-We also put sequencing indices at the 5' and 3' of the inserts to correspond to the different samples:
-
-<code>	mock1	ccaac	ccaac  
-	mock2	ggttg	ccaac  
-	mock3	ttggt	ccaac  
-	mouse1	aggtg	ccaac  
-	mouse2	cttac	ccaac  
-	mouse3	gaact	ccaac  
-	human1	tccga	ccaac  
-	human2	acagt	ccaac  
-	human3	cactg	ccaac  
-	soil1	aacca	ccaac  
-	soil2	tgtca	ccaac  
-	soil3	aaacc	ccaac</code>
+1	Department of Microbiology and Immunology, 1500 W. Medical Center, University
+of Michigan, Ann Arbor, MI 48109
+2	J Craig Venter Institute, 4120 Torrey Pines Road, La Jolla, CA 92307
 
 
-Putting it all together in an oligos file (pacbio.oligos), we get...
-
-<code>	primer	AGRGTTTGATYMTGGCTCAG	GGYTACCTTGTTACGACTT	v19  
-	primer	AGRGTTTGATYMTGGCTCAG	ACRACACGAGCTGACGAC	v16  
-	primer	AGRGTTTGATYMTGGCTCAG	CCCGTCAATTCMTTTRAGT	v15  
-	primer	AGRGTTTGATYMTGGCTCAG	ATTACCGCGGCTGCTGG	v13  
-	primer	CCTACGGGAGGCAGCAG	CCCGTCAATTCMTTTRAGT	v35  
-	primer	GTGCCAGCMGCCGCGGTAA	GGACTACHVGGGTWTCTAAT	v4  
-	barcode	ccaac	ccaac	mock1  
-	barcode	ggttg	ccaac	mock2  
-	barcode	ttggt	ccaac	mock3  
-	barcode	aggtg	ccaac	mouse1  
-	barcode	cttac	ccaac	mouse2  
-	barcode	gaact	ccaac	mouse3  
-	barcode	tccga	ccaac	human1  
-	barcode	acagt	ccaac	human2  
-	barcode	cactg	ccaac	human3  
-	barcode	aacca	ccaac	soil1  
-	barcode	tgtca	ccaac	soil2  
-	barcode	aaacc	ccaac	soil3</code>
-
-Let's use bash to clean up the folders a bit since these file names are long and unwieldy. We'll start by creating a folder called  `ccs.fastq`. We'll transfrer the fastqs from the `raw_data` folder into into region-specific folders: 
+## Abstract
 
 
-```{r engine='bash'}
-  mkdir ccs.fastqs
-  cd ccs.fastqs
-  mkdir v19 v16 v15 v13 v35 v4
-  for REGION in 19 16 15 13 35 4
-  do
-      cp ../raw_data/*_p$REGION/Analysis_Results/*ccs.fastq v$REGION
-  done
-  
-  ls */*fastq | cut -f 1 -d "/" | sort | uniq -c
-```
 
-This last command allows us to see that every region has 3 \*.ccs.fastq files, except for the v15 (6 files) and v19 (4 files) regions. Let's go ahead and concatenate those fastq files and dump them into individual folders.
+### Keywords
+Microbial ecology, bioinformatics, sequencing error
 
-```{r engine='bash'}
-cd ../
-mkdir v19 v16 v15 v13 v35 v4
 
-for REGION in $(ls -d v*)
-do
-    > $REGION/$REGION.fastq
-    for FILE in ccs.fastqs/$REGION/*.ccs.fastq
-    do
-        cat $FILE >> $REGION/$REGION.fastq
-    done
-done
-cd ../
-```
 
-We'd also like to concatenate the subread fasta files so that we can see how many base pairs were sequenced for each fragment:
+## Introduction
+The advent of so-called next generations sequencing technologies have introduced
+considerable advances in the field of microbial ecology. Clone-based Sanger
+sequencing of the 16S rRNA gene has largely been replaced by various platforms
+produced by 454/Roche [ref], Illumina [ref], and IonTorrent [ref]. It was once
+common to sequence fewer than 100 16S rRNA gene sequence from several samples
+using the Sanger approach. Now it is common to generate thousands of sequences
+from each of several hundred samples [ref]. This advance in throughput has come
+at the cost of read length. Sanger sequencing regularly generated 800 nt per
+read and because the DNA was cloned, it was possible to obtain multiple reads
+per fragment to yield a full-length sequence [ref]. At a cost of approximately
+$8 (US) per sequencing read, most researchers have effectively decided that
+full-length sequences are not worth the increased cost relative to the cost of
+the next-generation approaches.
 
-```{r engine='bash'}
-mkdir subreads.fasta
-cd subreads.fasta
+Each of these sequencing platforms has been primarily created to perform genome
+sequencing. When sequencing a genome, it is assumed that the same base of DNA
+will be sequenced multiple times and the consensus of multiple sequence reads is
+used to generate contigs. Thus, although an individual base call may have a high
+error rate, the consensus sequence will have a low error rate. To sequence the
+16S rRNA gene researchers use conserved primers to amplify a sub-region from
+within the gene that is isolated from many organisms. Because of the fragments
+are not cloned, it is not possible to obtain high sequence coverage from the
+same DNA molecule using these platforms. Thus, to reduce sequencing error rates
+it has become imperative to develop sequence curation and denoising algorithms.
+There has been a tradeoff between read length, number of reads per sample, and
+the error rate. For instance, we recently demonstrated that using the Illumina
+MiSeq and the 454 Roche Titanium platforms the raw error rate varies between 1
+and 2% [refs]. Yet, it was possible to obtain error rates below 0.02% by
+adopting various denoising algorithms. However, the resulting fragments were
+only 250 bp. In the case of 454 Roche Titanium, extending the length of the
+fragment introduces length-based errors and in the case of the Illumina MiSeq,
+increasing the length of the fragment reduces the overlap between the read pairs
+reducing the ability of each read to mutually reduce the sequencing error.
+Although both of these platforms enjoy widespread use in the field, the MiSeq
+platform is emerging as the leader because of the ability to sequence 15-20
+million fragments that can be distributed across hundreds of samples for less
+than $5000 (US).
 
-mkdir v19 v16 v15 v13 v35 v4
-for REGION in 19 16 15 13 35 4
-do
-    cp ../raw_data/*_p$REGION/Analysis_Results/*subreads.fasta v$REGION > v$REGION/v$REGION.subreads.fasta
+As these sequencing platforms have grown in popularity, there has been a decline
+in the number of full-length 16S rRNA genes being deposited into GenBank that
+could serve as references. This is particularly frustrating since the
+technologies have significantly reduced our limit of detection only to identify
+novel populations for which we lack full-length reference sequences. A related
+problem is the perceived limitation that the short reads generated by the 454
+Roche and Illumina platforms cannot be reliably classified to the genus or
+species level [ref]. Previous investigators have utilized simulations to
+demonstrate that increased read lengths usually increase the accuracy and
+sensitivity of classification against reference databases [ref]. There is
+clearly a need to develop sequencing technologies that will allow researchers to
+generate high quality full-length 16S rRNA gene sequences in a high throughput
+manner.
 
-    for FILE in v$REGION/*.subreads.fasta
-    do
-        cat $FILE >> v$REGION/v$REGION.subreads.fasta
-    done
-done
-```
+New advances in single molecule sequencing technologies, such as the platform
+produced by Pacific Biosciences (PacBio), offer the opportunity to once again
+obtain full-length sequence reads with a high depth of coverage from a large
+number of samples. To this point, the PacBio Single Molecule, Real-Time (SMRT)
+DNA Sequencing System has received limited application in the microbial ecology
+research domain [ref]. The SMRT system ligates hairpin adapters (i.e. SMRTbells)
+to the ends of double-stranded DNA. Although the DNA molecule is linear, it is
+effectively circularized allowing the sequencing polymerase to process around
+the molecule multiple times. According to Pacific Biosciences the platform is
+able to generate median read lengths longer than 8 kb with the P4-C2 chemistry;
+however, the single pass error rate of is 12-15%
+[http://files.pacb.com/pdf/PacBio_RS_II_Brochure.pdf]. Given the circular nature
+of the DNA fragment, the full read length can be used to cover the DNA fragment
+multiple times resulting in a reduced error rate. Therefore, one should be able
+to obtain multiple coverage of the full 16S rRNA gene at a reduced error rate.
 
-For each of these subreads fasta files, we'd like to know the number of subreads per sequence as well as the length of the pooled subreads. We can run this with an R script:
+Despite the opportunity to potentially generate high-quality full-length
+sequences, the Pacific Biosciences platform has not been widely adopted for
+sequencing 16S rRNA genes. Previous studies utilizing the technology have
+removed reads with mismatched primers and barcodes, ambiguous base calls, and
+low quality scores; however, the error rates associated with these criteria were
+not reported [ref]. Others have utilized the platform without describing the
+bioinformatic pipeline that was utilized [ref]. In the current study, we sought
+to assess the quality of data generated by the Pacific Biosciences sequencer and
+whether it could fill the need for generating high-quality, full-length sequence
+data. We hypothesized that by modulating the 16S rRNA gene fragment length we
+could alter the read depth and obtain reads longer than are currently available
+by the 454 Roche and Illumina platforms but with the same quality. To test this
+hypothesis, we developed a sequence curation pipeline that was optimized by
+reducing the sequencing error rate of a mock bacterial community with known
+composition. The resulting pipeline was then applied to 16S rRNA gene fragments
+that were isolated from soil and human and mouse feces.
+
+
+## Materials and Methods
+**Community DNA.**  We utilized genomic DNA isolated from four communities.
+These same DNA extracts were previously used to develop an Illumina MiSeq-based
+sequencing strategy [ref].  Briefly, we used a “Mock Community” composed of
+genomic DNA from 21 bacterial isolates: *Acinetobacter baumannii* ATCC 17978,
+*Actinomyces odontolyticus* ATCC 17982, *Bacillus cereus* ATCC 10987,
+*Bacteroides vulgatus* ATCC 8482, *Clostridium beijerinckii* ATCC 51743,
+*Deinococcus radiodurans* ATCC 13939, *Enterococcus faecalis* ATCC 47077,
+*Escherichia coli* ATCC 70096, *Helicobacter pylori* ATCC 700392, *Lactobacillus
+gasseri* ATCC 33323, *Listeria monocytogenes* ATCC BAA-679, *Neisseria
+meningitidis* ATCC BAA-335, *Porphyromonas gingivalis* ATCC 33277,
+*Propionibacterium acnes* DSM 16379, *Pseudomonas aeruginosa* ATCC 47085,
+*Rhodobacter sphaeroides* ATCC 17023, *Staphylococcus aureus* ATCC BAA-1718,
+*Staphylococcus epidermidis* ATCC 12228, *Streptococcus agalactiae* ATCC BAA-611,
+*Streptococcus mutans* ATCC 700610, *Streptococcus pneumoniae* ATCC BAA-334. The
+mock community DNA is available through BEI resources (v3.1, HM-278D). Genomic
+DNAs from the three other communities were obtained using the MO BIO PowerSoil
+DNA extraction kit. The human and mouse fecal samples were obtained using
+protocols that were reviewed and approved by the University Committee on Use and
+Care of Animals and the Institutional Review Board at the University of
+Michigan.
+
+**Library generation and sequencing.** The DNAs were each amplified in triplicate
+using barcoded primers targeting the V4, V1-V3, V3-V5, V1-V5, V1-V6, and V1-V9
+(Table 1). The primers were synthesized so that the 5’ end of the forward and
+reverse primers were each tagged with a 5-nt barcode sequence to allow
+multiplexing of samples within a single sequencing run. Methods describing PCR,
+amplicon cleanup, and pooling were described previously [ref]. The SMRTbell
+adapters were ligated onto the PCR products and sequenced at the University of
+Michigan DNA Sequencing Core using the P4-C2 chemistry on a PacBio RS II SMRT
+DNA Sequencing System.
+
+
+
+**Data analysis.** All sequencing data were curated using mothur (v 1.34) and
+analyzed using the R programming language [refs]. Several specific features were
+incorporated to facilitate the analysis of PacBio sequence data. First, because
+non-ambiguous base calls are assigned to Phred quality scores of zero, the
+consensus fastq files were parsed so that scores of zero were interpreted as
+corresponding to an ambiguous base call (i.e. N) in the fastq.info command using
+the pacbio=T option. Second, because the consensus sequence can be generated in
+the correct and reverse complement orientations, a checkorient option was added
+to the trim.seqs command in order to identify the proper orientation. These
+features were incorporated into mothur v.1.30. We identified chimeras and
+assessed error rates in the mock community as described previously using the
+seq.error command in mothur [refs]. Detailed methods are available as a public
+online repository (http://github.com/pschloss/PacBio_16S) and the original data
+and all derivatives can be obtained at FigShare. A standard operating procedure
+for analyzing PacBio data is available on the mothur wiki
+(http://www.mothur.org/wiki/PacBio_SOP).
+
+
+
+
+
+For each of these sub-reads' fasta files, we'd like to know the number of
+sub-reads per sequence as well as the length of the pooled subreads. We can run
+this with an R script:
+
+
+
+
 
 ```{r}
 coverage <- function(folder){
   suffix <- ".subreads.fasta"
 
 	file <- paste(folder, "/", folder, suffix, sep="")
-	data <- scan(file, what="", quiet=T)	
+	data <- scan(file, what="", quiet=T)
 
 	headers <- data[grepl("^>", data)]
 	headers <- substr(headers, 2, length(headers))
@@ -131,7 +199,7 @@ coverage <- function(folder){
 	end <- as.numeric(gsub(".*/\\d*_(\\d*)", "\\1", headers))
 
 	freq <- table(id)
-	length <- aggregate(end-start, by=list(id), sum)	
+	length <- aggregate(end-start, by=list(id), sum)
 
 	data <- matrix(rep(NA, 2*length(freq)), ncol=2)
 	colnames(data) <- c("freq", "length")
@@ -143,45 +211,8 @@ coverage <- function(folder){
 }
 
 lapply(dir(), coverage)
-
 ```
 
-Now we'd like to generate fasta and quality score files for each ccs file. When we do this, it is critical that we set the pacbio parameter to T. This is because by default PacBio will assign a base call even if the quality score is zero:
-
-
-```{r engine='bash'}
-cd ../
-
-for REGION in v*
-do
-    mothur "#fastq.info(fastq=$REGION/$REGION.fastq, pacbio=T, outputdir=./$REGION/)"
-done
-```
-
-Using the primer and barcode information from above, we can make region-specific oligos files and put them into the regional folders:
-
-```{r engine='bash'}
-for REGION in v*
-do
-    grep ""$REGION"" pacbio.oligos > $REGION/$REGION.oligos
-    grep "barcode" pacbio.oligos >> $REGION/$REGION.oligos
-done
-```
-
-Now we're all set to run some mothur commands. Since each file is a mixture of our mock community and data from soil, human feces, and mouse feces, we need to split the fasta and qual files by barcode. Let's initially be generous and allow for 2 mismatches to each barcode and 4 mismatches to each primer. To keep things simple, we'll concatenate the three mock community fasta, quality score, and groups files. We modified the source code to output the total number of mismatches to the barcodes and primers on the header line for each sequence in the trim file.
-
-```{r engine='bash'}
-for REGION in v*
-do
-    cd $REGION
-    mothur "#trim.seqs(fasta=$REGION.fasta, qfile=$REGION.qual, oligos=$REGION.oligos, checkorient=T, pdiffs=6, bdiffs=4, allfiles=T, processors=8)"
-    cat $REGION*mock?.$REGION.fasta > $REGION.mock.fasta
-    cat $REGION*mock?.$REGION.qual > $REGION.mock.qual
-    cat $REGION*mock?.$REGION.groups > $REGION.mock.groups
-    grep ">" $REGION.mock.fasta > $REGION.mismatches
-    cd ../
-done
-```
 
 Let's go back and extract the coverage data for each of the sequences using another R script:
 
@@ -195,10 +226,9 @@ getCoverage <- function(region){
 
 	coverage <- read.table(file=paste("subreads.fasta/", region, "/", region, ".coverage", sep=""), header=T)
 	mock.coverage <- coverage[(seqNames),]
-	
+
 	write.table(mock.coverage, file=paste(region, "/", region, ".ccs.coverage", sep=""))
 }
-
 
 lapply(dir("./", pattern="v\\d*"), getCoverage)
 ```
@@ -214,13 +244,13 @@ getAverageScore <- function(scoreString){
 
 getMinRollingAverage <- function(scoreString, windowSize){
 	scoreVector <- as.numeric(unlist(strsplit(scoreString, " ")))
-    scoreVector[scoreVector > 72] <- 72
-    min.avg <- 0
-    
-    if(length(scoreVector) > windowSize){
-        avg <- filter(scoreVector, rep(1/windowSize, windowSize), side=1)
-        min.avg <- min(avg, na.rm=T)
-    }
+	scoreVector[scoreVector > 72] <- 72
+	min.avg <- 0
+
+	if(length(scoreVector) > windowSize){
+		avg <- filter(scoreVector, rep(1/windowSize, windowSize), side=1)
+		min.avg <- min(avg, na.rm=T)
+	}
 	return(min.avg)
 }
 
@@ -233,28 +263,17 @@ reportAverageScores <- function(folder, windowSize = 50){
 
 	ave.scores <- unlist(lapply(seq.scores, getAverageScore))
 	min.scores <- unlist(lapply(seq.scores, getMinRollingAverage, windowSize))
-	
+
 	report <- cbind(ave.scores, min.scores)
 	rownames(report) <- seq.names
 	colnames(report) <- c("ave", "min")
-	
+
 	write.table(report, paste(folder, "/", folder, ".mock.qreport", sep=""), quote=F)
 }
 
 lapply(dir("./", pattern="v\\d*"), reportAverageScores)
 ```
 
-We are now ready to calculate the error rate for the various regions using the mock community and the HMP_MOCK sequence data. We will use mothur to align the sequences to HMP_MOCK.align, determine the start and end positions of the alignment, and calculate the error rate.
-
-```{r engine='bash'}
-for REGION in v*
-do
-    mothur "#align.seqs(fasta=$REGION/$REGION.mock.fasta, reference=HMP_MOCK.align, processors=8, outputdir=./$REGION/);
-        filter.seqs(fasta=$REGION/$REGION.mock.align-HMP_MOCK.align, vertical=T);
-        summary.seqs();
-        seq.error(fasta=$REGION/$REGION.mock.filter.fasta, reference=$REGION/HMP_MOCK.filter.fasta, report=$REGION/$REGION.mock.align.report, qfile=$REGION/$REGION.mock.qual, processors=8);"
-done
-```
 
 We now have all of the data summaries we need to start looking at the relationship between different factors and the sequencing error rates. We begin by looking at the different types of errors in our data.
 
@@ -274,14 +293,14 @@ error.rate <- 100 * sum(errors) / total				#1.925717
 
 subst.bias <- apply(errors[1:4,1:4], 2, sum)/apply(sub.matrix[1:4,1:4], 2, sum)
 subst.bias/sum(subst.bias)
-#       rA        rT        rG        rC 
-#0.2247412 0.2748158 0.2392554 0.2611875 
+#       rA        rT        rG        rC
+#0.2247412 0.2748158 0.2392554 0.2611875
 #these are more or less equal to each other
 
 insert.bias <- (sub.matrix[,"rGap"]/apply(sub.matrix, 1, sum))[1:4]
 insert.bias/sum(insert.bias)
-#       qA        qT        qG        qC 
-#0.2364246 0.2432987 0.2425315 0.2777452 
+#       qA        qT        qG        qC
+#0.2364246 0.2432987 0.2425315 0.2777452
 #these are more or less equal to each other
 
 delete.bias <- (sub.matrix["qGap",]/apply(sub.matrix, 2, sum))[1:4]
@@ -342,7 +361,7 @@ title(ylab="Quality score")
 ```
 
 There is a pretty good separtion between the correct and incorrect (substitutions/insertions) base calls. We will use this later to help us develop a plan for screening out sequences that are of low quality.  
-  
+
 Let's start by establishing a basic curation method. Let's remove any sequences with a homopolymer length longer than 8, sequences with ambiguous base calls, sequences that don't start and end at the expected positions, and any sequences that were flagged as being chimeras (these aren't sequencing errors).
 
 ```{r}
@@ -368,36 +387,34 @@ generateComposite <- function(folder){
   aveq <- aveq[non.chimeras,]
   error <- error[non.chimeras,]
   summary <- summary[non.chimeras,]
-  
+
 	#fix some column names
 	colnames(mismatches) <- c("barcode", "primer")
-    aveq <- aveq[,-1]
-    colnames(aveq) <- c("aveQ", "minQ")
-    
+	aveq <- aveq[,-1]
+	colnames(aveq) <- c("aveQ", "minQ")
 
 	mode.start <- getMode(summary$start)
 	mode.end <- getMode(summary$end)
 
-    good.start <- summary$start == mode.start  #find sequences that start at correct location in alignment
-    good.end <- summary$end == mode.end        #find sequences that end at correct location in alignment
+	good.start <- summary$start == mode.start  #find sequences that start at correct location in alignment
+	good.end <- summary$end == mode.end        #find sequences that end at correct location in alignment
 	good.homop <- summary$polymer <= 8         #find sequences with less than or equal to 8 nt
-    good.ambig <- summary$ambig == 0           #find sequences with no ambiguous base calls
-    
-	good.sequences <- good.start & good.end & good.homop & good.ambig
+	good.ambig <- summary$ambig == 0           #find sequences with no ambiguous base calls
 
+	good.sequences <- good.start & good.end & good.homop & good.ambig
 
 	#create composite data frame of good sequences
 	composite <- cbind(error[good.sequences,], coverage[good.sequences,],
 						mismatches[good.sequences,], aveq[good.sequences,],
 						summary[good.sequences,])
 	write.table(composite, paste(folder, "/", folder, ".composite", sep=""), quote=F, sep="\t")
-  
+
   n.seqs <- nrow(summary)
   lost.start.stop <- 1- sum(good.start & good.end)/n.seqs
   lost.homop <- 1 - sum(good.homop)/n.seqs
   lost.ambig <- 1 - sum(good.ambig)/n.seqs
   lost.total <- 1 - sum(good.sequences)/n.seqs
-  
+
   return(c(lost.start.stop, lost.homop, lost.ambig, lost.total))
 }
 
@@ -432,8 +449,8 @@ rownames(init.error) <- regions
 colnames(init.error) <- c("mismatches", "total")
 init.rates <- init.error[,"mismatches"] / init.error[,"total"]
 init.rates
-#        v13         v15         v16         v19         v35          v4 
-#0.023997519 0.018050725 0.025606045 0.022916201 0.025057346 0.008257847 
+#        v13         v15         v16         v19         v35          v4
+#0.023997519 0.018050725 0.025606045 0.022916201 0.025057346 0.008257847
 
 
 total.init.error <- sum(init.error[,"mismatches"])/sum(init.error[,"total"])
@@ -445,8 +462,8 @@ rownames(basic.error) <- regions
 colnames(basic.error) <- c("mismatches", "total")
 basic.rates <- basic.error[,"mismatches"] / basic.error[,"total"]
 basic.rates
-#        v13         v16         v35         v19         v15          v4 
-#0.015089630 0.009483316 0.014764301 0.013538793 0.014237063 0.005832224 
+#        v13         v16         v35         v19         v15          v4
+#0.015089630 0.009483316 0.014764301 0.013538793 0.014237063 0.005832224
 
 
 total.basic.error <- sum(basic.error[,"mismatches"])/sum(basic.error[,"total"])
@@ -463,9 +480,9 @@ Because PacBio sequencing is done in a circular manner to produce a conensus seq
 plotBarcodePrimerError <- function(folder){
 
   composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-  
+
   total.mismatch <- composite$barcode + composite$primer
-       
+
   error.mismatch <- aggregate(composite$error, by=list(total.mismatch), function(x){c(quantile(x, probs=c(0.025, 0.5, 0.975)), length(x))})$x
 	colnames(error.mismatch) <- c("lci", "median", "uci", "n")
 	rownames(error.mismatch) <- 0:(nrow(error.mismatch)-1)
@@ -497,9 +514,9 @@ We see that the median error rate does increase with the number of mismatches to
 ```{r}
 getFragment_BPErrorRates <- function(folder, length){
   bp.length <- length[folder]
-  
+
   composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-  
+
 	bc.primer <- composite$barcode + composite$primer
   return(cbind(composite$error, bc.primer/bp.length))
 }
@@ -529,13 +546,13 @@ cor.test(errors.table[, "fragment"], errors.table[,"oligos"])
 #95 percent confidence interval:
 # 0.3618482 0.3772373
 #sample estimates:
-#      cor 
-#0.3695681 
+#      cor
+#0.3695681
 
 
 
 summary(errors.table)
-#    fragment            oligos       
+#    fragment            oligos
 # Min.   :0.000000   Min.   :0.00000  
 # 1st Qu.:0.000000   1st Qu.:0.00000  
 # Median :0.002242   Median :0.00000  
@@ -561,15 +578,15 @@ names(clrs) <- regions
 
 plotLines <- function(folder){
   write(folder, "")
-  
+
   composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-  
+
 	error.by.depth <- aggregate(composite$error, by=list(composite$freq), function(x){c(mean=mean(x), quantile(x, prob=c(0.025, 0.975)), n=length(x))})
 
   error.by.depth <- error.by.depth[error.by.depth$x[,"n"]>=50,] #exclude any coverage values where we don't have at least 50 observations
   fold.coverage <- error.by.depth[, "Group.1"]
 	error.by.depth <- error.by.depth$x
-  
+
 	mean <- error.by.depth[,"mean"]
 #	lci <- error.by.depth[,"2.5%"]
 #	uci <- error.by.depth[,"97.5%"]
@@ -595,12 +612,12 @@ This plot shows us that the error rates appear to plateau around 10-fold coverag
 
 errorAtCoverageCutoff <- function(folder){
   write(folder, "")
-  
+
   composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-  
+
   total.seqs <- nrow(composite)
 	orig.error <- sum(composite$mismatches)/sum(composite$total)
-	
+
   deep <- composite$freq >= 10
 	composite <- composite[deep,]
 
@@ -632,8 +649,8 @@ output[o,]
 error.reduction <- (1-sort(output[,"final"]/output[,"orig"]))*100
 error.reduction
 
-#      v4      v13      v19      v15      v35      v16 
-#51.77766 31.17492 26.95477 26.93670 26.30490 26.13126 
+#      v4      v13      v19      v15      v35      v16
+#51.77766 31.17492 26.95477 26.93670 26.30490 26.13126
 
 
 ```
@@ -715,13 +732,13 @@ aggregateErrorMinQualityScore <- function(folder){
   write(folder, "")
   composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-  
+
   remaining.error <- rep(0, max(composite$minQ)+1)
   qscores <- 0:max(composite$minQ)
 
   remaining.error <- unlist(lapply(qscores, function(x){mean(composite[composite$minQ >= x,"error"])}))
   names(remaining.error) <- qscores
-  
+
   points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
 }
 
@@ -746,7 +763,7 @@ names(clrs) <- regions
 
 errorAveQualityScore <- function(folder){
   write(folder, "")
-  
+
   composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
   binned <- aggregate(composite$error, by=list(round(composite$aveQ)), mean)
@@ -810,13 +827,13 @@ aggregateErrorAveQualityScore <- function(folder){
   write(folder, "")
   composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
-  
+
   remaining.error <- rep(0, max(composite$aveQ)+1)
   qscores <- 0:max(composite$aveQ)
 
   remaining.error <- unlist(lapply(qscores, function(x){mean(composite[composite$aveQ >= x,"error"])}))
   names(remaining.error) <- qscores
-  
+
   points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
 }
 
@@ -842,7 +859,7 @@ getErrorRateFromAveQ <- function(folder, threshold=60){
   composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 
   rates <- composite[composite$aveQ >= threshold,]
-  
+
   original.error <- mean(composite[,"error"])
   remaining.error <- mean(rates[,"error"])
   fraction.kept <- nrow(rates)/nrow(composite)
@@ -864,7 +881,7 @@ colnames(results) <- c("original.error", "remaining.error", "fraction.kept")
 ```
 
 Here we see that we have reduced the error rate by 56 to 75% when we require the average quality score for the read to be at least 60. In addition, we notice that the fraction of the reads we keep decreases as we increase the length of the fragment.  
-  
+
 At this point we are kind of out of tricks to reduce the error rate further beyond combining methods. Let's go back and merge our approaches - allow no or one mismatch to the barcodes and primers, require 10-fold coverage, and an average quality score of 60. We are also interested in whether any of these specification are redundant with each other.
 
 ```{r}
@@ -872,7 +889,7 @@ At this point we are kind of out of tricks to reduce the error rate further beyo
 oligosCoverage <- function(folder){
   write(folder, "")
 	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-	
+
 	mismatch <- composite$barcode + composite$primer
 	good0 <- mismatch == 0 & composite$freq >= 10
 	composite.good0 <- composite[good0,]
@@ -880,9 +897,9 @@ oligosCoverage <- function(folder){
 	good1 <- mismatch <= 1 & composite$freq >= 10
 	composite.good1 <- composite[good1,]
 
-	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite), 
+	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
 										mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
-	
+
 }
 
 regions <- dir("./", pattern="^v.*")
@@ -911,7 +928,7 @@ oligosQScore <- function(folder){
 	good1 <- mismatch <= 1 & composite$aveQ >= 60
 	composite.good1 <- composite[good1,]
 
-	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite), 
+	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
 										mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
 }
 
@@ -966,7 +983,7 @@ allFilters <- function(folder){
 	good1 <- mismatch <= 1 & composite$aveQ >= 60 & composite$freq >= 10
 	composite.good1 <- composite[good1,]
 
-	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite), 
+	return(c(mean(composite[,"error"]), mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
 										mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
 
 }
@@ -988,139 +1005,12 @@ all.filters
 ```
 
 When we take a look at the output from oligos.qscore, oligos.coverage, coverage.qscore, and all.filters it becomes apparent that the oligos.qscore strategy reduces the error rates the most, while having a comparable effect on the number of sequences passing the filter relative to the other methods. When we look at the choice of allowing either no or one difference to the oligos, we find a negligible difference between the error rates of the two options. However, we retain considerably more sequences by allowing a single mismatch to the oligos. So, in the end our strategy to reduce the sequencing error rate is to allow a total of one mismatch to the barcodes and primers and using the average quality score threshold of 60.
- 
- 
-Having settled in on a pipeline, we would now like to run that protocol from the beginning on all of our samples. Let's create some new folders and make links to the original fasta files:
-
-```{r engine='bash'}
-
-mkdir pipeline_dev analysis
-mv v* pipeline_dev
-
-cd ../analysis
-mkdir v13  v15  v16  v19  v35  v4
-cd ../pipeline_dev
-
-for REGION in v*
-do
-    cp -l $REGION/$REGION.fasta $REGION/$REGION.qual $REGION/$REGION.oligos ../analysis/$REGION
-done
-cd ../analysis
-
-wget http://www.mothur.org/w/images/9/98/Silva.bacteria.zip
-unzip Silva.bacteria.zip 
-mv silva.bacteria/silva.bacteria.fasta ./
-```
-
-To recap, the pipeline consists of removing any fragment that has more than one mismatch to the barcodes or primers, contains an ambiguous basecall, has an average quality score below 60, has a homopolymer longer than 8 nt, and does not align correctly to the region of interest.  
-
-  
-  
-##Analysis of different communities based on new pipeline
-Let's run this using trim.seqs in mothur on each of the files. While we're at it, we'll go ahead and unique, align the sequences, and summarize the alignments.
-
-```{r engine='bash'}
-for REGION in v*
-do
-    cd $REGION
-    mothur "#trim.seqs(fasta=$REGION.fasta, qfile=$REGION.qual, oligos=$REGION.oligos, checkorient=T, tdiffs=1, maxambig=0, maxhomop=8, qaverage=60, processors=8);
-            unique.seqs(fasta=current); align.seqs(fasta=current, reference=../silva.bacteria.fasta);
-            summary.seqs(name=current)"
-    cd ../
-done
-```
-
-Looking at the output from the summary.seqs commands we come up with the following positions within the alignment for our start and end values:
 
 
-| Region | Start | End   | 
-|------------------------- 
-| v13    | 1044  | 13125 |  
-| v15    | 1044  | 27659 |  
-| v16    | 1044  | 34113 |  
-| v19    | 1044  | 43116 |  
-| v4     | 6428  | 27659 |  
-| v35    | 13862 | 23444 |  
-
-Now we want to run screen.seqs to remove sequences that do not start at or before the start position or end at or after end.
-
-```{r engine='bash'}
-mothur "#screen.seqs(fasta=v13.trim.unique.align, name=v13.trim.names, group=v13.groups, start=1044, end=13125, processors=8, inputdir=./v13)"
-mothur "#screen.seqs(fasta=v15.trim.unique.align, name=v15.trim.names, group=v15.groups, start=1044, end=27659, processors=8, inputdir=./v15)"
-mothur "#screen.seqs(fasta=v16.trim.unique.align, name=v16.trim.names, group=v16.groups, start=1044, end=34113, processors=8, inputdir=./v16)"
-mothur "#screen.seqs(fasta=v19.trim.unique.align, name=v19.trim.names, group=v19.groups, start=1044, end=43116, processors=8, inputdir=./v19)"
-mothur "#screen.seqs(fasta=v35.trim.unique.align, name=v35.trim.names, group=v35.groups, start=6428, end=27659, processors=8, inputdir=./v35)"
-mothur "#screen.seqs(fasta=v4.trim.unique.align, name=v4.trim.names, group=v4.groups, start=13862, end=23444, processors=8, inputdir=./v4)"
-```
-
-After we run screen.seqs, we'll go ahead and complete the pipeline by using filter.seqs to remove any columns that only contain gaps (vertical=T) or that contain missing data (trump=.) and we'll run unique.seqs and summary.seqs to get the sequence lengths:
-
-```{r engine='bash'}
-for REGION in v*
-do
-    mothur "#set.dir(input=./$REGION, output=./$REGION);
-            filter.seqs(fasta=$REGION.trim.unique.good.align-../HMP_MOCK.align, vertical=T, trump=., processors=8);
-            unique.seqs(fasta=$REGION.trim.unique.good.filter.fasta, name=$REGION.trim.good.names);
-            summary.seqs(name=current)"
-done
-```
-
-Next we'll want to run pre.cluster using the diffs parameter equal to 1 difference per 100 bp. In the previous step we got those lengths:
-
-| Region | Length | diffs |
-|--------|--------|-------|
-| v13    | 489    |  4    |
-| v15    | 879    |  8    |
-| v16    | 1028   | 10    |
-| v19    | 1458   | 14    | 
-| v35    | 545    |  5    |
-| v4     | 253    |  2    |
-
-Once we run pre.cluster, we'll check for chimeras, remove them, cluster the sequences and then make a shared file from them
-
-```{r engine='bash'}
-mothur "#pre.cluster(fasta=v13/v13.trim.unique.good.filter.unique.fasta, name=v13/v13.trim.unique.good.filter.names, group=v13/v13.good.groups, diffs=4, processors=8);"
-mothur "#pre.cluster(fasta=v15/v15.trim.unique.good.filter.unique.fasta, name=v15/v15.trim.unique.good.filter.names, group=v15/v15.good.groups, diffs=10, processors=8);"
-mothur "#pre.cluster(fasta=v16/v16.trim.unique.good.filter.unique.fasta, name=v16/v16.trim.unique.good.filter.names, group=v16/v16.good.groups, diffs=10, processors=8);"
-mothur "#pre.cluster(fasta=v19/v19.trim.unique.good.filter.unique.fasta, name=v19/v19.trim.unique.good.filter.names, group=v19/v19.good.groups, diffs=14, processors=8);"
-mothur "#pre.cluster(fasta=v35/v35.trim.unique.good.filter.unique.fasta, name=v35/v35.trim.unique.good.filter.names, group=v35/v35.good.groups, diffs=5, processors=8);"
-mothur "#pre.cluster(fasta=v4/v4.trim.unique.good.filter.unique.fasta, name=v4/v4.trim.unique.good.filter.names, group=v4/v4.good.groups, diffs=2, processors=8);"
 
 
-for REGION in v*
-do
-    mothur "#set.dir(input=./$REGION, output=./$REGION);
-      chimera.uchime(fasta=$REGION.trim.unique.good.filter.unique.precluster.fasta, name=$REGION.trim.unique.good.filter.unique.precluster.names, group=$REGION.good.groups, dereplicate=T, processors=8);
-      remove.seqs(fasta=current, group=current, name=current, accnos=current, dups=F);
-      dist.seqs(fasta=current, cutoff=0.15, processors=8);
-      cluster();
-      make.shared(list=current, label=0.03, group=current)"
-done
-```
 
 
-Let's get the error rates for our mock communities from before and after running the pre.cluster steps.
-
-```{r engine='bash'}
-
-for REGION in v*
-do
-    for REP in 1 2 3
-    do
-        mothur "#set.dir(input=./$REGION, output=./$REGION);
-            get.groups(fasta=$REGION.trim.unique.good.filter.unique.fasta, group=$REGION.good.pick.groups, name=$REGION.trim.unique.good.filter.names, groups=mock$REP.$REGION);
-            system(mv $REGION/$REGION.trim.unique.good.filter.pick.names $REGION/$REGION.mock$REP.unique.names);
-            system(mv $REGION/$REGION.trim.unique.good.filter.unique.pick.fasta $REGION/$REGION.mock$REP.unique.fasta);
-            seq.error(fasta=$REGION.mock$REP.unique.fasta, name=$REGION.mock$REP.unique.names, reference=HMP_MOCK.filter.fasta, aligned=T, processors=8)"            
-
-        mothur "#set.dir(input=./$REGION, output=./$REGION);
-            get.groups(fasta=$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, group=$REGION.good.pick.groups, name=$REGION.trim.unique.good.filter.unique.precluster.pick.names, groups=mock$REP.$REGION);
-            system(mv $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.pick.names $REGION/$REGION.mock$REP.precluster.names);
-            system(mv $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.pick.fasta $REGION/$REGION.mock$REP.precluster.fasta);
-            seq.error(fasta=$REGION.mock$REP.precluster.fasta, name=$REGION.mock$REP.precluster.names, reference=HMP_MOCK.filter.fasta, aligned=T, processors=8)"
-    done
-done
-```
 
 Let's see what the error rates were:
 
@@ -1129,7 +1019,7 @@ summarizeError <- function(folder, method){
   file1 <- paste(folder, "/", folder, ".mock1.", method, ".error.summary", sep="")
   file2 <- paste(folder, "/", folder, ".mock2.", method, ".error.summary", sep="")
   file3 <- paste(folder, "/", folder, ".mock3.", method, ".error.summary", sep="")
-  
+
   summary <- rbind(read.table(file=file1, header=T, row.names=1), read.table(file=file2, header=T, row.names=1), read.table(file=file3, header=T, row.names=1))
   nochim <- summary[summary$numparents==1,]
   error <- sum(nochim$weight * nochim$mismatches) / sum(nochim$weight * nochim$total)
@@ -1171,7 +1061,7 @@ for(r in regions){
   shared <- read.table(file=paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.an.shared", sep=""), header=T)
   rownames(shared) <- shared$Group
   shared <- shared[,-c(1,2,3)]
-  
+
   groups <- gsub(".v\\d*", "", rownames(shared))
   stopifnot(sum(groups == colnames(counts)) == length(groups))
   nseqs <- apply(shared, 1, sum)
@@ -1220,7 +1110,7 @@ for(r in regions){
   shared <- read.table(file=paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.an.merge.shared", sep=""), header=T)
   rownames(shared) <- shared$Group
   shared <- shared[,-c(1,2,3)]
-  
+
   groups <- gsub(".v\\d*", "", rownames(shared))
   stopifnot(sum(groups == colnames(counts)) == length(groups))
   nseqs <- apply(shared, 1, sum)
@@ -1238,38 +1128,6 @@ The merged counts:
 | v19 |  354  |  1214  |  540  | 1588
 | v35 | 2863  |  3457  | 1665  | 2044
 | v4  | 2100  | 12679  | 3692  | 4745
-
-Let's rarefy everything to 354 reads per sample
-
-```{r engine="bash"}
-for REGION in v*
-do
-    mothur "#summary.single(shared=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.shared, calc=sobs-coverage, subsample=354, iters=1000)"
-done
-```
-
-Let's remove all of the chimeras we didn't detect and see how many OTUs we would have come up with
-
-```{r engine='bash'}
-for REGION in v*
-do
-  grep "2$" $REGION/$REGION.mock*error.summary | cut -f 2 -d ":" | cut -f 1 > $REGION/$REGION.extra.chimeras
-  cat $REGION/$REGION.mock?.precluster.fasta > $REGION/$REGION.mock.precluster.fasta
-  cat $REGION/$REGION.mock?.precluster.names > $REGION/$REGION.mock.precluster.names
-  mothur "#remove.seqs(fasta=$REGION/$REGION.mock.precluster.fasta, name=$REGION/$REGION.mock.precluster.names, accnos=$REGION/$REGION.extra.chimeras);
-          dist.seqs(cutoff=0.15); cluster(); summary.single(subsample=283, calc=sobs, label=0.03)"
-done
-```
-
-Let's use the reference sequences we sampled to see what the "correct" number of OTUs would have been
-
-```{r engine='bash'}
-for REGION in v*
-do
-    grep "1$" $REGION/$REGION.mock*error.summary | cut -f 2 | sort | uniq > $REGION/mock.ref.accnos
-    mothur "#get.seqs(fasta=$REGION/HMP_MOCK.filter.fasta, accnos=$REGION/mock.ref.accnos); dist.seqs(cutoff=0.15, output=lt); cluster(phylip=current); summary.single(label=0.03, calc=sobs)"
-done
-```
 
 Now we want to summarize the number of OTUs we observed under different conditions:
 
@@ -1295,41 +1153,6 @@ colnames(otu.table) <- c("perfect", "no.chims", "obs.mock", "soil", "mouse", "hu
 ```
 
 
-Now we'd like to go ahead and classify all of our sequences using the RDP, greengenes, and SILVA training sets:
-
-```{r engine='bash'}
-wget -N http://www.mothur.org/w/images/5/59/Trainset9_032012.pds.zip
-unzip -o Trainset9_032012.pds.zip
-mv trainset9_032012.pds.tax trainset9_032012.pds_rdp.tax
-
-wget -N http://www.mothur.org/w/images/6/68/Gg_13_8_99.taxonomy.tgz
-tar xvzf Gg_13_8_99.taxonomy.tgz
-mv gg_13_8_99.gg.tax gg_13_8_99.pds_gg.tax
-
-wget -N http://www.mothur.org/w/images/2/27/Silva.nr_v119.tgz
-tar xvzf Silva.nr_v119.tgz
-mothur "#degap.seqs(fasta=silva.nr_v119.align)"
-
-for REGION in v*
-do
-  mothur "#classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=trainset9_032012.pds.fasta, taxonomy=trainset9_032012.pds_rdp.tax, processors=8);
-			    classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=gg_13_8_99.fasta, taxonomy=gg_13_8_99.pds_gg.tax, processors=8);
-          classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=silva.nr_v119.ng.fasta, taxonomy=silva.nr_v119.tax, processors=8)"
-done
-```
-
-Let's also classify the sequences from the mock community samples that we pulled out earlier:
-
-```{r engine='bash'}
-for REGION in v*
-do
-  cat $REGION/$REGION.mock?.precluster.fasta > $REGION/$REGION.mock.precluster.fasta
-  mothur "#classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=trainset9_032012.pds.fasta, taxonomy=trainset9_032012.pds_rdp.tax, processors=8);
-	         classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=gg_13_8_99.fasta, taxonomy=gg_13_8_99.pds_gg.tax, processors=8)
-           classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=silva.nr_v119.ng.fasta, taxonomy=silva.nr_v119.tax, processors=8)"
-done
-```
-        
 Let's see what fraction of each dataset classifies to each taxonomic level by both classification databases
 
 ```{r}
@@ -1362,10 +1185,10 @@ for(r in regions){
 
   silvaFileName <- paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.nr_v119.wang.taxonomy", sep="")
   silva <- getDepths(silvaFileName)
-  
+
   write.table(cbind("rdp" = rdp, "gg" = gg, "silva"=silva), file=paste(r, "/", r, ".tax.compare", sep=""), quote=F)
-  
-  
+
+
   rdpMock <- paste(r, "/", r, ".mock.precluster.pds_rdp.wang.taxonomy", sep="")
   rdp <- getDepths(rdpMock)
 
@@ -1379,7 +1202,9 @@ for(r in regions){
 }
 ```
 
-Now we'd like to break this down by sample type. First we'll count the number of times each sequence shows up in each group using mothur:
+# Not sure about this...
+# Now we'd like to break this down by sample type. First we'll count the number
+# of times each sequence shows up in each group using mothur:
 
 ```{r engine='bash'}
 for REGION in v*
@@ -1393,28 +1218,28 @@ done
 getDepthByLibrary <- function(region){
   count.file <- paste(region, "/", region, ".trim.unique.good.filter.unique.precluster.pick.count_table", sep="")
   count.table <- read.table(file=count.file, header=T, row.names=1)
-  
+
   depth.file <- paste(region, "/", region, ".tax.compare", sep="")
   depth.table <- read.table(file=depth.file, header=T, row.names=1)
   depth.table$rdp <- factor(depth.table$rdp, levels=0:7)
   depth.table$gg <- factor(depth.table$gg, levels=0:7)
   depth.table$silva <- factor(depth.table$silva, levels=0:7)
-  
+
   mock.depth <- depth.table[count.table$mock > 0,]
   human.depth <- depth.table[count.table$human > 0,]
   mouse.depth <- depth.table[count.table$mouse > 0,]
   soil.depth <- depth.table[count.table$soil > 0,]
-  
+
   mock.gg <- 100*summary(mock.depth$gg)/nrow(mock.depth)
   human.gg <- 100*summary(human.depth$gg)/nrow(human.depth)
   mouse.gg <- 100*summary(mouse.depth$gg)/nrow(mouse.depth)
   soil.gg <- 100*summary(soil.depth$gg)/nrow(soil.depth)
-  
+
   mock.rdp <- 100*summary(mock.depth$rdp)/nrow(mock.depth)
   human.rdp <- 100*summary(human.depth$rdp)/nrow(human.depth)
   mouse.rdp <- 100*summary(mouse.depth$rdp)/nrow(mouse.depth)
   soil.rdp <- 100*summary(soil.depth$rdp)/nrow(soil.depth)
-  
+
   mock.silva <- 100*summary(mock.depth$silva)/nrow(mock.depth)
   human.silva <- 100*summary(human.depth$silva)/nrow(human.depth)
   mouse.silva <- 100*summary(mouse.depth$silva)/nrow(mouse.depth)
@@ -1486,17 +1311,23 @@ Let's build some dot-plots to show how well the various regions classified for e
 
 
 
-
-It is commonly said that the error profile in PacBio-generated sequence data are random. As we saw above, the substitution preference was random. However, if the errors are truly random, then we would expect to have a bunch of singleton error sequences, not sequences with errors that show up multiple times. Let's see what type of error profile we have. Because they have the most reads, let's consider the v4, v35, and v15 mock community samples from before the pre.cluster step:
-
-```{r, engine='bash'}
-for REGION in $(ls -d v*)
-do
-  mothur "#get.groups(fasta=$REGION/$REGION.trim.unique.good.filter.unique.fasta, name=$REGION/$REGION.trim.unique.good.filter.names, group=$REGION/$REGION.good.groups, groups=mock1.$REGION-mock2.$REGION-mock3.$REGION);
-          degap.seqs();
-          seq.error(fasta=current, name=current, reference=$REGION/HMP_MOCK.filter.fasta, aligned=F, processors=8)"
-done
-```
+# Not sure this is needed...
+# It is commonly said that the error profile in PacBio-generated sequence data
+# are random. As we saw above, the substitution preference was random. However,
+# if the errors are truly random, then we would expect to have a bunch of
+# singleton error sequences, not sequences with errors that show up multiple
+# times. Let's see what type of error profile we have. Because they have the
+# most reads, let's consider the v4, v35, and v15 mock community samples from
+# before the pre.cluster step:
+#
+# ```{r, engine='bash'}
+# for REGION in $(ls -d v*)
+# do
+#   mothur "#get.groups(fasta=$REGION/$REGION.trim.unique.good.filter.unique.fasta, name=$REGION/$REGION.trim.unique.good.filter.names, group=$REGION/$REGION.good.groups, groups=mock1.$REGION-mock2.$REGION-mock3.$REGION);
+#           degap.seqs();
+#           seq.error(fasta=current, name=current, reference=$REGION/HMP_MOCK.filter.fasta, aligned=F, processors=8)"
+# done
+# ```
 
 ... on into R ...
 
@@ -1542,3 +1373,204 @@ axis(2, at=seq(0,0.35,0.05), label=seq(0,35,5), las=1)
 legend(x=12, y=0.30, legend=c("0.49%", "0.34%", "0.20%","0.10%"), lwd=3, col=c("black", "red", "blue", "darkgreen"))
 dev.off()
 ```
+
+
+## Results and Discussion
+**The PacBio error profile.** To build a sequence curation pipeline, we first
+needed to characterize the error rate associated with sequencing the 16S rRNA
+gene. We observed a sequencing error rate of 1.9% across the regions within the
+gene that we tested. Insertions, deletions, and substitutions accounted for
+45.0, 16.7, and 36.6% of the errors, respectively. Ambiguous base calls
+accounted for 2.2% of the errors. The substitution errors were equally likely
+and all four bases were equally likely to cause insertion errors. Interestingly,
+guanines (44.2%) and cytosines (34.3%) were more likely to be deleted than
+adenines (11.7%) or thymidines (9.8%). When we considered the Phred quality
+score of each base call, we observed a median quality score of 72 for correct
+base calls and scores of 22 and 20 for substitutions and insertions,
+respectively (Figure ErrorQualityScore). Although there was a broad distribution
+of quality scores with each type of base call, the errors could largely be
+distinguished from the correct base calls.
+
+**A basic sequence curation procedure.** To establish a simple curation
+procedure, we culled any sequence that contained an ambiguous base call, had a
+string of the same base repeated 9 or more times, or did not start and end at
+the expected alignment coordinates for that region of the 16S rRNA gene. This
+reduced the experiment-wide error rate from 1.93 to 1.08% across the six regions
+we considered. This basic procedure resulted in the removal of between 4.4 (V4)
+and 33.1 (V1-V9)% of the reads and the percentage of reads removed increased
+with the length of the fragment (Figure PipelineError). For each region, the
+number of reads removed because of the presence of ambiguous base calls was
+similar to the number of reads that were removed for not fully aligning to the
+correct region within the 16S rRNA gene. The latter class of errors was
+generally due to sequence truncations that could not be explained.
+
+**Identifying correlates of increased sequencing error.** In contrast to the 454
+Roche and Illumina-based platforms where the sequencing quality decays with
+length, the consensus sequencing approach employed by the PacBio sequencer is
+thought to generate a uniform distribution of errors. This makes it impossible
+to simply trim sequences to high quality regions. Therefore, we sought to
+identify characteristics within sequences that would allow us to identify and
+remove those sequences with errors using three different approaches. First, we
+hypothesized that errors in the barcode and primer should be correlated with the
+error rate for the entire sequence. We observed a modest correlation between the
+error rate within the barcode and primer sequences and the error rate of the
+fragment of interest (R=0.37, P<0.001). This indicated that sequences with
+errors in their barcodes or primers were more likely to have errors in the rest
+of the fragment. There was a small difference in the error rate when we allowed
+zero or one mismatch to the barcodes and primers; however, the more stringent
+requirement of zero mismatches removed a large fraction of the reads from the
+dataset (Figure BarcodePrimerError). Second, we hypothesized that increased
+sequencing coverage should yield lower error rates. We found that once we had
+obtained 10-fold coverage of the fragments, the error rate did not change
+appreciably (Figure ErrorSequenceCoverage). When we compared the error rates of
+reads with at least 10-fold coverage to those with less coverage, we reduced the
+error rate by 26-31% for each region except the V4 region for which the error
+rate was reduced by 52%. Third, based on the earlier analysis associating errors
+with quality scores, we used two quality score-based approaches for identifying
+reads with errors. We calculated the minimum average quality score across all
+50-nt window within each sequence and we also calculated the average quality
+score across each sequence. We then associated both with the error rate of the
+reads with values above defined thresholds as well as the fraction of sequences
+that would be retained if each threshold were selected. By the sliding window
+approach we did not observe any clear break points indicating that one quality
+score would be better than another. In contrast, by the whole sequence quality
+score average we observed a decrease in the error rate and the fraction of
+sequences retained when the threshold was increased above 60 (Figure
+QualityScoreAverage). When we used this threshold, we were able to reduce the
+error rate by 56 to 75% (Figure ErrorSequenceCoverage). We noted that the
+fraction of reads retained decreased as the length of the fragment increased
+with retention of 86.7% of the V4 reads and 49.8% of the V1-V9 reads (Figure
+ErrorSequenceCoverage). These results demonstrated that each of the approaches
+we evaluated, including culling reads with: mismatches to the expected barcodes
+and primers, less than 10-fold sequencing coverage, and an average quality score
+less than 60, we were able to make meaningful reductions in the error rates.
+With these observations, it was possible to develop a sequence curation pipeline
+to minimize the sequencing error rate. We then implemented the basic curation
+pipeline along with permutations of these three thresholds. We observed similar
+error rates when we required 1 or fewer mismatches to the barcodes and primers
+and an average quality score above 60 as when we also required a minimum 10-fold
+coverage. The overall error rate was reduced to 0.63% and an additional 19 (V4)
+to 54 (V1-V9)% of the reads were removed (Figure ErrorSequenceCoverage).
+
+**Pre-clustering sequences to further reduce sequencing noise.**  Previously, we
+implemented a pre-clustering algorithm where sequences are sorted by their
+abundance in decreasing order and rare sequences are clustered with a more
+abundant sequence if the rare sequences have fewer mismatches than a defined
+threshold when compared to the more abundant sequence. The recommended threshold
+was a 1-nt difference per 100-bp of sequence data. For example, the threshold
+for 250 bp fragment from the V4 region would be 2 nt or 14 for the 1458 bp V1-V9
+fragments. This approach removes residual PCR and sequencing errors while not
+overwhelming the resolution needed to identify OTUs that are based on a 3%
+distance threshold. Needless to say, this approach would limit one’s ability to
+detect 3 nt differences between V1-V9 sequences. When we apply this approach to
+our PacBio data, we observed a reduction in the error rate between 15 (V1-V3 and
+V3-V5) and 53% (V1-V5). The final error rates varied between 0.09 (V4) and 0.77%
+(V3-V5); the full-length, V1-V9, fragments had an error rate of 0.34% (Figure
+ErrorSequenceCoverage). These error rates are 4-5 times higher than what we have
+previously observed using the Roche 454 and Illumina MiSeq platforms [refs].
+
+**Sequencing errors are not random.** Although there was no obvious bias in the
+substitution, insertion, or deletion patterns, during the pre-clustering
+analysis we noted that the frequency distribution of sequences observed was not
+uniform. This indicated a lack of randomness in the error profile. Because we
+were able to obtain a large number of reads from the V1-V5 (N=5109 sequences),
+V4 (N=12684), and V3-V5 (N=3677) datasets, we investigated the mock communities
+from these regions further. We identified all of the sequences that had a 1-nt
+difference to the true sequence. A majority of these sequences only appeared
+once; however, we observed sequences that appeared 19 (V1-V5), 60 (V4), and 14
+(V3-V5) times. Manual inspection of these sequences indicated that they were not
+intra-genomic chimeras, but a single base substitution, deletion, and insertion,
+respectively. The presence of these errors at relative abundances between 0.37
+and 0.47% indicates that removing singleton sequences or OTUs will give a false
+sense of sequence curation since many errors will be observed more than once.
+Furthermore, recently described oligotyping methods would need to be reassessed
+since those methods assume that every base in a sequence is equally likely to be
+incorrect.
+
+**Effects of error rates on OTU assignments.** The sequencing error rate is
+known to affect the number of OTUs that are observed. For each region, we
+calculated the number of OTUs we would have observed in the mock community if
+there were no PCR or sequencing errors or chimeras, the number of OTUs if there
+were no chimeras, and the number of OTUs observed using the pipeline described
+above and UCHIME to identify and cull chimeras (Table OTU). We also calculated
+the number of OTUs in the soil, mouse, and human samples using the same pipeline
+with chimera detection and removal. Because we wanted to compare all datasets
+using the same number of reads and because a large number of reads from the
+V1-V9 dataset were removed for quality problems, we rarefied all datasets to 354
+sequences per dataset. Among the mock community samples the number of OTUs
+increased with error rate. Although the variation in the number of OTUs is
+affected by the error rate, it is also affected by the specificity of the PCR
+primers and the sequence variation within the region being amplified.
+
+**Increasing sequence length improves classification.** We classified all of the
+sequence data we generated using the naïve Bayesian classifier using the RDP,
+SILVA, and greengenes reference taxonomies (Figure Classification). In general,
+increasing the length of the region improved the ability to assign the sequence
+to a genus or species. Interestingly, each of the samples we analyzed varied in
+their ability to assign sequences to the depth of genus or species and the
+reference database that did the best job of classifying the sequences varied by
+sample type. For example, the SILVA reference did the best for the human fecal
+samples and the RDP did the best for the mouse feces and soil samples. An
+advantage of the greengenes database is that it contains information for 2,514
+species-level lineages for 11% of the reference sequences; the other databases
+only provide taxonomic data to the genus level. Although there was a modest
+association between the length of the fragment and the ability to classify
+sequences to the species-level for the human samples, there was no such
+association for the mouse and soil samples. In fact, at most 6.0% of the soil
+sequences and 4.6% of the mouse sequences could be classified to a genus. These
+results indicate that the ability to classify sequences to the genus or species
+level is a function of read length, sample type, and the reference database.
+
+
+## Conclusions
+The various sequencing platforms that are available to microbial ecologists are
+able to fill unique needs and have their own strengths and weaknesses. For
+sequencing the 16S rRNA gene, the 454 platform is able to generate a moderate
+number of high-quality 500-nt sequence fragments (error rates < 0.02%) [ref] and
+the MiSeq platform is able to generate a large number of high-quality 250-nt
+sequence fragments (error rates < 0.02%) [ref]. The promise of the PacBio
+sequencing platform was the generation of high-quality near full-length sequence
+fragments. As we have shown in this study, it is possible to generate near
+full-length sequences; however, the error rate associated with those reads is
+considerable (i.e. 0.34%) and requires a level of sequencing coverage that is
+not commonly observed in a typical sequencing run. This results in the
+generation of a small number of low quality full-length sequences. When we
+considered the shorter V4 region, that is similar in length to what is sequenced
+by the MiSeq platform, the error rates were nearly 5-fold higher than what has
+previously been reported (0.09%). It appears that the promise offered by the
+PacBio platform has not been realized.
+
+The widespread adoption of the 454 and MiSeq platforms and decrease in Sanger
+sequencing for sequencing the 16S rRNA gene has resulted in a decrease in the
+generation of the full-length reference sequences that are needed for performing
+phylogenetic analyses and designing lineage specific PCR primers and fluorescent
+in situ hybridization probes. It remains to be determined whether the elevated
+error rates we observed for full-length sequences are prohibitive for these
+applications. Considering the 16S rRNA gene fragment is approximately 1,500 nt
+long and an error rate of 0.34%, one would expect 26% of the sequences to have
+no errors, 35% to have one error, 24% to have two errors, and 11% to have 3
+errors.
+
+Figure FullLengthErrors
+
+Classification is dependent on quality of sequence data, length of the data, and
+the quality of the database
+
+Critical that people begin to utilize mock communities as part of their
+experimental design so that they can quantify their error rates
+
+Probably not worth the effort at this point
+
+
+## Acknowledgements
+The Genomic DNA from Microbial Mock Community A (Even, Low Concentration, v3.1,
+HM-278D) was obtained through the NIH Biodefense and Emerging Infections
+Research Resources Repository, NIAID, NIH as part of the Human Microbiome
+Project.
+
+
+Funding statement
+This study was supported by grants from the NIH (R01HG005975, R01GM099514 and P30DK034933 to PDS and U54HG004973 to SKH).
+
+
+References
