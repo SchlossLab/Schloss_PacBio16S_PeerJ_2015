@@ -18,12 +18,14 @@ ls */*fastq | cut -f 1 -d "/" | sort | uniq -c
 # concatenate those fastq files and dump them into individual folders.
 
 cd ../
+mkdir pipeline_dev
+cd pipeline_dev
 mkdir v19 v16 v15 v13 v35 v4
 
 for REGION in $(ls -d v*)
 do
     > $REGION/$REGION.fastq
-    for FILE in ccs.fastqs/$REGION/*.ccs.fastq
+    for FILE in ../ccs.fastqs/$REGION/*.ccs.fastq
     do
         cat $FILE >> $REGION/$REGION.fastq
     done
@@ -32,6 +34,7 @@ done
 # We'd also like to concatenate the subread fasta files so that we can see how
 # many base pairs were sequenced for each fragment:
 
+cd ../
 mkdir subreads.fasta
 cd subreads.fasta
 

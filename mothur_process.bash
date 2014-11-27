@@ -5,9 +5,7 @@
 # that protocol from the beginning on all of our samples. Let's create some new
 # folders and make links to the original fasta files:
 
-mkdir pipeline_dev analysis
-mv v* pipeline_dev
-
+mkdir analysis
 cd ../analysis
 mkdir v13  v15  v16  v19  v35  v4
 cd ../pipeline_dev
