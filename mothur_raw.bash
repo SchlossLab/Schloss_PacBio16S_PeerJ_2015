@@ -71,6 +71,7 @@ for REGION in v*
 do
     grep ""$REGION"" ../pacbio.oligos > $REGION/$REGION.oligos
     grep "barcode" ../pacbio.oligos >> $REGION/$REGION.oligos
+    cp ../HMP_MOCK.align ./$REGION/
 done
 
 
@@ -102,10 +103,12 @@ done
 
 for REGION in v*
 do
-    mothur "#align.seqs(fasta=$REGION/$REGION.mock.fasta, reference=HMP_MOCK.align, processors=8, outputdir=./$REGION/);
-        filter.seqs(fasta=$REGION/$REGION.mock.align-HMP_MOCK.align, vertical=T);
+    cd $REGION
+    mothur "#align.seqs(fasta=$REGION.mock.fasta, reference=HMP_MOCK.align, processors=8);
+        filter.seqs(fasta=$REGION.mock.align-HMP_MOCK.align, vertical=T);
         summary.seqs();
-        seq.error(fasta=$REGION/$REGION.mock.filter.fasta, reference=$REGION/HMP_MOCK.filter.fasta, report=$REGION/$REGION.mock.align.report, qfile=$REGION/$REGION.mock.qual, processors=8);"
+        seq.error(fasta=$REGION.mock.filter.fasta, reference=HMP_MOCK.filter.fasta, report=$REGION.mock.align.report, qfile=$REGION.mock.qual);"
+    cd ../
 done
 
 cd ..
