@@ -6,6 +6,7 @@ ccs.fastqs/
 pipeline_dev/
 raw_data/
 subreads.fasta/
+mothur.*.logfile
 
 *.docx
 *.html
