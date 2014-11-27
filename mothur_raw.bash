@@ -111,5 +111,6 @@ do
     cd ../
 done
 
+cd ..
 
-# Should end back at the pipeline_dev folder
+# Should end back at the root of the project folder system
