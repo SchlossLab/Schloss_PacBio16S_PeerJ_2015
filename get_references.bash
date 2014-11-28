@@ -13,7 +13,7 @@ cd references
 # the databases to only include bacterial sequences.
 
 
-if [ got.silva -ot silva.bacteria.fasta ] && [ got.silva -ot silva.bacteria.tax ]; then
+if [ ! -e got.sliva ] || [ got.silva -ot silva.bacteria.fasta ] || [ got.silva -ot silva.bacteria.tax ]; then
   wget -N http://www.mothur.org/w/images/2/27/Silva.nr_v119.tgz
   tar xvzf Silva.nr_v119.tgz
   mothur "#get.lineage(fasta=silva.nr_v119.align, taxonomy=silva.nr_v119.tax, taxon=Bacteria)"
@@ -28,7 +28,7 @@ fi
 # greengenes v13_8_99 and is described at
 # http://blog.mothur.org/2014/08/12/greengenes-v13_8_99-reference-files/
 
-if [ got.silva -ot gg_13_8_99.fasta ] && [ got.silva -ot gg_13_8_99.gg.tax ]; then
+if [ ! -e got.gg ] || [ got.gg -ot gg_13_8_99.fasta ] || [ got.gg -ot gg_13_8_99.gg.tax ]; then
   wget -N http://www.mothur.org/w/images/6/68/Gg_13_8_99.taxonomy.tgz
   tar xvzf Gg_13_8_99.taxonomy.tgz
   touch got.gg
@@ -40,7 +40,7 @@ fi
 # use a "special" pds version of the database files, which are
 # described at http://blog.mothur.org/2014/10/28/RDP-v10-reference-files/
 
-if [ got.silva -ot trainset10_082014.pds.fasta ] && [ got.silva -ot trainset10_082014.pds.tax ]; then
+if [ ! -e got.rdp ] || [ got.rdp -ot trainset10_082014.pds.fasta ] || [ got.rdp -ot trainset10_082014.pds.tax ]; then
   wget -N http://www.mothur.org/w/images/2/24/Trainset10_082014.pds.tgz
   tar xvzf Trainset10_082014.pds.tgz
   mv trainset10_082014.pds/* ./
@@ -53,7 +53,7 @@ fi
 # Finally, we want to align the mock community reference sequences to our newly
 # created silva.bacteria.fasta file...
 
-if [ HMP_MOCK.align -ot HMP_MOCK.fasta ]; then
+if [ ! -e HMP_MOCK.align ] || [ HMP_MOCK.align -ot HMP_MOCK.fasta ]; then
   mothur "#align.seqs(fasta=HMP_MOCK.fasta, reference=silva.bacteria.fasta)"
   #HMP_MOCK.align
 fi
