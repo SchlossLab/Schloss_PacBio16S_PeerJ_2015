@@ -64,6 +64,6 @@ fi
 
 # Clean up and move out...
 
-rm README*
+rm -f README* mothur*logfile
 
 cd ../
