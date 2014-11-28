@@ -160,7 +160,7 @@ done
 
 for REGION in v*
 do
-  mothur "#classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=../reference/trainset9_032012.pds.fasta, taxonomy=../reference/trainset9_032012.pds_rdp.tax, processors=8);
+  mothur "#classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=../reference/trainset10_082014.pds.fasta, taxonomy=../reference/trainset10_082014.pds.tax, processors=8);
   classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=../reference/gg_13_8_99.fasta, taxonomy=../reference/gg_13_8_99.gg.tax, processors=8);
   classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=../reference/silva.bacteria.fasta, taxonomy=../reference/silva.bacteria.tax, processors=8)"
 done
@@ -172,7 +172,7 @@ done
 for REGION in v*
 do
   cat $REGION/$REGION.mock?.precluster.fasta > $REGION/$REGION.mock.precluster.fasta
-  mothur "#classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=trainset9_032012.pds.fasta, taxonomy=trainset9_032012.pds_rdp.tax, processors=8);
-  classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=gg_13_8_99.fasta, taxonomy=gg_13_8_99.pds_gg.tax, processors=8)
-  classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=silva.nr_v119.ng.fasta, taxonomy=silva.nr_v119.tax, processors=8)"
+  mothur "#classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=../reference/trainset10_082014.pds.fasta, taxonomy=../reference/trainset10_082014.pds.tax, processors=8);
+  classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=../reference/gg.fasta, taxonomy=../reference/gg_13_8_99.gg.tax, processors=8)
+  classify.seqs(fasta=$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=../reference/silva.bacteria.fasta, taxonomy=../reference/silva.bacteria.tax, processors=8)"
 done
