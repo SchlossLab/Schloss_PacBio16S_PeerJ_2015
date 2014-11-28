@@ -17,14 +17,6 @@ done
 cd ../analysis
 
 
-# We'll want to align our sequences to remove those sequences that don't align to the correct region.  to the SILVA reference alignment since it is
-# the best reference alignment on the market
-
-wget http://www.mothur.org/w/images/9/98/Silva.bacteria.zip
-unzip Silva.bacteria.zip
-mv silva.bacteria/silva.bacteria.fasta ./
-
-
 # Let's run this using trim.seqs in mothur on each of the files applying the
 # criteria we developed earlier. While we're at it, we'll go ahead and unique,
 # align the sequences, and summarize the alignments.
@@ -164,28 +156,13 @@ done
 
 
 # Now we'd like to go ahead and classify all of our sequences using the RDP,
-# greengenes, and SILVA training sets. First we want to get the references
-
-wget -N http://www.mothur.org/w/images/5/59/Trainset9_032012.pds.zip
-unzip -o Trainset9_032012.pds.zip
-mv trainset9_032012.pds.tax trainset9_032012.pds_rdp.tax
-
-wget -N http://www.mothur.org/w/images/6/68/Gg_13_8_99.taxonomy.tgz
-tar xvzf Gg_13_8_99.taxonomy.tgz
-mv gg_13_8_99.gg.tax gg_13_8_99.pds_gg.tax
-
-wget -N http://www.mothur.org/w/images/2/27/Silva.nr_v119.tgz
-tar xvzf Silva.nr_v119.tgz
-mothur "#degap.seqs(fasta=silva.nr_v119.align)"
-
-
-# Now we do the classification
+# greengenes, and SILVA training sets.
 
 for REGION in v*
 do
-  mothur "#classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=trainset9_032012.pds.fasta, taxonomy=trainset9_032012.pds_rdp.tax, processors=8);
-  classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=gg_13_8_99.fasta, taxonomy=gg_13_8_99.pds_gg.tax, processors=8);
-  classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=silva.nr_v119.ng.fasta, taxonomy=silva.nr_v119.tax, processors=8)"
+  mothur "#classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=../reference/trainset9_032012.pds.fasta, taxonomy=../reference/trainset9_032012.pds_rdp.tax, processors=8);
+  classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=../reference/gg_13_8_99.fasta, taxonomy=../reference/gg_13_8_99.gg.tax, processors=8);
+  classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, reference=../reference/silva.bacteria.fasta, taxonomy=../reference/silva.bacteria.tax, processors=8)"
 done
 
 
