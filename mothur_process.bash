@@ -61,7 +61,7 @@ mothur "#screen.seqs(fasta=v4.trim.unique.align, name=v4.trim.names, group=v4.gr
 for REGION in v*
 do
     mothur "#set.dir(input=./$REGION, output=./$REGION);
-            filter.seqs(fasta=$REGION.trim.unique.good.align-../HMP_MOCK.align, vertical=T, trump=., processors=8);
+            filter.seqs(fasta=$REGION.trim.unique.good.align-../reference/HMP_MOCK.align, vertical=T, trump=., processors=8);
             unique.seqs(fasta=$REGION.trim.unique.good.filter.fasta, name=$REGION.trim.good.names);
             summary.seqs(name=current)"
 done
