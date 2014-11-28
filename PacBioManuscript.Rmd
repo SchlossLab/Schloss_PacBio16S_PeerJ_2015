@@ -202,7 +202,7 @@ matches <- c(sub.matrix[1,1], sub.matrix[2,2], sub.matrix[3,3], sub.matrix[4,4])
 total <- sum(sub.matrix)
 errors <- sub.matrix
 diag(errors[1:4,1:4]) <- 0
-error.rate <- 100 * sum(errors) / total				#1.925717
+init.error.rate <- 100 * sum(errors) / total				#1.925717
 
 subst.bias <- apply(errors[1:4,1:4], 2, sum)/apply(sub.matrix[1:4,1:4], 2, sum)
 subst.bias <- 100 * subst.bias/sum(subst.bias)
@@ -250,30 +250,13 @@ ambig <- rep(as.numeric(rownames(error.quality)), error.quality$ambiguous)
 a.quant <- quantile(ambig, prob=c(0.025, 0.25, 0.5, 0.75, 0.975))
 ```
 
-```{r FigureErrorQualityScore, echo=T, eval=T, results='hide'}
-par(mar=c(6, 5, 0.5, 0.5))
-plot(1, xlim=c(0.5, 4.5), ylim=c(0,80), type="n", yaxt="n", xaxt="n", xlab="", ylab="")
-polygon(x=c(0.75, 1.25, 1.25, 0.75), y=c(m.quant["25%"], m.quant["25%"], m.quant["75%"], m.quant["75%"]))
-polygon(x=c(1.75, 2.25, 2.25, 1.75), y=c(s.quant["25%"], s.quant["25%"], s.quant["75%"], s.quant["75%"]))
-polygon(x=c(2.75, 3.25, 3.25, 2.75), y=c(i.quant["25%"], i.quant["25%"], i.quant["75%"], i.quant["75%"]))
-polygon(x=c(3.75, 4.25, 4.25, 3.75), y=c(a.quant["25%"], a.quant["25%"], a.quant["75%"], a.quant["75%"]))
-segments(x0=seq(0.75, 3.75, 1), x1=seq(1.25,4.25,1), y0=c(m.quant["50%"], s.quant["50%"], i.quant["50%"], a.quant["50%"]), lwd=4)
-
-arrows(x0=1:4, y0=c(m.quant["75%"], s.quant["75%"], i.quant["75%"], a.quant["75%"]), y1=c(m.quant["97.5%"], s.quant["97.5%"], i.quant["97.5%"], a.quant["97.5%"]), angle=90)
-arrows(x0=1:4, y0=c(m.quant["25%"], s.quant["25%"], i.quant["25%"], a.quant["25%"]), y1=c(m.quant["2.5%"], s.quant["2.5%"], i.quant["2.5%"], a.quant["2.5%"]), angle=90)
-
-axis(2, las=2)
-axis(1, at=c(1,2,3,4), label=c("Matches", "Substitutions", "Insertions", "Ambiguous"), las=2)
-title(ylab="Quality score")
-```
-
 To build a sequence curation pipeline, we first needed to characterize the error
 rate associated with sequencing the 16S rRNA gene. We observed a sequencing
-error rate of `r format(error.rate, digits=3, nsmall=2)`% across the regions within
-the gene that we tested.
-Insertions, deletions, substitutions, and ambiguous base calls accounted for
-`r format(insertions, digits=3, nsmall=1)`, `r format(deletions, digits=3, nsmall=1)`,
-`r format(substitutions, digits=3, nsmall=1)`, and `r format(ambiguous, digits=2, nsmall=1)` of
+error rate of `r format(init.error.rate, digits=3, nsmall=2)`% across the regions within
+the gene that we tested. Insertions, deletions, substitutions, and ambiguous base calls
+accounted for `r format(insertions, digits=3, nsmall=1)`,
+`r format(deletions, digits=3, nsmall=1)`, `r format(substitutions, digits=3, nsmall=1)`,
+and `r format(ambiguous, digits=2, nsmall=1)` of
 the errors, respectively. The substitution errors were equally likely and all four bases
 were equally likely to cause insertion errors. Interestingly, guanines
 (`r format(delete.bias["rG"], digits=3, nsmall=1)`%) and cytosines
@@ -287,69 +270,66 @@ was a broad distribution of quality scores with each type of base call, the erro
 largely be distinguished from the correct base calls.
 
 
-### A basic sequence curation procedure.
+### A basic sequence curation procedure
 
 ```{r}
 getInitError <- function(folder){
-	error <- read.table(file=paste(folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
+	error <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
 	error <- error[error$numparents==1,]
 	return(sum(error$mismatches)/sum(error$total))
 }
 
-init.error <- matrix(unlist(lapply(regions, getInitError)), ncol=2, byrow=T)
-rownames(init.error) <- regions
-colnames(init.error) <- c("mismatches", "total")
-init.rates <- init.error[,"mismatches"] / init.error[,"total"]
-total.init.error <- sum(init.error[,"mismatches"])/sum(init.error[,"total"])
+init.rates <- unlist(lapply(regions, getInitError))
+names(init.rates) <- regions
+#          v4         v13         v35         v15         v16         v19 
+# 0.008257847 0.023997519 0.025057346 0.018050725 0.025606045 0.022916201 
 
-#        v13         v15         v16         v19         v35          v4
-#0.023997519 0.018050725 0.025606045 0.022916201 0.025057346 0.008257847
-#[1] 0.01925717
 
+getReasonsLost <- function(region){
+	composite <- read.table(file=paste("pipeline_dev/", region, "/", region, ".composite", sep=""), header=T, row.names=1)
+	reasons <- as.character(composite$reason)
+
+	nseqs <- length(reasons)
+	good <- sum(reasons=="g")	/ nseqs
+	start.stop <- sum(grepl("s", reasons) | grepl("e", reasons)) / nseqs
+	homop <- length(grep("h", reasons)) / nseqs
+	ambig <- length(grep("n", reasons)) / nseqs
+	return(c(good=good, start.stop=start.stop, homop=homop, ambig=ambig, ngood=nseqs))
+}
+
+reasons.lost <- matrix(unlist(lapply(regions, getReasonsLost)), ncol=5, byrow=T)
+colnames(reasons.lost) <- c("good", "start.stop", "homop", "ambig", "nseqs")
+rownames(reasons.lost) <- regions
+
+nseqs <- reasons.lost[,"nseqs"]
+n.good <- nseqs * reasons.lost[,1]
+reasons.lost <- reasons.lost[,-5]
 
 getBasicError <- function(folder){
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 	good <- composite[composite$reason == "g",]
 	return(sum(good$mismatches)/sum(good$total))
 }
 
-basic.error <- matrix(unlist(lapply(regions, getBasicError)), ncol=2, byrow=T)
-rownames(basic.error) <- regions
-colnames(basic.error) <- c("mismatches", "total")
-basic.rates <- basic.error[,"mismatches"] / basic.error[,"total"]
-total.basic.error <- sum(basic.error[,"mismatches"])/sum(basic.error[,"total"])
-
-#        v13         v16         v35         v19         v15          v4
-#0.015089630 0.009483316 0.014764301 0.013538793 0.014237063 0.005832224
-#[1] 0.01079351
-
-
-# Need to redo this section. Make a supplemental table?
-# fraction.lost <- matrix(unlist(lapply(regions, generateComposite)), ncol=4, byrow=T)
-# rownames(fraction.lost) <- regions
-# colnames(fraction.lost) <- c("start.stop", "homop", "ambig", "total")
-#
-#    start.stop        homop      ambig      total
-# v4  0.03205128 0.0006275776 0.01739286 0.04410974
-# v13 0.10845623 0.0005600149 0.08381557 0.17304461
-# v35 0.16210726 0.0018959913 0.11565547 0.23469664
-# v15 0.12101535 0.0025580480 0.13183786 0.21979536
-# v16 0.12669288 0.0008737440 0.20008737 0.28877239
-# v19 0.18291262 0.0048543689 0.18485437 0.33145631
+basic.error <- unlist(lapply(regions, getBasicError))
+names(basic.error) <- regions
+#          v4         v13         v35         v15         v16         v19 
+# 0.005832224 0.015089630 0.014237063 0.009483316 0.014764301 0.013538793 
+composite.basic.error <- 100 * sum(basic.error*n.good)/(sum(n.good))
 ```
 
 To establish a simple curation procedure, we culled any sequence that contained
 an ambiguous base call, had a string of the same base repeated 9 or more times,
 did not start and end at the expected alignment coordinates for that region
 of the 16S rRNA gene, or that was chimeric. This reduced the experiment-wide
-error rate from 1.93 to 1.08% across the six regions we considered. This basic
-procedure resulted in the removal of between 4.4 (V4) and 33.1 (V1-V9)% of the
+error rate from `r format(init.error.rate, digits=3, nsmall=2)` to `r format(composite.basic.error, digits=2, nsmall=2)`% across the six regions we considered. This basic
+procedure resulted in the removal of between `r round(min(100*(1-reasons.lost[,"good"])), digits=1)` (`r pretty.region[names(which.min(100*(1-reasons.lost[,"good"])))]`) and `r round(max(100*(1-reasons.lost[,"good"])), digits=1)` (`r pretty.region[names(which.max(100*(1-reasons.lost[,"good"])))]`)% of the
 reads and the percentage of reads removed increased with the length of the
 fragment (Figure PipelineError). For each region, the number of reads removed
 because of the presence of ambiguous base calls was similar to the number of
 reads that were removed for not fully aligning to the correct region within the
-16S rRNA gene. The latter class of errors was generally due to sequence
-truncations that could not be explained.  
+16S rRNA gene (Table SupplementalReasonsLost). The latter class of errors was
+generally due to sequence truncations that could not be explained.  
 
 
 ### Identifying correlates of increased sequencing error
@@ -1278,13 +1258,31 @@ References
 
 
 
-Figures
+## Figures
 
-```{r FigureErrorQualityScore, echo=F, eval=T, results='asis'}
+```{r FigureErrorQualityScore, echo=T, eval=T, results='hide'}
+par(mar=c(6, 5, 0.5, 0.5))
+plot(1, xlim=c(0.5, 4.5), ylim=c(0,80), type="n", yaxt="n", xaxt="n", xlab="", ylab="")
+polygon(x=c(0.75, 1.25, 1.25, 0.75), y=c(m.quant["25%"], m.quant["25%"], m.quant["75%"], m.quant["75%"]))
+polygon(x=c(1.75, 2.25, 2.25, 1.75), y=c(s.quant["25%"], s.quant["25%"], s.quant["75%"], s.quant["75%"]))
+polygon(x=c(2.75, 3.25, 3.25, 2.75), y=c(i.quant["25%"], i.quant["25%"], i.quant["75%"], i.quant["75%"]))
+polygon(x=c(3.75, 4.25, 4.25, 3.75), y=c(a.quant["25%"], a.quant["25%"], a.quant["75%"], a.quant["75%"]))
+segments(x0=seq(0.75, 3.75, 1), x1=seq(1.25,4.25,1), y0=c(m.quant["50%"], s.quant["50%"], i.quant["50%"], a.quant["50%"]), lwd=4)
+
+arrows(x0=1:4, y0=c(m.quant["75%"], s.quant["75%"], i.quant["75%"], a.quant["75%"]), y1=c(m.quant["97.5%"], s.quant["97.5%"], i.quant["97.5%"], a.quant["97.5%"]), angle=90)
+arrows(x0=1:4, y0=c(m.quant["25%"], s.quant["25%"], i.quant["25%"], a.quant["25%"]), y1=c(m.quant["2.5%"], s.quant["2.5%"], i.quant["2.5%"], a.quant["2.5%"]), angle=90)
+
+axis(2, las=2)
+axis(1, at=c(1,2,3,4), label=c("Matches", "Substitutions", "Insertions", "Ambiguous"), las=2)
+title(ylab="Quality score")
 ```
 
+PipelineError
 
 
+## Supplemental Tables
+
+SupplementalReasonsLost
 
 
 ```{r versions, echo=T, eval=T}
