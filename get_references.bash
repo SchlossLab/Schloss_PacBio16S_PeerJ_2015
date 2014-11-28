@@ -18,9 +18,12 @@ if [ ! -e got.sliva ] || [ got.silva -ot silva.bacteria.align ] || [ got.silva -
   wget -N http://www.mothur.org/w/images/2/27/Silva.nr_v119.tgz
   tar xvzf Silva.nr_v119.tgz
   mothur "#get.lineage(fasta=silva.nr_v119.align, taxonomy=silva.nr_v119.tax, taxon=Bacteria)"
+  mothur "#degap.seqs(fasta=silva.nr_v119.pick.align)"
   mv silva.nr_v119.pick.align silva.bacteria.align
   mv silva.nr_v119.pick.tax silva.bacteria.tax
+  mv silva.nr_v119.pick.ng.fasta silva.bacteria.fasta
   touch got.silva
+  #silva.bacteria.align
   #silva.bacteria.fasta
   #silva.bacteria.tax
 fi
@@ -55,7 +58,7 @@ fi
 # created silva.bacteria.fasta file...
 
 if [ ! -e HMP_MOCK.align ] || [ HMP_MOCK.align -ot HMP_MOCK.fasta ]; then
-  mothur "#align.seqs(fasta=HMP_MOCK.fasta, reference=silva.bacteria.fasta)"
+  mothur "#align.seqs(fasta=HMP_MOCK.fasta, reference=silva.bacteria.align)"
   #HMP_MOCK.align
 fi
 
