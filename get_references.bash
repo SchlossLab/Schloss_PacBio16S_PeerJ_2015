@@ -1,5 +1,6 @@
 # This command will pull down a copy of the HMP_MOCK.fasta reference sequence
-# file and the necessary reference databases
+# file and the necessary reference databases. Yes, I realize that this is a hack
+# to avoid figuring out how to use make correctly.
 
 mkdir -p references
 cd references
