@@ -8,9 +8,9 @@
 # transfer the fastqs from the `raw_data` folder into into region-specific
 # folders:
 
-mkdir ccs.fastqs
+mkdir -p ccs.fastqs
 cd ccs.fastqs
-mkdir v19 v16 v15 v13 v35 v4
+mkdir -p v19 v16 v15 v13 v35 v4
 for REGION in 19 16 15 13 35 4
 do
     cp ../raw_data/*_p$REGION/Analysis_Results/*ccs.fastq v$REGION
@@ -23,9 +23,9 @@ ls */*fastq | cut -f 1 -d "/" | sort | uniq -c > ../ccs.fastqs.count
 # concatenate those fastq files and dump them into individual folders.
 
 cd ../
-mkdir pipeline_dev
+mkdir -p pipeline_dev
 cd pipeline_dev
-mkdir v19 v16 v15 v13 v35 v4
+mkdir -p v19 v16 v15 v13 v35 v4
 
 for REGION in $(ls -d v*)
 do
@@ -41,10 +41,10 @@ done
 # many base pairs were sequenced for each fragment:
 
 cd ../
-mkdir subreads.fasta
+mkdir -p subreads.fasta
 cd subreads.fasta
 
-mkdir v19 v16 v15 v13 v35 v4
+mkdir -p v19 v16 v15 v13 v35 v4
 for REGION in 19 16 15 13 35 4
 do
     cat ../raw_data/*_p$REGION/Analysis_Results/*subreads.fasta > v$REGION/v$REGION.subreads.fasta
@@ -110,6 +110,8 @@ do
         seq.error(fasta=$REGION.mock.filter.fasta, reference=HMP_MOCK.filter.fasta, report=$REGION.mock.align.report, qfile=$REGION.mock.qual);"
     cd ../
 done
+
+wc -l */*error.summary > ../count.seqs
 
 cd ..
 
