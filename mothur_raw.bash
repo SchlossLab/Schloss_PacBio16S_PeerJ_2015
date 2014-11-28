@@ -71,7 +71,7 @@ for REGION in v*
 do
     grep ""$REGION"" ../pacbio.oligos > $REGION/$REGION.oligos
     grep "barcode" ../pacbio.oligos >> $REGION/$REGION.oligos
-    cp ../HMP_MOCK.align ./$REGION/
+    cp ../reference/HMP_MOCK.align ./$REGION/
 done
 
 
