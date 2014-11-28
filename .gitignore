@@ -11,3 +11,5 @@ mothur.*.logfile
 *.docx
 *.html
 HMP_MOCK*
+*.Rout
+
