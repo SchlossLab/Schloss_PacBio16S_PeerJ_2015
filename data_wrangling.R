@@ -146,7 +146,7 @@ generateComposite <- function(folder){
   summary <- summary[non.chimeras,]
 
   #fix some column names
-  colnames(mismatches) <- c("barcode", "primer")
+#  colnames(mismatches) <- c("barcode", "primer")
   aveq <- aveq[,-1]
   colnames(aveq) <- c("aveQ", "minQ")
 
