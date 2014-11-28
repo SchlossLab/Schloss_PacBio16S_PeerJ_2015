@@ -14,11 +14,11 @@ cd references
 # the databases to only include bacterial sequences.
 
 
-if [ ! -e got.sliva ] || [ got.silva -ot silva.bacteria.fasta ] || [ got.silva -ot silva.bacteria.tax ]; then
+if [ ! -e got.sliva ] || [ got.silva -ot silva.bacteria.align ] || [ got.silva -ot silva.bacteria.fasta ] || [ got.silva -ot silva.bacteria.tax ]; then
   wget -N http://www.mothur.org/w/images/2/27/Silva.nr_v119.tgz
   tar xvzf Silva.nr_v119.tgz
   mothur "#get.lineage(fasta=silva.nr_v119.align, taxonomy=silva.nr_v119.tax, taxon=Bacteria)"
-  mv silva.nr_v119.pick.align silva.bacteria.fasta
+  mv silva.nr_v119.pick.align silva.bacteria.align
   mv silva.nr_v119.pick.tax silva.bacteria.tax
   touch got.silva
   #silva.bacteria.fasta
