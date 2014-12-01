@@ -172,10 +172,12 @@ analyzing PacBio data is available on the mothur wiki
 (http://www.mothur.org/wiki/PacBio_SOP).
 
 ```{r setup, echo=TRUE, eval=TRUE, tidy=TRUE}
+pdf.options(encoding="ISOLatin2.enc")
 regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
 clrs <- rainbow(length(regions))
 pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
 names(clrs) <- regions
+
 
 opts_chunk$set("fig.path"="figure/")
 opts_chunk$set("fig.align"="center")
@@ -206,8 +208,8 @@ init.error.rate <- 100 * sum(errors) / total				#1.925717
 
 subst.bias <- apply(errors[1:4,1:4], 2, sum)/apply(sub.matrix[1:4,1:4], 2, sum)
 subst.bias <- 100 * subst.bias/sum(subst.bias)
-#       rA        rT        rG        rC 
-#0.2247412 0.2748158 0.2392554 0.2611875 
+#       rA        rT        rG        rC
+#0.2247412 0.2748158 0.2392554 0.2611875
 #these are more or less equal to each other
 
 insert.bias <- (sub.matrix[,"rGap"]/apply(sub.matrix, 1, sum))[1:4]
@@ -281,8 +283,8 @@ getInitError <- function(folder){
 
 init.rates <- unlist(lapply(regions, getInitError))
 names(init.rates) <- regions
-#          v4         v13         v35         v15         v16         v19 
-# 0.008257847 0.023997519 0.025057346 0.018050725 0.025606045 0.022916201 
+#          v4         v13         v35         v15         v16         v19
+# 0.008257847 0.023997519 0.025057346 0.018050725 0.025606045 0.022916201
 
 
 getReasonsLost <- function(region){
@@ -313,8 +315,8 @@ getBasicError <- function(folder){
 
 basic.error <- unlist(lapply(regions, getBasicError))
 names(basic.error) <- regions
-#          v4         v13         v35         v15         v16         v19 
-# 0.005832224 0.015089630 0.014237063 0.009483316 0.014764301 0.013538793 
+#          v4         v13         v35         v15         v16         v19
+# 0.005832224 0.015089630 0.014237063 0.009483316 0.014764301 0.013538793
 composite.basic.error <- 100 * sum(basic.error*n.good)/(sum(n.good))
 ```
 
@@ -355,10 +357,10 @@ getBCPrimerError <- function(folder){
 
 	good0 <- mismatch == 0
 	composite.good0 <- composite[good0,]
-	
+
 	good1 <- mismatch <= 1
 	composite.good1 <- composite[good1,]
-	
+
 	return(c(mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
 	mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
 }
@@ -398,7 +400,7 @@ coverage.error <- unlist(lapply(regions, errorAtCoverageCutoff))
 coverage.error <- matrix(coverage.error, ncol=2, byrow=T)
 rownames(coverage.error) <- regions
 colnames(coverage.error) <- c("10.error", "10.frac")
-       
+
 #        10.error   10.frac
 # v4  0.002812434 0.7875164
 # v13 0.010385450 0.6568849
@@ -409,8 +411,8 @@ colnames(coverage.error) <- c("10.error", "10.frac")
 
 
 coverage.reduction <- (1-coverage.error[,"error"]/basic.error)*100
-#      v16      v35      v15      v19      v13       v4 
-# 26.13126 26.30490 26.93670 26.95477 31.17492 51.77766 
+#      v16      v35      v15      v19      v13       v4
+# 26.13126 26.30490 26.93670 26.95477 31.17492 51.77766
 ```
 
 
@@ -421,10 +423,10 @@ getErrorRateFromAveQ <- function(folder, threshold=60){
 	composite <- composite[composite$reason == "g",]
 
 	rates <- composite[composite$aveQ >= threshold,]
-	
+
 	remaining.error <- mean(rates[,"error"])
 	fraction.kept <- nrow(rates)/nrow(composite)
-	
+
 	return(c(remaining.error, fraction.kept))
 }
 
@@ -448,14 +450,14 @@ oligosCoverage <- function(folder){
 	write(folder, "")
 	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 	composite <- composite[composite$reason == "g",]
-	
+
 	mismatch <- composite$fbdiffs + composite$rbdiffs + composite$fpdiffs + composite$rpdiffs
 	good0 <- mismatch == 0 & composite$freq >= 10
 	composite.good0 <- composite[good0,]
-	
+
 	good1 <- mismatch <= 1 & composite$freq >= 10
 	composite.good1 <- composite[good1,]
-	
+
 	return(c(mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
 	mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
 }
@@ -483,10 +485,10 @@ oligosQScore <- function(folder){
 
 	good <- mismatch == 0 & composite$aveQ >= 60
 	composite.good0 <- composite[good,]
-	
+
 	good1 <- mismatch <= 1 & composite$aveQ >= 60
 	composite.good1 <- composite[good1,]
-	
+
 	return(c(mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
 	mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
 }
@@ -509,11 +511,11 @@ coverageQScore <- function(folder){
 	write(folder, "")
 		composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 		composite <- composite[composite$reason == "g",]
-	
+
 	good <- composite$freq >= 10 & composite$aveQ>= 60
 	composite.good <- composite[good,]
-	
-	return(c(mean(composite.good[,"error"]), nrow(composite.good)/nrow(composite) ))	
+
+	return(c(mean(composite.good[,"error"]), nrow(composite.good)/nrow(composite) ))
 }
 
 coverageQScore.error <- matrix(unlist(lapply(regions, coverageQScore)), ncol=2, byrow=T)
@@ -569,10 +571,10 @@ identify and remove those sequences with errors using three different
 approaches. First, we hypothesized that errors in the barcode and primer would
 be correlated with the error rate for the entire sequence. We observed a strong
 relationship between the number of mismatches to the barcodes and primers and the
-error rate of the rest of the sequence fragment (Figure FigureErrorQualityScore_B). Although 
+error rate of the rest of the sequence fragment (Figure FigureErrorQualityScore_B). Although
 allowing no mismatches to the barcodes and primers yielded the lowest error rate,
-that stringent criterion removed a large fraction of the reads from the dataset and 
-allowing at most one mismatch marginally increased the error rate while preserving 
+that stringent criterion removed a large fraction of the reads from the dataset and
+allowing at most one mismatch marginally increased the error rate while preserving
 more sequences in the dataset (Figure PipelineError). Second, we hypothesized
 that increased sequencing coverage should yield lower error rates. We found that
 once we had obtained 10-fold coverage of the fragments, the error rate did not
@@ -580,25 +582,25 @@ change appreciably (Figure FigureErrorQualityScore_C). When we compared the erro
 rates of reads with at least 10-fold coverage to those with less coverage, we
 reduced the error rate by `r paste(round(sort(coverage.reduction)[c(1,5)], digits=1), collapse=" to ")`% for each region except the V4 region for which
 the error rate was reduced by `r round(coverage.reduction["v4"], digits=1)`%.
-Third, based on the earlier analysis associating errors with quality scores, we used 
-two quality score-based approaches for identifying reads with errors. We calculated 
-the minimum average quality score across all 50-nt window within each sequence and we 
-also calculated the average quality score across each sequence. We then associated 
-both methods of calculating the average quality score with the error rate of the 
-reads and the fraction of sequences that would be retained if each threshold were 
-selected. Using the sliding window approach we did not observe any clear break points 
-indicating that one quality score would be better than another. In contrast, using 
-the whole sequence quality score average we observed a decrease in the error rate and 
-the fraction of sequences retained when the threshold was increased above 60 (Figure 
-QualityScoreAverage). When we used this threshold, we were able to reduce the error 
-rate by `r paste(round(range(quality.reduction), digits=1), collapse=" to ")`% 
-(Figure ErrorSequenceCoverage). We noted that the fraction of reads retained 
+Third, based on the earlier analysis associating errors with quality scores, we used
+two quality score-based approaches for identifying reads with errors. We calculated
+the minimum average quality score across all 50-nt window within each sequence and we
+also calculated the average quality score across each sequence. We then associated
+both methods of calculating the average quality score with the error rate of the
+reads and the fraction of sequences that would be retained if each threshold were
+selected. Using the sliding window approach we did not observe any clear break points
+indicating that one quality score would be better than another. In contrast, using
+the whole sequence quality score average we observed a decrease in the error rate and
+the fraction of sequences retained when the threshold was increased above 60 (Figure
+QualityScoreAverage). When we used this threshold, we were able to reduce the error
+rate by `r paste(round(range(quality.reduction), digits=1), collapse=" to ")`%
+(Figure ErrorSequenceCoverage). We noted that the fraction of reads retained
 decreased as the length of the fragment increased with retention of
 `r round(100*aveq.error["v4", "kept"],digits=1)`% of the V4 reads and
-`r round(100*aveq.error["v19", "kept"],digits=1)`% of the V1-V9 reads (Figure 
-ErrorSequenceCoverage). Next, we asked whether which combinations of culling 
-reads with mismatches to the expected barcodes and primers, less than 10-fold 
-sequencing coverage, and an average quality score less than 60 made the most 
+`r round(100*aveq.error["v19", "kept"],digits=1)`% of the V1-V9 reads (Figure
+ErrorSequenceCoverage). Next, we asked whether which combinations of culling
+reads with mismatches to the expected barcodes and primers, less than 10-fold
+sequencing coverage, and an average quality score less than 60 made the most
 meaningful reductions in the error rate while preserving the most reads. Finally, we
 implemented the basic curation pipeline along with permutations of these
 three critera. We observed similar error rates when we required 1 or fewer
@@ -1096,6 +1098,7 @@ References
 
 ### Figure 1
 ```{r FigureErrorQualityScore, echo=F, eval=T, fig.width=6.5, fig.height=3.0}
+#pdf(file="test.pdf", width=6.5, height=3.0)
 layout(matrix(c(1,2,3), nrow=1), heights=1, widths=c(0.75,1,1))
 
 #
@@ -1112,9 +1115,9 @@ segments(x0=seq(0.75, 3.75, 1), x1=seq(1.25,4.25,1), y0=c(m.quant["50%"], s.quan
 arrows(x0=1:4, y0=c(m.quant["75%"], s.quant["75%"], i.quant["75%"], a.quant["75%"]), y1=c(m.quant["97.5%"], s.quant["97.5%"], i.quant["97.5%"], a.quant["97.5%"]), angle=90, length=0.05)
 arrows(x0=1:4, y0=c(m.quant["25%"], s.quant["25%"], i.quant["25%"], a.quant["25%"]), y1=c(m.quant["2.5%"], s.quant["2.5%"], i.quant["2.5%"], a.quant["2.5%"]), angle=90, length=0.05)
 
-axis(2, las=2, at=c(0,25,50,75))
-axis(1, at=c(1,2,3,4), label=c("Matches", "Substitutions", "Insertions", "Ambiguous"), las=2)
-title(ylab="Quality score")
+axis(2, las=2, at=c(0,25,50,75), cex.axis=1.5)
+axis(1, at=c(1,2,3,4), label=c("Matches", "Substitutions", "Insertions", "Ambiguous"), las=2, cex.axis=1)
+title(ylab="Quality score", cex.lab=1.5)
 mtext(side=2, line=2.5, at=75, text="A", cex=2, font=2, las=2)
 
 
@@ -1125,9 +1128,11 @@ mtext(side=2, line=2.5, at=75, text="A", cex=2, font=2, las=2)
 #
 
 par(mar=c(5,5,0.5,0.5))
-plot(err.bcprimer$x[1:6,1]~err.bcprimer$Group.1[1:6], pch=19, ylab="Error rate (%)", xlab="Total mismatches to\nbarcodes and primers", axes=F, ylim=c(0,5))
-axis(1)
-axis(2, las=2)
+plot(err.bcprimer$x[1:6,1]~err.bcprimer$Group.1[1:6], pch=19, ylab="Error rate (%)",
+		 xlab="", axes=F, ylim=c(0,5), cex.lab=1.5)
+mtext(side=1, line=3.75, text="Total mismatches to\nbarcodes and primers", cex=0.9)
+axis(1, cex.axis=1.5)
+axis(2, las=2, cex.axis=1.5)
 box()
 mtext(side=2, line=2.5, at=5, text="B", cex=2, font=2, las=2)
 
@@ -1153,20 +1158,24 @@ plotLines <- function(folder){
 }
 
 par(mar=c(5,2,0.5, 0.5))
-plot(1, xlim=c(2,30), ylim=c(0,0.05), type="n", xlab="", ylab="", yaxt="n")
-title(xlab="Coverage", ylab="")
+plot(1, xlim=c(2,30), ylim=c(0,0.05), type="n", xlab="", ylab="", axes=F)
 #axis(2, at=seq(0,0.05, 0.01), label=seq(0,5, 1), las=2)
+axis(1, cex.axis=1.5)
 lapply(regions, plotLines)
 legend(x=18, y=0.05, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
 mtext(side=2, line=0.5, at=0.05, text="C", cex=2, font=2, las=2)
+title(xlab="Coverage", ylab="", cex.lab=1.5)
+box()
 
 layout(1)
+#dev.off()
 ```
 
 
 
 ### Figure 2
 ```{r pipelineErrorFigure}
+cairo_pdf(file="test.pdf", width=6.5, height=6)
 error.fraction <- cbind(initial.error=init.rates, basic.error=basic.error, bcprimer.error, coverage.error, aveq.error, oligosCoverage.error, oligosQScore.error, coverageQScore.error, allFilters.error)
 rownames(error.fraction) <- gsub("v(\\d*)", "\\1", rownames(error.fraction))
 
@@ -1183,61 +1192,74 @@ getJitter <- function(x){
 l <- layout(matrix(c(1,2,3), nrow=3), heights=c(1,1,0.5))
 
 par(mar=c(0.5, 7, 0.5, 0.5))
-plot(1, type="n", xlim=c(0.75, 11.25), ylim=c(0,1.25), axes=F, xlab="", ylab="", cex.lab=1.5)
-text(x=getJitter(1.0), y=error[,3], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(2.0), y=error[,4], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(3.0), y=error[,5], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(4.0), y=error[,6], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(5.0), y=error[,7], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(6.0), y=error[,8], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(7.0), y=error[,9], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(8.0), y=error[,10], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(9.0), y=error[,11], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(10.0), y=error[,12], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(11.0), y=error[,13], label=rownames(error.fraction), cex=1.5)
+plot(1, type="n", xlim=c(1, 14), ylim=c(0,2.5), axes=F, xlab="", ylab="", cex.lab=1.5)
+text(x=getJitter(1.0), y=error[,1], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(2.0), y=error[,2], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(3.0), y=error[,3], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(4.0), y=error[,4], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(5.0), y=error[,5], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(6.0), y=error[,6], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(7.0), y=error[,7], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(8.0), y=error[,8], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(9.0), y=error[,9], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(10.0), y=error[,10], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(11.0), y=error[,11], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(12.0), y=error[,12], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(13.0), y=error[,13], label=rownames(error.fraction), cex=1.25)
 mtext(text="Error rate (%)", side=2, line=4, cex.lab=1.2)
 box()
-axis(2, las=2, at=seq(0,1.25, 0.25), label=format(seq(0, 1.25, 0.25),nsmall=2), cex.axis=1.5)
+axis(2, las=2, at=seq(0,2.5, 0.5), label=format(seq(0, 1.25, 0.25),nsmall=2), cex.axis=1.5)
 
-abline(v=seq(1.5,10.5, 1), col="grey")
-mtext(side=2, line=4, at=1.22, text="A", cex=3, font=2, las=1)
+abline(v=seq(3.5,13.5, 1), col="grey")
+abline(v=c(1.5, 2.5, 13.5), col="black", lwd=2)
+
+
+mtext(side=2, line=4, at=2.44, text="A", cex=2, font=2, las=1)
 
 
 par(mar=c(0.5, 7, 0.5, 0.5))
-plot(1, type="n", xlim=c(0.75, 11.25), ylim=c(0,100), axes=F, ylab="% of Reads Remaining\nfrom Basic Criteria ", xlab="", cex.lab=1.5)
-text(x=getJitter(1.0), y=fraction[,1], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(2.0), y=fraction[,2], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(3.0), y=fraction[,3], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(4.0), y=fraction[,4], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(5.0), y=fraction[,5], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(6.0), y=fraction[,6], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(7.0), y=fraction[,7], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(8.0), y=fraction[,8], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(9.0), y=fraction[,9], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(10.0), y=fraction[,10], label=rownames(error.fraction), cex=1.5)
-text(x=getJitter(11.0), y=fraction[,11], label=rownames(error.fraction), cex=1.5)
+plot(1, type="n", xlim=c(1, 14), ylim=c(0,100), axes=F,
+		 ylab="Reads Remaining\nfrom Basic Criteria (%)", xlab="", cex.lab=1.5)
+text(x=getJitter(3.0), y=fraction[,1], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(4.0), y=fraction[,2], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(5.0), y=fraction[,3], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(6.0), y=fraction[,4], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(7.0), y=fraction[,5], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(8.0), y=fraction[,6], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(9.0), y=fraction[,7], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(10.0), y=fraction[,8], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(11.0), y=fraction[,9], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(12.0), y=fraction[,10], label=rownames(error.fraction), cex=1.25)
+text(x=getJitter(13.0), y=fraction[,11], label=rownames(error.fraction), cex=1.25)
 
 box()
-abline(v=seq(1.5,10.5, 1), col="grey")
-mtext(side=2, line=4, at=96, text="B", cex=3, font=2, las=1)
+abline(v=seq(3.5,13.5, 1), col="grey")
+abline(v=c(1.5, 2.5, 13.5), col="black", lwd=2)
+
+mtext(side=2, line=4, at=98, text="B", cex=2, font=2, las=1)
 axis(2, las=2, at=seq(0,100, 25), label=seq(0, 100, 25), cex.axis=1.5)
+text(1,0, label="NA")
+text(2,0, label="NA")
 
 
-plot(1, type="n", xlim=c(0.75, 11.25), ylim=c(0,1), axes=F, ylab="", xlab="")
+plot(1, type="n", xlim=c(1, 14), ylim=c(0,1), axes=F, ylab="", xlab="")
 
-text(x=c(1:11)+0.2, y=rep(1, 11), label=c("No Mismatches", "\u22641 Mismatch", "Coverage", "Quality Score", "No Mismatches\n& Coverage", "\u22641 Mismatch\n& Coverage", "No Mismatches\n& Quality", "\u22641 Mismatch\n& Quality", "Coverage & Quality", "No Mismatches,\nCoverage & Quality", "\u22641 Mismatch,\nCoverage & Quality"), srt=90, pos=2, cex=1.25)
-
-
+text(x=c(1:14)+0.2, y=rep(1, 11), label=c("Initial data", "Basic criteria", "No Mismatches",
+		"\u22641 Mismatch", "Coverage", "Quality Score", "No Mismatches\n& Coverage",
+		"\u22641 Mismatch\n& Coverage", "No Mismatches\n& Quality", "\u22641 Mismatch\n& Quality",
+		"Coverage & Quality", "No Mismatches,\nCoverage & Quality", 
+		"\u22641 Mismatch,\nCoverage & Quality", "After Pre-clustering"), srt=90, pos=2, cex=1)  
 
 
 layout(1)
+dev.off()
 
 ```
 
 
 
 
-### Figure 3 
+### Figure 3
 Quality score
 ```{r FigureMinimumSlidingWindow}
 errorMinQualityScore <- function(folder){
@@ -1263,11 +1285,11 @@ legend(x=60, y=0.10, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regio
 
 fractionMinQualityScore <- function(folder){
 	write(folder, "")
-	
+
 	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 	composite <- composite[composite$reason == "g",]
-	
-	binned <- aggregate(composite$error, by=list(round(composite$minQ)), length)	
+
+	binned <- aggregate(composite$error, by=list(round(composite$minQ)), length)
 	remaining <- 1-cumsum(binned$x)/sum(binned$x)
 	points(binned$Group.1, remaining, type="l", col=clrs[folder], lwd=2)
 }
@@ -1285,7 +1307,7 @@ aggregateErrorMinQualityScore <- function(folder){
 write(folder, "")
 	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 	composite <- composite[composite$reason == "g",]
-	
+
 
 remaining.error <- rep(0, max(composite$minQ)+1)
 qscores <- 0:max(composite$minQ)
@@ -1310,7 +1332,7 @@ write(folder, "")
 
 	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 	composite <- composite[composite$reason == "g",]
-	
+
 binned <- aggregate(composite$error, by=list(round(composite$aveQ)), mean)
 binned <- binned[binned$Group.1 <= 70, ]
 points(binned$Group.1, binned$x, type="l", col=clrs[folder], lwd=2)
