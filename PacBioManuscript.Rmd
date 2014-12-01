@@ -265,7 +265,7 @@ than adenines (`r format(delete.bias["rA"], digits=3, nsmall=1)`%) or thymidines
 (`r format(delete.bias["rT"], digits=3, nsmall=1)`%). When we considered the Phred
 quality score of each base call, we observed a median quality score of `r m.quant["50%"]`
 for correct base calls and scores of `r s.quant["50%"]` and `r i.quant["50%"]` for
-substitutions and insertions, respectively (Figure ErrorQualityScore). Although there
+substitutions and insertions, respectively (Figure FigureErrorQualityScore_A). Although there
 was a broad distribution of quality scores with each type of base call, the errors could
 largely be distinguished from the correct base calls.
 
@@ -569,14 +569,14 @@ identify and remove those sequences with errors using three different
 approaches. First, we hypothesized that errors in the barcode and primer would
 be correlated with the error rate for the entire sequence. We observed a strong
 relationship between the number of mismatches to the barcodes and primers and the
-error rate of the rest of the sequence fragment (Figure BarcodePimerError). Although 
+error rate of the rest of the sequence fragment (Figure FigureErrorQualityScore_B). Although 
 allowing no mismatches to the barcodes and primers yielded the lowest error rate,
 that stringent criterion removed a large fraction of the reads from the dataset and 
 allowing at most one mismatch marginally increased the error rate while preserving 
-more sequences in the dataset (Figure BarcodePrimerError). Second, we hypothesized
+more sequences in the dataset (Figure PipelineError). Second, we hypothesized
 that increased sequencing coverage should yield lower error rates. We found that
 once we had obtained 10-fold coverage of the fragments, the error rate did not
-change appreciably (Figure ErrorSequenceCoverage). When we compared the error
+change appreciably (Figure FigureErrorQualityScore_C). When we compared the error
 rates of reads with at least 10-fold coverage to those with less coverage, we
 reduced the error rate by `r paste(round(sort(coverage.reduction)[c(1,5)], digits=1), collapse=" to ")`% for each region except the V4 region for which
 the error rate was reduced by `r round(coverage.reduction["v4"], digits=1)`%.
@@ -599,22 +599,13 @@ decreased as the length of the fragment increased with retention of
 ErrorSequenceCoverage). Next, we asked whether which combinations of culling 
 reads with mismatches to the expected barcodes and primers, less than 10-fold 
 sequencing coverage, and an average quality score less than 60 made the most 
-meaningful reductions in the error rate while preserving the most reads.
-
-
-
-
-
-
-
-
-
-We then implemented the basic curation pipeline along with permutations of these
+meaningful reductions in the error rate while preserving the most reads. Finally, we
+implemented the basic curation pipeline along with permutations of these
 three critera. We observed similar error rates when we required 1 or fewer
 mismatches to the barcodes and primers and an average quality score above 60 as
-when we also required a minimum 10-fold coverage. The overall error rate was
-reduced to 0.63% and an additional 19 (V4) to 54 (V1-V9)% of the reads were
-removed (Figure ErrorSequenceCoverage).
+when we also required a minimum 10-fold coverage. Culling sequences that had more than
+one mismatch to the barcodes and primers and those with an average quality score less
+than 60 reduced the error rate to between `r paste(round(100*range(oligosQScore.error[,"1.60.error"]), digits=2), collapse=" and ")`. This procedure resulted in the removal of `r paste(rev(round(100*(1-range(oligosQScore.error[,"1.60.frac"])), digits=0)), collapse=" and ")`% of the reads (Figure PipelineError).
 
 
 ### Pre-clustering sequences to further reduce sequencing noise
@@ -1104,26 +1095,77 @@ References
 ## Figures
 
 ### Figure 1
-```{r FigureErrorQualityScore, echo=T, eval=T, results='hide'}
+```{r FigureErrorQualityScore, echo=F, eval=T, fig.width=6.5, fig.height=3.0}
+layout(matrix(c(1,2,3), nrow=1), heights=1, widths=c(0.75,1,1))
+
+#
+#Panel A depicting range of quality scores for different errors
+#
 par(mar=c(6, 5, 0.5, 0.5))
-plot(1, xlim=c(0.5, 4.5), ylim=c(0,80), type="n", yaxt="n", xaxt="n", xlab="", ylab="")
+plot(1, xlim=c(0.5, 4.5), ylim=c(0,75), type="n", yaxt="n", xaxt="n", xlab="", ylab="")
 polygon(x=c(0.75, 1.25, 1.25, 0.75), y=c(m.quant["25%"], m.quant["25%"], m.quant["75%"], m.quant["75%"]))
 polygon(x=c(1.75, 2.25, 2.25, 1.75), y=c(s.quant["25%"], s.quant["25%"], s.quant["75%"], s.quant["75%"]))
 polygon(x=c(2.75, 3.25, 3.25, 2.75), y=c(i.quant["25%"], i.quant["25%"], i.quant["75%"], i.quant["75%"]))
 polygon(x=c(3.75, 4.25, 4.25, 3.75), y=c(a.quant["25%"], a.quant["25%"], a.quant["75%"], a.quant["75%"]))
 segments(x0=seq(0.75, 3.75, 1), x1=seq(1.25,4.25,1), y0=c(m.quant["50%"], s.quant["50%"], i.quant["50%"], a.quant["50%"]), lwd=4)
 
-arrows(x0=1:4, y0=c(m.quant["75%"], s.quant["75%"], i.quant["75%"], a.quant["75%"]), y1=c(m.quant["97.5%"], s.quant["97.5%"], i.quant["97.5%"], a.quant["97.5%"]), angle=90)
-arrows(x0=1:4, y0=c(m.quant["25%"], s.quant["25%"], i.quant["25%"], a.quant["25%"]), y1=c(m.quant["2.5%"], s.quant["2.5%"], i.quant["2.5%"], a.quant["2.5%"]), angle=90)
+arrows(x0=1:4, y0=c(m.quant["75%"], s.quant["75%"], i.quant["75%"], a.quant["75%"]), y1=c(m.quant["97.5%"], s.quant["97.5%"], i.quant["97.5%"], a.quant["97.5%"]), angle=90, length=0.05)
+arrows(x0=1:4, y0=c(m.quant["25%"], s.quant["25%"], i.quant["25%"], a.quant["25%"]), y1=c(m.quant["2.5%"], s.quant["2.5%"], i.quant["2.5%"], a.quant["2.5%"]), angle=90, length=0.05)
 
-axis(2, las=2)
+axis(2, las=2, at=c(0,25,50,75))
 axis(1, at=c(1,2,3,4), label=c("Matches", "Substitutions", "Insertions", "Ambiguous"), las=2)
 title(ylab="Quality score")
+mtext(side=2, line=2.5, at=75, text="A", cex=2, font=2, las=2)
+
+
+
+#
+#Panel B depicting relationship between errors in barcodes/primers and the
+#rest of the sequence.
+#
+
+par(mar=c(5,5,0.5,0.5))
+plot(err.bcprimer$x[1:6,1]~err.bcprimer$Group.1[1:6], pch=19, ylab="Error rate (%)", xlab="Total mismatches to\nbarcodes and primers", axes=F, ylim=c(0,5))
+axis(1)
+axis(2, las=2)
+box()
+mtext(side=2, line=2.5, at=5, text="B", cex=2, font=2, las=2)
+
+
+
+#
+#Panel C depicting relationship between sequencing coverage and error rate for the different
+#regions that were sequence
+#
+
+
+plotLines <- function(folder){
+	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+	composite <- composite[composite$reason=="g",]
+	error.by.depth <- aggregate(composite$error, by=list(composite$freq), function(x){c(mean=mean(x), quantile(x, prob=c(0.025, 0.975)), n=length(x))})
+
+	error.by.depth <- error.by.depth[error.by.depth$x[,"n"]>=50,] #exclude any coverage values where we don't have at least 50 observations
+	fold.coverage <- error.by.depth[, "Group.1"]
+	error.by.depth <- error.by.depth$x
+
+	mean <- error.by.depth[,"mean"]
+	points(mean~fold.coverage, type="l", lwd=2, col=clrs[folder])
+}
+
+par(mar=c(5,2,0.5, 0.5))
+plot(1, xlim=c(2,30), ylim=c(0,0.05), type="n", xlab="", ylab="", yaxt="n")
+title(xlab="Coverage", ylab="")
+#axis(2, at=seq(0,0.05, 0.01), label=seq(0,5, 1), las=2)
+lapply(regions, plotLines)
+legend(x=18, y=0.05, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
+mtext(side=2, line=0.5, at=0.05, text="C", cex=2, font=2, las=2)
+
+layout(1)
 ```
 
 
+
 ### Figure 2
-PipelineError
 ```{r pipelineErrorFigure}
 error.fraction <- cbind(initial.error=init.rates, basic.error=basic.error, bcprimer.error, coverage.error, aveq.error, oligosCoverage.error, oligosQScore.error, coverageQScore.error, allFilters.error)
 rownames(error.fraction) <- gsub("v(\\d*)", "\\1", rownames(error.fraction))
@@ -1193,36 +1235,9 @@ layout(1)
 ```
 
 
-### Figure 3
-Error by mismatches to the barcodes and primers
 
 
-### Figure 4
-```{r FigureCoverageAnalysis}
-
-plotLines <- function(folder){
-	composite <- read.table(file=paste(folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-	composite <- composite[composite$reason=="g",]
-	error.by.depth <- aggregate(composite$error, by=list(composite$freq), function(x){c(mean=mean(x), quantile(x, prob=c(0.025, 0.975)), n=length(x))})
-
-	error.by.depth <- error.by.depth[error.by.depth$x[,"n"]>=50,] #exclude any coverage values where we don't have at least 50 observations
-	fold.coverage <- error.by.depth[, "Group.1"]
-	error.by.depth <- error.by.depth$x
-
-	mean <- error.by.depth[,"mean"]
-	points(mean~fold.coverage, type="l", lwd=2, col=clrs[folder])
-}
-
-par(mar=c(5,5,0.5, 0.5))
-plot(1, xlim=c(0,60), ylim=c(0,0.05), type="n", xlab="", ylab="", yaxt="n")
-title(xlab="Coverage", ylab="Error rate (%)")
-axis(2, at=seq(0,0.05, 0.01), label=seq(0,5, 1), las=2)
-lapply(regions, plotLines)
-legend(x=40, y=0.05, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
-```
-
-
-### Figure 5 
+### Figure 3 
 Quality score
 ```{r FigureMinimumSlidingWindow}
 errorMinQualityScore <- function(folder){
@@ -1354,7 +1369,7 @@ legend(x=55, y=0.02, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regio
 ```
 
 
-### Figure 6
+### Figure 4
 
 
 ## Supplemental Tables
