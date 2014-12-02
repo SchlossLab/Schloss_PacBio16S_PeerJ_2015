@@ -614,9 +614,9 @@ than 60 reduced the error rate to between `r paste(round(100*range(oligosQScore.
 
 ```{r}
 summarizeError <- function(folder, method){
-  file1 <- paste(folder, "/", folder, ".mock1.", method, ".error.summary", sep="")
-  file2 <- paste(folder, "/", folder, ".mock2.", method, ".error.summary", sep="")
-  file3 <- paste(folder, "/", folder, ".mock3.", method, ".error.summary", sep="")
+  file1 <- paste("pipeline_dev/", folder, "/", folder, ".mock1.", method, ".error.summary", sep="")
+  file2 <- paste("pipeline_dev/", folder, "/", folder, ".mock2.", method, ".error.summary", sep="")
+  file3 <- paste("pipeline_dev/", folder, "/", folder, ".mock3.", method, ".error.summary", sep="")
 
   summary <- rbind(read.table(file=file1, header=T, row.names=1), read.table(file=file2, header=T, row.names=1), read.table(file=file3, header=T, row.names=1))
   nochim <- summary[summary$numparents==1,]
@@ -636,7 +636,6 @@ rownames(error) <- regions
 #v19 0.004917835 0.003397170
 #v35 0.009064385 0.007661003
 #v4  0.001746057 0.000943217
-
 ```
 
 Previously, we implemented a pre-clustering algorithm where sequences are sorted
@@ -1261,32 +1260,28 @@ dev.off()
 
 ### Figure 3
 Quality score
-```{r FigureMinimumSlidingWindow}
-errorMinQualityScore <- function(folder){
-	write(folder, "")
-
-	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-	composite <- composite[composite$reason == "g",]
-
-	binned <- aggregate(composite$error, by=list(round(composite$minQ)), mean)
-	binned <- binned[binned$Group.1 <= 70, ]
-	points(binned$Group.1, binned$x, type="l", col=clrs[folder], lwd=2)
-}
-
-par(mar=c(5,5,0.5, 0.5))
-plot(1, xlim=c(10,75), ylim=c(0,0.10), type="n", yaxt="n", xlab="", ylab="")
-lapply(regions, errorMinQualityScore)
-title(xlab="Minimum average quality score\nwithin a 50-nt window across the full sequence", ylab="Error Rate (%)")
-axis(2, las=2, at=seq(0,0.1,0.02), label=seq(0,10,2))
-legend(x=60, y=0.10, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
-```
 
 ```{r}
+aggregateErrorMinQualityScore <- function(folder){
+	write(folder, "")
+	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder,
+																		 ".composite", sep=""), header=T, row.names=1)
+	composite <- composite[composite$reason == "g",]
+
+	remaining.error <- rep(0, max(composite$minQ)+1)
+	qscores <- 0:max(composite$minQ)
+	
+	remaining.error <- unlist(lapply(qscores,
+														function(x){mean(composite[composite$minQ >= x,"error"])}))
+	names(remaining.error) <- qscores
+	points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
+}
 
 fractionMinQualityScore <- function(folder){
 	write(folder, "")
 
-	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder,
+																		 ".composite", sep=""), header=T, row.names=1)
 	composite <- composite[composite$reason == "g",]
 
 	binned <- aggregate(composite$error, by=list(round(composite$minQ)), length)
@@ -1294,101 +1289,84 @@ fractionMinQualityScore <- function(folder){
 	points(binned$Group.1, remaining, type="l", col=clrs[folder], lwd=2)
 }
 
-par(mar=c(5,5,0.5, 0.5))
-plot(1, xlim=c(10,75), ylim=c(0,1), type="n", yaxt="n", xlab="", ylab="")
-lapply(regions, fractionMinQualityScore)
-title(xlab="Minimum average quality score\nwithin a 50-nt window across the full sequence", ylab="Sequences above threshold (%)")
-axis(2, las=2, at=seq(0,1,0.2), label=seq(0,100,20))
-legend(x=10, y=0.30, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
-```
 
-```{r}
-aggregateErrorMinQualityScore <- function(folder){
-write(folder, "")
-	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+aggregateErrorAveQualityScore <- function(folder){
+	write(folder, "")
+	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder,
+																		 ".composite", sep=""), header=T, row.names=1)
 	composite <- composite[composite$reason == "g",]
-
-
-remaining.error <- rep(0, max(composite$minQ)+1)
-qscores <- 0:max(composite$minQ)
-
-remaining.error <- unlist(lapply(qscores, function(x){mean(composite[composite$minQ >= x,"error"])}))
-names(remaining.error) <- qscores
-
-points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
+	
+	remaining.error <- rep(0, max(composite$aveQ)+1)
+	qscores <- 0:max(composite$aveQ)
+	remaining.error <- unlist(lapply(qscores,
+												function(x){mean(composite[composite$aveQ >= x,"error"])}))
+	names(remaining.error) <- qscores
+	points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
 }
 
-par(mar=c(5,5,0.5, 0.5))
-plot(1, xlim=c(10,75), ylim=c(0,0.02), type="n", yaxt="n", xlab="", ylab="")
-lapply(regions, aggregateErrorMinQualityScore)
-title(xlab="Minimum average quality score\nwithin 50-nt windows from across the full sequence", ylab="Error rate of sequences above threshold (%)")
-axis(2, las=2, at=seq(0,0.02,0.005), label=seq(0,2,0.5))
-legend(x=55, y=0.02, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
-```
 
-```{r}
-errorAveQualityScore <- function(folder){
-write(folder, "")
-
-	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-	composite <- composite[composite$reason == "g",]
-
-binned <- aggregate(composite$error, by=list(round(composite$aveQ)), mean)
-binned <- binned[binned$Group.1 <= 70, ]
-points(binned$Group.1, binned$x, type="l", col=clrs[folder], lwd=2)
-}
-
-par(mar=c(5,5,0.5, 0.5))
-plot(1, xlim=c(10,75), ylim=c(0,0.10), type="n", yaxt="n", xlab="", ylab="")
-lapply(regions, errorAveQualityScore)
-title(xlab="Average quality score", ylab="Error Rate (%)")
-axis(2, las=2, at=seq(0,0.1,0.02), label=seq(0,10,2))
-legend(x=60, y=0.10, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
-```
-
-```{r}
 fractionAveQualityScore <- function(folder){
 write(folder, "")
 
 	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
 	composite <- composite[composite$reason == "g",]
 
-binned <- aggregate(composite$error, by=list(round(composite$aveQ)), length)
-
-remaining <- 1-cumsum(binned$x)/sum(binned$x)
-points(binned$Group.1, remaining, type="l", col=clrs[folder], lwd=2)
+	binned <- aggregate(composite$error, by=list(round(composite$aveQ)), length)
+	
+	remaining <- 1-cumsum(binned$x)/sum(binned$x)
+	points(binned$Group.1, remaining, type="l", col=clrs[folder], lwd=2)
 }
 
-par(mar=c(5,5,0.5, 0.5))
-plot(1, xlim=c(10,75), ylim=c(0,1), type="n", yaxt="n", xlab="", ylab="")
-lapply(regions, fractionAveQualityScore)
-title(xlab="Average quality score", ylab="Sequences above threshold (%)")
-axis(2, las=2, at=seq(0,1,0.2), label=seq(0,100,20))
-legend(x=10, y=0.30, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
-```
+pdf(file="test.pdf", width=6.5, height=6.5)
+layout(1)
+layout(matrix(c(1,2,3,4), nrow=2, byrow=F), width=c(1.1,1), height=c(1, 1.3))
 
-```{r}
-aggregateErrorAveQualityScore <- function(folder){
-write(folder, "")
-composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
-	composite <- composite[composite$reason == "g",]
+#A
+par(mar=c(0.5,5,0.5, 0.5))
+plot(1, xlim=c(10,75), ylim=c(0,0.015), type="n", axes=F, xlab="", ylab="")
+lapply(regions, aggregateErrorMinQualityScore)
+mtext(side=2, line=2.5, text="Error rate of sequences\nabove threshold (%)", cex.lab=0.9)
+axis(1, at=seq(10,70,10), label=F, tick=T)
+axis(2, las=2, at=seq(0,0.015,0.005), label=format(seq(0,1.5,0.5), nsmall=1), cex.axis=1.25)
+box()
+mtext(side=2, line=2.6, at=0.015, text="A", las=2, cex=2, font=2)
 
-remaining.error <- rep(0, max(composite$aveQ)+1)
-qscores <- 0:max(composite$aveQ)
+#B
+par(mar=c(6,5,0.5, 0.5))
+plot(1, xlim=c(10,75), ylim=c(0,1), type="n", yaxt="n", xlab="", ylab="", cex.axis=1.25)
+lapply(regions, fractionMinQualityScore)
+mtext(side=1, line=4.25, text="Minimum average quality\nscore within a 50-nt window\nacross the full sequence", cex=0.9)
+mtext(side=2, line=2.5, text="Sequences above\nthreshold (%)", cex.lab=0.9)
 
-remaining.error <- unlist(lapply(qscores, function(x){mean(composite[composite$aveQ >= x,"error"])}))
-names(remaining.error) <- qscores
+axis(2, las=2, at=seq(0,1,0.2), label=seq(0,100,20), cex.axis=1.25)
+mtext(side=2, line=2.6, at=1, text="B", las=2, cex=2, font=2)
 
-points(x=10:70, remaining.error[10:70], type="l", col=clrs[folder], lwd=2)
-}
 
-par(mar=c(5,5,0.5, 0.5))
-plot(1, xlim=c(10,75), ylim=c(0,0.02), type="n", yaxt="n", xlab="", ylab="")
+#C
+par(mar=c(0.5,2,0.5, 0.5))
+plot(1, xlim=c(10,75), ylim=c(0,0.015), type="n", axes=F, xlab="", ylab="")
 lapply(regions, aggregateErrorAveQualityScore)
-title(xlab="Average quality score\nacross the full sequence", ylab="Error rate of sequences above threshold (%)")
-axis(2, las=2, at=seq(0,0.02,0.005), label=seq(0,2,0.5))
-legend(x=55, y=0.02, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions])
+axis(1, at=seq(10,70,10), label=F, tick=T)
+axis(2, at=seq(0,0.02,0.005), label=F, tick=T)
+box()
+mtext(side=2, line=0.6, at=0.015, text="C", las=2, cex=2, font=2)
+
+
+#D
+par(mar=c(6,2,0.5, 0.5))
+plot(1, xlim=c(10,75), ylim=c(0,1), type="n", yaxt="n", xlab="", ylab="", cex.axis=1.25)
+lapply(regions, fractionAveQualityScore)
+mtext(side=1, text="Average quality score", cex=0.9, line=3)
+title(ylab="Sequences above threshold (%)")
+axis(2, at=seq(0,1,0.2), label=FALSE, tick=TRUE)
+mtext(side=2, line=0.6, at=1, text="D", las=2, cex=2, font=2)
+
+
+legend(x=10, y=0.50, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions], cex=1.0)
+
+dev.off()
 ```
+
 
 
 ### Figure 4
@@ -1397,6 +1375,11 @@ legend(x=55, y=0.02, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regio
 ## Supplemental Tables
 
 SupplementalReasonsLost
+```{r}
+rownames(reasons.lost) <- pretty.region[rownames(reasons.lost)]
+kable(100*reasons.lost, digits=1, row.names=TRUE, col.names=c("Good reads (%)", "Wrong start/end position (%)", "Excessively long homopolymers (%)", "Ambiguous base calls (%)"), align="c")
+```
+
 
 
 ```{r versions, echo=T, eval=T}
