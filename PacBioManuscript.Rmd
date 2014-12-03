@@ -210,25 +210,25 @@ init.error.rate <- 100 * sum(errors) / total				#1.925717
 subst.bias <- apply(errors[1:4,1:4], 2, sum)/apply(sub.matrix[1:4,1:4], 2, sum)
 subst.bias <- 100 * subst.bias/sum(subst.bias)
 #       rA        rT        rG        rC
-#0.2247412 0.2748158 0.2392554 0.2611875
+# 22.43918 27.21620 24.06557 26.27904 
 #these are more or less equal to each other
 
 insert.bias <- (sub.matrix[,"rGap"]/apply(sub.matrix, 1, sum))[1:4]
 insert.bias <- 100 * insert.bias/sum(insert.bias)
-#       qA        qT        qG        qC
-#0.2364246 0.2432987 0.2425315 0.2777452
+#       qA       qT       qG       qC
+# 23.46112 24.36667 24.33064 27.84157 
 #these are more or less equal to each other
 
 delete.bias <- (sub.matrix["qGap",]/apply(sub.matrix, 2, sum))[1:4]
 delete.bias <- 100 * delete.bias/sum(delete.bias)
-#            rA        rT       rG        rC
-#qGap 0.1167635 0.0978054 0.442078 0.3433531
+#           rA      rT       rG       rC
+#qGap 11.43234 9.46907 44.57506 34.52353
 #interestingly the G's and C's are more likely to be deleted than the As or Ts
 
-substitutions <- 100*sum(errors[1:4,1:4])/sum(errors)	#0.3656617
-insertions <- 100*sum(errors[,5])/sum(errors)			#0.450299
-deletions <- 100*sum(errors[5,])/sum(errors)			#0.167206
-ambiguous <- 100*sum(errors[6,])/sum(errors)			#0.02157014
+substitutions <- 100*sum(errors[1:4,1:4])/sum(errors)	#35.80084
+insertions <- 100*sum(errors[,5])/sum(errors)			#45.27368
+deletions <- 100*sum(errors[5,])/sum(errors)			#17.27259
+ambiguous <- 100*sum(errors[6,])/sum(errors)			#2.101505
 
 
 # Need to connect error types with the quality scores
@@ -284,8 +284,9 @@ getInitError <- function(folder){
 
 init.rates <- unlist(lapply(regions, getInitError))
 names(init.rates) <- regions
-#          v4         v13         v35         v15         v16         v19
-# 0.008257847 0.023997519 0.025057346 0.018050725 0.025606045 0.022916201
+#         v4         v13         v35         v15         v16         v19 
+#0.007348394 0.022576344 0.023803251 0.016778645 0.024307232 0.021551162 
+
 
 
 getReasonsLost <- function(region){
@@ -316,8 +317,8 @@ getBasicError <- function(folder){
 
 basic.error <- unlist(lapply(regions, getBasicError))
 names(basic.error) <- regions
-#          v4         v13         v35         v15         v16         v19
-# 0.005832224 0.015089630 0.014237063 0.009483316 0.014764301 0.013538793
+#         v4         v13         v35         v15         v16         v19 
+#0.005373722 0.014743697 0.013730112 0.009027326 0.014249660 0.013027623 
 composite.basic.error <- 100 * sum(basic.error*n.good)/(sum(n.good))
 ```
 
@@ -371,12 +372,12 @@ rownames(bcprimer.error) <- regions
 colnames(bcprimer.error) <- c("0.error", "0.frac", "1.error", "1.frac")
 
 #         0.error    0.frac     1.error    1.frac
-# v4  0.002616919 0.6312137 0.003711755 0.8932658
-# v13 0.011102712 0.5731377 0.012493712 0.8573363
-# v35 0.010838504 0.6398867 0.011901910 0.8844452
-# v15 0.005375052 0.5023119 0.007029568 0.8246322
-# v16 0.010374438 0.5399263 0.011874367 0.8519656
-# v19 0.008543379 0.4998548 0.010086351 0.8117920
+# v4  0.002616919 0.6417469 0.003711755 0.9081720
+# v13 0.011102712 0.5799452 0.012493713 0.8675194
+# v35 0.010838504 0.6464069 0.011901910 0.8934573
+# v15 0.005375053 0.5079055 0.007029568 0.8338150
+# v16 0.010374438 0.5456238 0.011893323 0.8609559
+# v19 0.008543379 0.5072207 0.010086351 0.8237548
 ```
 
 
@@ -402,18 +403,18 @@ coverage.error <- matrix(coverage.error, ncol=2, byrow=T)
 rownames(coverage.error) <- regions
 colnames(coverage.error) <- c("10.error", "10.frac")
 
-#        10.error   10.frac
-# v4  0.002812434 0.7875164
-# v13 0.010385450 0.6568849
-# v35 0.010492018 0.6627146
-# v15 0.006928824 0.6698613
-# v16 0.010906203 0.4606880
-# v19 0.009889442 0.5620099
+#       10.error   10.frac
+#v4  0.002524566 0.7897874
+#v13 0.010359113 0.6592051
+#v35 0.010084961 0.6642832
+#v15 0.006534609 0.6717103
+#v16 0.010039601 0.4605835
+#v19 0.009506114 0.5620395
 
 
 coverage.reduction <- (1-coverage.error[,"10.error"]/basic.error)*100
-#      v16      v35      v15      v19      v13       v4
-# 26.13126 26.30490 26.93670 26.95477 31.17492 51.77766
+#      v4      v13      v35      v15      v16      v19 
+#53.02015 29.73870 26.54859 27.61302 29.54498 27.03110 
 ```
 
 
@@ -435,13 +436,13 @@ aveq.error <- matrix(unlist(lapply(regions, getErrorRateFromAveQ)), ncol=2, byro
 rownames(aveq.error) <- regions
 colnames(aveq.error) <- c("60.error", "60.frac")
 
-#        60.error   60.frac
-# v4  0.002923691 0.8667229
-# v13 0.009899221 0.7571106
-# v35 0.009427016 0.7676517
-# v15 0.004816332 0.6967633
-# v16 0.009527474 0.6560197
-# v19 0.005936197 0.4978217
+#       60.error   60.frac
+#v4  0.002623098 0.8692667
+#v13 0.009914371 0.7608497
+#v35 0.009035060 0.7697533
+#v15 0.004553350 0.7005270
+#v16 0.008921902 0.6561142
+#v19 0.005714256 0.5010315
 
 quality.reduction <- (1-aveq.error[,"60.error"]/basic.error)*100
 ```
@@ -467,13 +468,13 @@ oligosCoverage.error <- matrix(unlist(lapply(regions, oligosCoverage)), ncol=4, 
 rownames(oligosCoverage.error) <- regions
 colnames(oligosCoverage.error) <- c("0.10.error", "0.10.frac", "1.10.error", "1.10.frac")
 
-#      0.10.error 0.10.frac  1.10.error 1.10.frac
-# v4  0.001565052 0.5476458 0.002068184 0.7389796
-# v13 0.009371691 0.4302483 0.009899256 0.6108352
-# v35 0.009096211 0.4857547 0.009503092 0.6257300
-# v15 0.004050098 0.3762085 0.005253236 0.5834384
-# v16 0.007945951 0.2929975 0.008956478 0.4256757
-# v19 0.006706336 0.3142608 0.007903900 0.4856230
+#     0.10.error 0.10.frac  1.10.error 1.10.frac
+#v4  0.001565052 0.5567846 0.002068184 0.7513111
+#v13 0.009371691 0.4353586 0.009899256 0.6180905
+#v35 0.009096211 0.4907043 0.009503092 0.6321058
+#v15 0.004050098 0.3803978 0.005253236 0.5899354
+#v16 0.007945951 0.2960894 0.008956478 0.4301676
+#v19 0.006706336 0.3188918 0.007903900 0.4927793
 ```
 
 ```{r oligosQScoreAnalysis}
@@ -489,7 +490,7 @@ oligosQScore <- function(folder){
 
 	good1 <- mismatch <= 1 & composite$aveQ >= 60
 	composite.good1 <- composite[good1,]
-
+	write(file="v4.good.txt", rownames(composite[good1,]))
 	return(c(mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
 	mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
 }
@@ -498,13 +499,13 @@ oligosQScore.error <- matrix(unlist(lapply(regions, oligosQScore)), ncol=4, byro
 rownames(oligosQScore.error) <- regions
 colnames(oligosQScore.error) <- c("0.60.error", "0.60.frac", "1.60.error", "1.60.frac")
 
-#      0.60.error 0.60.frac  1.60.error 1.60.frac
-# v4  0.001715135 0.5916338 0.002215499 0.8096980
-# v13 0.009153895 0.4954853 0.009700915 0.7024831
-# v35 0.008365403 0.5501681 0.008690839 0.7207574
-# v15 0.003217812 0.4057167 0.003993206 0.6213535
-# v16 0.007589961 0.4072482 0.008358922 0.6038084
-# v19 0.004870705 0.3162939 0.005294429 0.4586117
+#     0.60.error 0.60.frac  1.60.error 1.60.frac
+#v4  0.001715135 0.6015066 0.002215499 0.8232097
+#v13 0.009153895 0.5013705 0.009700915 0.7108269
+#v35 0.008365403 0.5557740 0.008690839 0.7281015
+#v15 0.003217812 0.4102346 0.003993206 0.6282727
+#v16 0.007589961 0.4115456 0.008358922 0.6101800
+#v19 0.004870705 0.3209549 0.005294429 0.4653699
 ```
 
 ```{r coverageQScoreAnalysis}
@@ -523,13 +524,13 @@ coverageQScore.error <- matrix(unlist(lapply(regions, coverageQScore)), ncol=2, 
 rownames(coverageQScore.error) <- regions
 colnames(coverageQScore.error) <- c("10.60.error", "10.60.frac")
 
-#     10.60.error 10.60.frac
-# v4  0.002636544  0.7850778
-# v13 0.010013647  0.6514673
-# v35 0.009707464  0.6549283
-# v15 0.004775956  0.5793190
-# v16 0.010487021  0.4588452
-# v19 0.005815805  0.3860006
+#    10.60.error 10.60.frac
+#v4  0.002361882  0.7874988
+#v13 0.010016818  0.6541800
+#v35 0.009296289  0.6564176
+#v15 0.004481083  0.5824549
+#v16 0.009612120  0.4587213
+#v19 0.005692918  0.3884468
 ```
 
 ```{r allFiltersAnalysis}
@@ -553,13 +554,13 @@ allFilters.error <- matrix(unlist(lapply(regions, allFilters)), ncol=4, byrow=T)
 rownames(allFilters.error) <- regions
 colnames(allFilters.error) <- c("0.10.60.error", "0.10.60.frac", "1.10.60.error", "1.10.60.frac")
 
-#     0.10.60.error 0.10.60.frac 1.10.60.error 1.10.60.frac
-# v4    0.001515500    0.5470831   0.001993325    0.7376665
-# v13   0.009299146    0.4286682   0.009827404    0.6083521
-# v35   0.008613200    0.4813307   0.008979207    0.6190055
-# v15   0.003078476    0.3450189   0.003905562    0.5210593
-# v16   0.007738039    0.2923833   0.008814923    0.4250614
-# v19   0.004797594    0.2460064   0.005266467    0.3578275
+#    0.10.60.error 0.10.60.frac 1.10.60.error 1.10.60.frac
+#v4    0.001515500    0.5562125   0.001993325    0.7499762
+#v13   0.009299146    0.4337597   0.009827404    0.6155779
+#v35   0.008613200    0.4862353   0.008979207    0.6253128
+#v15   0.003078476    0.3488609   0.003905562    0.5268616
+#v16   0.007738039    0.2954687   0.008814923    0.4295469
+#v19   0.004797594    0.2496316   0.005266467    0.3631005
 ```
 
 
@@ -616,9 +617,9 @@ than 60 reduced the error rate to between `r paste(round(100*range(oligosQScore.
 
 ```{r}
 summarizeError <- function(folder, method){
-  file1 <- paste("pipeline_dev/", folder, "/", folder, ".mock1.", method, ".error.summary", sep="")
-  file2 <- paste("pipeline_dev/", folder, "/", folder, ".mock2.", method, ".error.summary", sep="")
-  file3 <- paste("pipeline_dev/", folder, "/", folder, ".mock3.", method, ".error.summary", sep="")
+  file1 <- paste("analysis/", folder, "/", folder, ".mock1.", method, ".error.summary", sep="")
+  file2 <- paste("analysis/", folder, "/", folder, ".mock2.", method, ".error.summary", sep="")
+  file3 <- paste("analysis/", folder, "/", folder, ".mock3.", method, ".error.summary", sep="")
 
   summary <- rbind(read.table(file=file1, header=T, row.names=1), read.table(file=file2, header=T, row.names=1), read.table(file=file3, header=T, row.names=1))
   nochim <- summary[summary$numparents==1,]
@@ -628,16 +629,25 @@ summarizeError <- function(folder, method){
 
 unique <- unlist(lapply(regions, summarizeError, "unique"))
 precluster <- unlist(lapply(regions, summarizeError, "precluster"))
-error <- cbind(unique, precluster)
-rownames(error) <- regions
+final.error <- cbind(unique, precluster)
+rownames(final.error) <- regions
 
 #         unique  precluster
-#v13 0.008320245 0.007029193
-#v15 0.003644766 0.001727743
-#v16 0.006742346 0.005426787
-#v19 0.004917835 0.003397170
-#v35 0.009064385 0.007661003
-#v4  0.001746057 0.000943217
+#v4  0.002277391 0.001418871
+#v13 0.009081866 0.007722886
+#v35 0.009719159 0.008257968
+#v15 0.004740243 0.002645747
+#v16 0.007130228 0.005676505
+#v19 0.005158478 0.003163881
+
+reduction <- 100*(1-final.error[,"precluster"]/final.error[,"unique"])
+rnd.reduction <- round(reduction, 0)
+min.rnd.red <- min(rnd.reduction)
+max.rnd.red <- max(rnd.reduction)
+
+min.region <- paste(pretty.region[names(rnd.reduction[rnd.reduction==min.rnd.red])],collapse=" and ")
+
+max.region <- pretty.region[[names(rnd.reduction[rnd.reduction==max.rnd.red])]]
 ```
 
 Previously, we implemented a pre-clustering algorithm where sequences are sorted
@@ -651,11 +661,13 @@ errors while not overwhelming the resolution needed to identify OTUs that are
 based on a 3% distance threshold. Needless to say, this approach would limit
 one’s ability to detect 3 nt differences between V1-V9 sequences. When we apply
 this approach to our PacBio data, we observed a reduction in the error rate
-between 15 (V1-V3 and 	V3-V5) and 53% (V1-V5). The final error rates varied
-between 0.09 (V4) and 0.77% (V3-V5); the full-length, V1-V9, fragments had an
-error rate of 0.34% (Figure ErrorSequenceCoverage). These error rates are 4-5
+between `r min.rnd.red` (`r min.region`) and `r max.rnd.red`% (`r max.region`).
+The final error rates varied between `r round(min(100*final.error[,"precluster"]), digits=2)` (`r pretty.region[names(which.min(final.error[,"precluster"]))]`)
+and `r round(max(100*final.error[,"precluster"]), digits=2)`%
+(`r pretty.region[names(which.max(final.error[,"precluster"]))]`); the
+full-length, V1-V9, fragments had an error rate of `r round(100* final.error["v19","precluster"], digits=2)`% (Figure ErrorSequenceCoverage). These error rates are 7-40
 times higher than what we have previously observed using the Roche 454 and
-Illumina MiSeq platforms [refs].
+Illumina MiSeq platforms (0.02%)[refs].
 
 
 
@@ -695,16 +707,6 @@ for(r in regions){
 }
 ```
 
-Unfortunately, those counts are kind of depressing:
-
-|   | human1  | human2	| human3	| mock1		| mock2		| mock3		| mouse1	| mouse2	| mouse3	| soil1		| soil2	| soil3	|
-|-----------------------------------------------------------------------------------------------------------------------|
-| v13 |  1038 |   810   | 1062   |  750     |  767    |  792    |  546    | 1049    |  365    |  790    |   606 |  870  |
-| v15 |   556 |   700   | 1398   | 1459     | 1866    | 1669    | 1035    |  671    | 1345    | 1259    |  1480 | 1498  |
-| v16 |   492 |   437   |  592   |  270     |  244    |  247    |  262    |  448    |  286    |  358    |   299 |  210  |
-| v19 |   165 |    55   |  134   |  455     |  402    |  357    |  314    |  109    |  117    |  399    |   479 |  710  |
-| v35 |  1050 |   965   |  848   |  979     | 1247    | 1231    |  634    |  606    |  425    |  612    |   357 | 1075  |
-| v4  |   620 |   908   |  572   | 3721     | 4101    | 4857    | 1527    |  979    | 1186    |  728    |  2707 | 1310  |
 
 Let's merge the three replicates for each sample like we did for the error analysis and move forward... First we'll make a mapping file and then we'll run merge.groups in mothur
 
@@ -714,12 +716,8 @@ for(r in regions){
 }
 ```
 
-```{r engine='bash'}
-for REGION in v*
-do
-    mothur "#merge.groups(shared=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.shared, design=$REGION/merge.groups)"
-done
-```
+
+
 
 Here's what we get out when we run the above code again on the meged groups:
 
@@ -741,16 +739,9 @@ for(r in regions){
 }
 ```
 
-The merged counts:
 
-|     | human | mock   | mouse | soil
-|-------------------------------------
-| v13 | 2910  |  2309  | 1960  | 2266
-| v15 | 2654  |  4994  | 3051  | 4237
-| v16 | 1521  |   761  |  996  |  867
-| v19 |  354  |  1214  |  540  | 1588
-| v35 | 2863  |  3457  | 1665  | 2044
-| v4  | 2100  | 12679  | 3692  | 4745
+
+
 
 Now we want to summarize the number of OTUs we observed under different conditions:
 
@@ -824,17 +815,6 @@ for(r in regions){
 }
 ```
 
-# Not sure about this...
-# Now we'd like to break this down by sample type. First we'll count the number
-# of times each sequence shows up in each group using mothur:
-
-```{r engine='bash'}
-for REGION in v*
-do
-    mothur "#merge.groups(group=$REGION/$REGION.good.pick.groups, design=$REGION/merge.groups);
-            count.seqs(group=$REGION/$REGION.good.pick.merge.groups, name=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.names)"
-done
-```
 
 ```{r}
 getDepthByLibrary <- function(region){
@@ -1090,9 +1070,27 @@ Project.
 This study was supported by grants from the NIH (R01HG005975, R01GM099514 and
 P30DK034933 to PDS and U54HG004973 to SKH).
 
-References
+
+## References
 
 
+
+## Tables
+
+**Table 1. Primer pairs used to generate 16S rRNA gene fragments of varying length.**
+```{r Table1}
+oligos <- read.table(file="pacbio.oligos", stringsAsFactors=F)[1:6,]
+rownames(oligos) <- pretty.region[oligos$V4]
+oligos <- oligos[,c("V2", "V3")]
+colnames(oligos) <- c("Forward", "Reverse")
+coordinates <- rep("NA", 6)
+length <- rep("NA", 6)
+references <- rep("NA", 6)
+t1 <- cbind(oligos, coordinates, length, references)
+kable(t1, digits=1, row.names=TRUE, col.names=c("Forward", "Reverse", "*E. coli* coordinates", "Length (bp)^a^", "References"), align=c("l", "l", "c", "c", "c"))
+```
+
+^a^	Represents the expected median length of the DNA fragments amplified between the primers when using the 16S rRNA gene fragments in the mock community.
 
 
 ## Figures
