@@ -443,7 +443,7 @@ colnames(aveq.error) <- c("60.error", "60.frac")
 # v16 0.009527474 0.6560197
 # v19 0.005936197 0.4978217
 
-quality.reduction <- (1-aveq.error[,"error"]/basic.error)*100
+quality.reduction <- (1-aveq.error[,"60.error"]/basic.error)*100
 ```
 
 ```{r oligosCoverageAnalysis}
