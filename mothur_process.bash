@@ -24,7 +24,7 @@ cd ../analysis
 for REGION in v*
 do
     cd $REGION
-    mothur "#trim.seqs(fasta=$REGION.fasta, qfile=$REGION.qual, oligos=$REGION.oligos, checkorient=T, tdiffs=1, maxambig=0, maxhomop=8, qaverage=60, processors=8);
+    mothur "#trim.seqs(fasta=$REGION.fasta, qfile=$REGION.qual, oligos=$REGION.oligos, checkorient=T, pdiffs=1, bdiffs=1, tdiffs=1, maxambig=0, maxhomop=8, qaverage=60, processors=8);
             unique.seqs(fasta=current); align.seqs(fasta=current, reference=../../references/silva.bacteria.align);
             summary.seqs(name=current)"
     cd ../
