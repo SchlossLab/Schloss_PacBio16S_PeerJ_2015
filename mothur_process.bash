@@ -6,7 +6,7 @@
 # folders and make links to the original fasta files:
 
 mkdir analysis
-cd ../analysis
+cd analysis
 mkdir v13  v15  v16  v19  v35  v4
 cd ../pipeline_dev
 
@@ -25,7 +25,7 @@ for REGION in v*
 do
     cd $REGION
     mothur "#trim.seqs(fasta=$REGION.fasta, qfile=$REGION.qual, oligos=$REGION.oligos, checkorient=T, tdiffs=1, maxambig=0, maxhomop=8, qaverage=60, processors=8);
-            unique.seqs(fasta=current); align.seqs(fasta=current, reference=../silva.bacteria.fasta);
+            unique.seqs(fasta=current); align.seqs(fasta=current, reference=../../references/silva.bacteria.align);
             summary.seqs(name=current)"
     cd ../
 done
@@ -35,20 +35,20 @@ done
 #
 # | Region | Start | End   |
 # |-------------------------
-# | v13    | 1044  | 13125 |
-# | v15    | 1044  | 27659 |
-# | v16    | 1044  | 34113 |
-# | v19    | 1044  | 43116 |
-# | v4     | 6428  | 27659 |
-# | v35    | 13862 | 23444 |
+# | v13    | 1046  | 13125 |
+# | v15    | 1046  | 27659 |
+# | v16    | 1046  | 34113 |
+# | v19    | 1046  | 43116 |
+# | v35    | 6428  | 27659 |
+# | v4     | 13862 | 23444 |
 
 # Now we want to run screen.seqs to remove sequences that do not start at or
 # before the start position or end at or after end.
 
-mothur "#screen.seqs(fasta=v13.trim.unique.align, name=v13.trim.names, group=v13.groups, start=1044, end=13125, processors=8, inputdir=./v13)"
-mothur "#screen.seqs(fasta=v15.trim.unique.align, name=v15.trim.names, group=v15.groups, start=1044, end=27659, processors=8, inputdir=./v15)"
-mothur "#screen.seqs(fasta=v16.trim.unique.align, name=v16.trim.names, group=v16.groups, start=1044, end=34113, processors=8, inputdir=./v16)"
-mothur "#screen.seqs(fasta=v19.trim.unique.align, name=v19.trim.names, group=v19.groups, start=1044, end=43116, processors=8, inputdir=./v19)"
+mothur "#screen.seqs(fasta=v13.trim.unique.align, name=v13.trim.names, group=v13.groups, start=1046, end=13125, processors=8, inputdir=./v13)"
+mothur "#screen.seqs(fasta=v15.trim.unique.align, name=v15.trim.names, group=v15.groups, start=1046, end=27659, processors=8, inputdir=./v15)"
+mothur "#screen.seqs(fasta=v16.trim.unique.align, name=v16.trim.names, group=v16.groups, start=1046, end=34113, processors=8, inputdir=./v16)"
+mothur "#screen.seqs(fasta=v19.trim.unique.align, name=v19.trim.names, group=v19.groups, start=1046, end=43116, processors=8, inputdir=./v19)"
 mothur "#screen.seqs(fasta=v35.trim.unique.align, name=v35.trim.names, group=v35.groups, start=6428, end=27659, processors=8, inputdir=./v35)"
 mothur "#screen.seqs(fasta=v4.trim.unique.align, name=v4.trim.names, group=v4.groups, start=13862, end=23444, processors=8, inputdir=./v4)"
 
@@ -61,7 +61,7 @@ mothur "#screen.seqs(fasta=v4.trim.unique.align, name=v4.trim.names, group=v4.gr
 for REGION in v*
 do
     mothur "#set.dir(input=./$REGION, output=./$REGION);
-            filter.seqs(fasta=$REGION.trim.unique.good.align-../reference/HMP_MOCK.align, vertical=T, trump=., processors=8);
+            filter.seqs(fasta=$REGION.trim.unique.good.align-../references/HMP_MOCK.align, vertical=T, trump=., processors=8);
             unique.seqs(fasta=$REGION.trim.unique.good.filter.fasta, name=$REGION.trim.good.names);
             summary.seqs(name=current)"
 done
@@ -78,7 +78,7 @@ done
 # | v19    | 1458   | 14    |
 # | v35    | 545    |  5    |
 # | v4     | 253    |  2    |
-#
+
 # Once we run pre.cluster, we'll check for chimeras, remove them, cluster the
 # sequences and then make a shared file from them
 
@@ -105,30 +105,57 @@ done
 
 for REGION in v*
 do
-    for REP in 1 2 3
-    do
-        mothur "#set.dir(input=./$REGION, output=./$REGION);
-            get.groups(fasta=$REGION.trim.unique.good.filter.unique.fasta, group=$REGION.good.pick.groups, name=$REGION.trim.unique.good.filter.names, groups=mock$REP.$REGION);
-            system(mv $REGION/$REGION.trim.unique.good.filter.pick.names $REGION/$REGION.mock$REP.unique.names);
-            system(mv $REGION/$REGION.trim.unique.good.filter.unique.pick.fasta $REGION/$REGION.mock$REP.unique.fasta);
-            seq.error(fasta=$REGION.mock$REP.unique.fasta, name=$REGION.mock$REP.unique.names, reference=HMP_MOCK.filter.fasta, aligned=T, processors=8)"
+  for REP in 1 2 3
+  do
+    mothur "#set.dir(input=./$REGION, output=./$REGION);
+        get.groups(fasta=$REGION.trim.unique.good.filter.unique.fasta, group=$REGION.good.pick.groups, name=$REGION.trim.unique.good.filter.names, groups=mock$REP.$REGION);
+        system(mv $REGION/$REGION.trim.unique.good.filter.pick.names $REGION/$REGION.mock$REP.unique.names);
+        system(mv $REGION/$REGION.trim.unique.good.filter.unique.pick.fasta $REGION/$REGION.mock$REP.unique.fasta);
+        seq.error(fasta=$REGION.mock$REP.unique.fasta, name=$REGION.mock$REP.unique.names, reference=HMP_MOCK.filter.fasta, aligned=T, processors=8)"
 
-        mothur "#set.dir(input=./$REGION, output=./$REGION);
-            get.groups(fasta=$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, group=$REGION.good.pick.groups, name=$REGION.trim.unique.good.filter.unique.precluster.pick.names, groups=mock$REP.$REGION);
-            system(mv $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.pick.names $REGION/$REGION.mock$REP.precluster.names);
-            system(mv $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.pick.fasta $REGION/$REGION.mock$REP.precluster.fasta);
-            seq.error(fasta=$REGION.mock$REP.precluster.fasta, name=$REGION.mock$REP.precluster.names, reference=HMP_MOCK.filter.fasta, aligned=T, processors=8)"
-    done
+    mothur "#set.dir(input=./$REGION, output=./$REGION);
+        get.groups(fasta=$REGION.trim.unique.good.filter.unique.precluster.pick.fasta, group=$REGION.good.pick.groups, name=$REGION.trim.unique.good.filter.unique.precluster.pick.names, groups=mock$REP.$REGION);
+        system(mv $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.pick.names $REGION/$REGION.mock$REP.precluster.names);
+        system(mv $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.pick.fasta $REGION/$REGION.mock$REP.precluster.fasta);
+        seq.error(fasta=$REGION.mock$REP.precluster.fasta, name=$REGION.mock$REP.precluster.names, reference=HMP_MOCK.filter.fasta, aligned=T, processors=8)"
+  done
+done
+
+
+# Let's find the smallest number of sequences in each region
+MIN=1000000
+for REGION in v*
+do
+    COUNT=$(grep -c "mock" $REGION/$REGION.good.pick.groups)
+    MIN=$(echo $(($MIN>$COUNT?$COUNT:$MIN)))
+    COUNT=$(grep -c "soil" $REGION/$REGION.good.pick.groups)
+    MIN=$(echo $(($MIN>$COUNT?$COUNT:$MIN)))
+    COUNT=$(grep -c "human" $REGION/$REGION.good.pick.groups)
+    MIN=$(echo $(($MIN>$COUNT?$COUNT:$MIN)))
+    COUNT=$(grep -c "mouse" $REGION/$REGION.good.pick.groups)
+    MIN=$(echo $(($MIN>$COUNT?$COUNT:$MIN)))
+done
+
+
+# Let's merge the three replicates for each library and recreate a shared file
+# based on the merged group files
+
+for REGION in v*
+do
+  cut -f 1 -d "." $REGION/$REGION.good.pick.groups | sed "s/.$//" > $REGION/$REGION.good.pick.merge.groups
+  cp $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.list $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.list
+  mothur "#make.shared(list=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.list, group=$REGION/$REGION.good.pick.merge.groups, label=0.03)"
 done
 
 
 
-# Let's rarefy everything to 354 reads per sample since this was the size of the
+
+# Let's rarefy everything to $MIN (~350) reads per sample since this was the size of the
 # smallest v19 library
 
 for REGION in v*
 do
-  mothur "#summary.single(shared=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.shared, calc=sobs-coverage, subsample=354, iters=1000)"
+  mothur "#summary.single(shared=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.shared, calc=sobs-coverage, subsample=$MIN, iters=1000)"
 done
 
 
@@ -137,11 +164,18 @@ done
 
 for REGION in v*
 do
-  grep "2$" $REGION/$REGION.mock*error.summary | cut -f 2 -d ":" | cut -f 1 > $REGION/$REGION.extra.chimeras
-  cat $REGION/$REGION.mock?.precluster.fasta > $REGION/$REGION.mock.precluster.fasta
-  cat $REGION/$REGION.mock?.precluster.names > $REGION/$REGION.mock.precluster.names
-  mothur "#remove.seqs(fasta=$REGION/$REGION.mock.precluster.fasta, name=$REGION/$REGION.mock.precluster.names, accnos=$REGION/$REGION.extra.chimeras);
-  dist.seqs(cutoff=0.15); cluster(); summary.single(subsample=283, calc=sobs, label=0.03)"
+  grep "2$" $REGION/$REGION.mock?.precluster*error.summary | cut -f 2 -d ":" | cut -f 1 > $REGION/$REGION.extra.chimeras
+  cat $REGION/$REGION.mock?.precluster.fasta > $REGION/$REGION.mock.precluster.perfect.fasta
+  cat $REGION/$REGION.mock?.precluster.names > $REGION/$REGION.mock.precluster.perfect.names
+  mothur "#remove.seqs(fasta=$REGION/$REGION.mock.precluster.perfect.fasta, name=$REGION/$REGION.mock.precluster.perfect.names, accnos=$REGION/$REGION.extra.chimeras);
+  dist.seqs(cutoff=0.15); cluster(); summary.single(calc=nseqs, label=0.03)"
+done
+
+MIN=$(cat v*/*mock.precluster.perfect.pick.an.summary | cut -f 2 | grep "\\." | sort -n | head -n 1 | cut -f 1 -d ".")
+
+for REGION in v*
+do
+  mothur "#summary.single(list=$REGION/$REGION.mock.precluster.perfect.pick.an.list, subsample=$MIN, calc=sobs, label=0.03)"
 done
 
 
@@ -151,7 +185,8 @@ done
 for REGION in v*
 do
   grep "1$" $REGION/$REGION.mock*error.summary | cut -f 2 | sort | uniq > $REGION/mock.ref.accnos
-  mothur "#get.seqs(fasta=$REGION/HMP_MOCK.filter.fasta, accnos=$REGION/mock.ref.accnos); dist.seqs(cutoff=0.15, output=lt); cluster(phylip=current); summary.single(label=0.03, calc=sobs)"
+  mothur "#get.seqs(fasta=$REGION/HMP_MOCK.filter.fasta, accnos=$REGION/mock.ref.accnos);
+          dist.seqs(cutoff=0.15, output=lt); cluster(phylip=current); summary.single(label=0.03, calc=sobs)"
 done
 
 

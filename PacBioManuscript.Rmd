@@ -583,7 +583,8 @@ rates of reads with at least 10-fold coverage to those with less coverage, we
 reduced the error rate by `r paste(round(sort(coverage.reduction)[c(1,5)], digits=1), collapse=" to ")`% for each region except the V4 region for which
 the error rate was reduced by `r round(coverage.reduction["v4"], digits=1)`%.
 Third, based on the earlier analysis associating errors with quality scores, we used
-two quality score-based approaches for identifying reads with errors. We calculated
+two quality score-based approaches for identifying reads with errors (Figure
+QualityScoreFigure. We calculated
 the minimum average quality score across all 50-nt window within each sequence and we
 also calculated the average quality score across each sequence. We then associated
 both methods of calculating the average quality score with the error rate of the
@@ -592,7 +593,7 @@ selected. Using the sliding window approach we did not observe any clear break p
 indicating that one quality score would be better than another. In contrast, using
 the whole sequence quality score average we observed a decrease in the error rate and
 the fraction of sequences retained when the threshold was increased above 60 (Figure
-QualityScoreAverage). When we used this threshold, we were able to reduce the error
+QualityScoreFigure). When we used this threshold, we were able to reduce the error
 rate by `r paste(round(range(quality.reduction), digits=1), collapse=" to ")`%
 (Figure ErrorSequenceCoverage). We noted that the fraction of reads retained
 decreased as the length of the fragment increased with retention of
@@ -1096,7 +1097,7 @@ References
 ## Figures
 
 ### Figure 1
-```{r FigureErrorQualityScore, echo=F, eval=T, fig.width=6.5, fig.height=3.0}
+```{r ErrorQualityScoreFigure, fig.width=6.5, fig.height=3.0}
 #pdf(file="test.pdf", width=6.5, height=3.0)
 layout(matrix(c(1,2,3), nrow=1), heights=1, widths=c(0.75,1,1))
 
@@ -1173,7 +1174,7 @@ layout(1)
 
 
 ### Figure 2
-```{r pipelineErrorFigure}
+```{r PipelineErrorFigure, width=6.5, height=6}
 cairo_pdf(file="test.pdf", width=6.5, height=6)
 error.fraction <- cbind(initial.error=init.rates, basic.error=basic.error, bcprimer.error, coverage.error, aveq.error, oligosCoverage.error, oligosQScore.error, coverageQScore.error, allFilters.error)
 rownames(error.fraction) <- gsub("v(\\d*)", "\\1", rownames(error.fraction))
@@ -1259,9 +1260,9 @@ dev.off()
 
 
 ### Figure 3
-Quality score
 
-```{r}
+
+```{r QualityScoreFigure, fig.width=6.5, fig.width=6.5}
 aggregateErrorMinQualityScore <- function(folder){
 	write(folder, "")
 	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder,
@@ -1368,8 +1369,11 @@ dev.off()
 ```
 
 
-
 ### Figure 4
+
+
+
+
 
 
 ## Supplemental Tables
