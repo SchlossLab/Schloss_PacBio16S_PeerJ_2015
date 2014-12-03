@@ -1175,6 +1175,7 @@ layout(1)
 
 ### Figure 2
 ```{r PipelineErrorFigure, width=6.5, height=6}
+cairo_pdf(file="test.pdf", width=6.5, height=6)
 error.fraction <- cbind(initial.error=init.rates, basic.error=basic.error, bcprimer.error, coverage.error, aveq.error, oligosCoverage.error, oligosQScore.error, coverageQScore.error, allFilters.error, final.error)
 rownames(error.fraction) <- gsub("v(\\d*)", "\\1", rownames(error.fraction))
 
@@ -1206,10 +1207,11 @@ text(x=getJitter(11.0), y=error[,11], label=rownames(error.fraction), cex=1.25)
 text(x=getJitter(12.0), y=error[,12], label=rownames(error.fraction), cex=1.25)
 text(x=getJitter(13.0), y=error[,13], label=rownames(error.fraction), cex=1.25)
 text(x=getJitter(14.0), y=error[,15], label=rownames(error.fraction), cex=1.25)
+text(x=10, y=2, label="*", cex=3, font=2)
 
 mtext(text="Error rate (%)", side=2, line=4, cex.lab=1.2)
 box()
-axis(2, las=2, at=seq(0,2.5, 0.5), label=format(seq(0, 1.25, 0.25),nsmall=2), cex.axis=1.5)
+axis(2, las=2, at=seq(0,2.5, 0.5), label=format(seq(0, 2.5, 0.5),nsmall=2), cex.axis=1.5)
 
 abline(v=seq(3.5,13.5, 1), col="grey")
 abline(v=c(1.5, 2.5, 13.5), col="black", lwd=2)
@@ -1234,7 +1236,6 @@ text(x=getJitter(12.0), y=fraction[,10], label=rownames(error.fraction), cex=1.2
 text(x=getJitter(13.0), y=fraction[,11], label=rownames(error.fraction), cex=1.25)
 text(x=getJitter(14.0), y=fraction[,8], label=rownames(error.fraction), cex=1.25)
 
-
 box()
 abline(v=seq(3.5,13.5, 1), col="grey")
 abline(v=c(1.5, 2.5, 13.5), col="black", lwd=2)
@@ -1253,7 +1254,10 @@ text(x=c(1:14)+0.2, y=rep(1, 11), label=c("Initial data", "Basic criteria", "No 
 		"Coverage & Quality", "No Mismatches,\nCoverage & Quality", 
 		"\u22641 Mismatch,\nCoverage & Quality", "After Pre-clustering"), srt=90, pos=2, cex=1)  
 
+
 layout(1)
+dev.off()
+
 ```
 
 
