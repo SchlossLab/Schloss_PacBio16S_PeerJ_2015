@@ -13,3 +13,4 @@ mothur.*.logfile
 HMP_MOCK*
 *.Rout
 
+*.tgz
