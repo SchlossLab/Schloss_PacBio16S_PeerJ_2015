@@ -80,14 +80,14 @@ done
 # to split the fasta and qual files by barcode. Let's initially be generous and
 # allow for 2 mismatches to each barcode and 4 mismatches to each primer. To
 # keep things simple, we'll concatenate the three mock community fasta, quality
-# score, and groups files. The
-# number of mismatches to the barcodes and primers is on the header line for each
-# sequence in the trim file and is extracted here to a *.mismatches file
+# score, and groups files. The number of mismatches to the barcodes and primers
+# is on the header line for each sequence in the trim file and is extracted here
+# to a *.mismatches file
 
 for REGION in v*
 do
     cd $REGION
-    mothur "#trim.seqs(fasta=$REGION.fasta, qfile=$REGION.qual, oligos=$REGION.oligos, checkorient=T, pdiffs=6, bdiffs=4, allfiles=T, processors=8)"
+    mothur "#trim.seqs(fasta=$REGION.fasta, qfile=$REGION.qual, oligos=$REGION.oligos, checkorient=T, pdiffs=4, bdiffs=2, allfiles=T, processors=8)"
     cat $REGION*mock?.$REGION.fasta > $REGION.mock.fasta
     cat $REGION*mock?.$REGION.qual > $REGION.mock.qual
     cat $REGION*mock?.$REGION.groups > $REGION.mock.groups
