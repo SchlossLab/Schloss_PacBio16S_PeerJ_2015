@@ -172,6 +172,7 @@ analyzing PacBio data is available on the mothur wiki
 (http://www.mothur.org/wiki/PacBio_SOP).
 
 ```{r setup, echo=TRUE, eval=TRUE, tidy=TRUE}
+rm(list=ls())
 pdf.options(encoding="ISOLatin2.enc")
 regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
 clrs <- rainbow(length(regions))
@@ -410,7 +411,7 @@ colnames(coverage.error) <- c("10.error", "10.frac")
 # v19 0.009889442 0.5620099
 
 
-coverage.reduction <- (1-coverage.error[,"error"]/basic.error)*100
+coverage.reduction <- (1-coverage.error[,"10.error"]/basic.error)*100
 #      v16      v35      v15      v19      v13       v4
 # 26.13126 26.30490 26.93670 26.95477 31.17492 51.77766
 ```
