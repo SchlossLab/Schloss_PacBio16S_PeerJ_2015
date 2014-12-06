@@ -199,5 +199,17 @@ do
   cat $REGION/$REGION.mock?.precluster.fasta > $REGION/$REGION.mock.precluster.fasta
   mothur "#classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta-$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=../references/trainset10_082014.pds.fasta, taxonomy=../references/trainset10_082014.pds.tax, processors=8);
   classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta-$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=../references/gg_13_8_99.fasta, taxonomy=../references/gg_13_8_99.gg.tax, processors=8);
-  classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta-$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=../references/silva.bacteria.fasta, taxonomy=../references/silva.bacteria.tax, processors=8)"
+  classify.seqs(fasta=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.fasta-$REGION/$REGION.mock.precluster.fasta-$REGION/HMP_MOCK.filter.fasta, reference=../references/silva.bacteria.fasta, taxonomy=../references/silva.bacteria.tax, processors=8);"
 done
+
+
+
+# Finally, let's count how many times each sequence shows up in each of the
+# merged groups
+
+for REGION in v*
+do
+  mothur "#count.seqs(group=$REGION/$REGION.good.pick.merge.groups, name=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.names)"
+done
+
+cd ../
