@@ -122,20 +122,6 @@ do
 done
 
 
-# Let's find the smallest number of sequences in each region
-MIN=1000000
-for REGION in v*
-do
-    COUNT=$(grep -c "mock" $REGION/$REGION.good.pick.groups)
-    MIN=$(echo $(($MIN>$COUNT?$COUNT:$MIN)))
-    COUNT=$(grep -c "soil" $REGION/$REGION.good.pick.groups)
-    MIN=$(echo $(($MIN>$COUNT?$COUNT:$MIN)))
-    COUNT=$(grep -c "human" $REGION/$REGION.good.pick.groups)
-    MIN=$(echo $(($MIN>$COUNT?$COUNT:$MIN)))
-    COUNT=$(grep -c "mouse" $REGION/$REGION.good.pick.groups)
-    MIN=$(echo $(($MIN>$COUNT?$COUNT:$MIN)))
-done
-
 
 # Let's merge the three replicates for each library and recreate a shared file
 # based on the merged group files
@@ -148,19 +134,7 @@ do
 done
 
 
-
-
-# Let's rarefy everything to $MIN (~350) reads per sample since this was the size of the
-# smallest v19 library
-
-for REGION in v*
-do
-  mothur "#summary.single(shared=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.shared, calc=sobs-coverage, subsample=$MIN, iters=1000)"
-done
-
-
-# Let's remove all of the chimeras we didn't detect and see how many OTUs we
-# would have come up with
+# Let's remove all of the chimeras we didn't detect from the mock communities
 
 for REGION in v*
 do
@@ -171,12 +145,26 @@ do
   dist.seqs(cutoff=0.15); cluster(); summary.single(calc=nseqs, label=0.03)"
 done
 
+
+# Let's find the smallest number of sequences in each region
 MIN=$(cat v*/*mock.precluster.perfect.pick.an.summary | cut -f 2 | grep "\\." | sort -n | head -n 1 | cut -f 1 -d ".")
+
+
+
+# Let's rarefy everything to $MIN (~350) reads per sample since this was the size of the
+# smallest v19 library
 
 for REGION in v*
 do
-  mothur "#summary.single(list=$REGION/$REGION.mock.precluster.perfect.pick.an.list, subsample=$MIN, calc=sobs, label=0.03)"
+  # the observed data...
+  mothur "#summary.single(shared=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.shared, subsample=$MIN, calc=sobs-coverage-nseqs, label=0.03, iters=1000)"
+
+  # the perfect chimera removal data
+  mothur "#summary.single(list=$REGION/$REGION.mock.precluster.perfect.pick.an.list, subsample=$MIN, calc=sobs-coverage-nseqs, label=0.03, iters=1000)"
 done
+
+
+
 
 
 # Let's use the reference sequences we sampled to see what the "correct" number
