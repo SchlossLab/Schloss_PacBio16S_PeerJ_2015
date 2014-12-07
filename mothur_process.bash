@@ -123,17 +123,6 @@ done
 
 
 
-# Let's merge the three replicates for each library and recreate a shared file
-# based on the merged group files
-
-for REGION in v*
-do
-  cut -f 1 -d "." $REGION/$REGION.good.pick.groups | sed "s/.$//" > $REGION/$REGION.good.pick.merge.groups
-  cp $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.list $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.list
-  mothur "#make.shared(list=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.list, group=$REGION/$REGION.good.pick.merge.groups, label=0.03)"
-done
-
-
 # Let's remove all of the chimeras we didn't detect from the mock communities
 
 for REGION in v*
@@ -146,8 +135,24 @@ do
 done
 
 
+
+
+# Let's merge the three replicates for each library and recreate a shared file
+# based on the merged group files and get the number of sequences per library
+
+for REGION in v*
+do
+  cut -f 1 -d "." $REGION/$REGION.good.pick.groups | sed "s/.$//" > $REGION/$REGION.good.pick.merge.groups
+  cp $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.list $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.list
+  mothur "#make.shared(list=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.list, group=$REGION/$REGION.good.pick.merge.groups, label=0.03); summary.single(shared=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.shared, calc=nseqs)"
+done
+
+
 # Let's find the smallest number of sequences in each region
 MIN=$(cat v*/*mock.precluster.perfect.pick.an.summary | cut -f 2 | grep "\\." | sort -n | head -n 1 | cut -f 1 -d ".")
+SMALL_LIB=$(cat */*.trim.unique.good.filter.unique.precluster.pick.an.merge.groups.summary | sort -k 3 -n | head -n 7 | tail -n 1 | cut -f 3 | cut -f 1 -d ".")
+
+MIN=$(echo $(($MIN<$SMALL_LIB?$MIN:$SMALL_LIB)))
 
 
 
