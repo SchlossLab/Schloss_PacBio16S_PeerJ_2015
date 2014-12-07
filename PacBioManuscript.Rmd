@@ -674,99 +674,78 @@ Illumina MiSeq platforms (0.02%)[refs].
 
 ### Effects of error rates on OTU assignments
 
+```{r}
+getOTUResults <- function(region){
+  perfect <- read.table(file=paste0("analysis/", region, "/HMP_MOCK.filter.pick.phylip.an.summary"), header=T)
+  nochims <- read.table(file=paste0("analysis/", region, "/", region, ".mock.precluster.perfect.pick.an.ave-std.summary"), header=T)
+  observed <- read.table(file=paste0("analysis/",region, "/", region, ".trim.unique.good.filter.unique.precluster.pick.an.merge.groups.ave-std.summary"), header=T)
+	obs.mock <- observed[observed$group=="mock"   & observed$method=="ave", "sobs"]
+	obs.soil <- observed[observed$group=="soil"   & observed$method=="ave", "sobs"]
+	obs.mouse <- observed[observed$group=="mouse" & observed$method=="ave", "sobs"]
+	obs.human <- observed[observed$group=="human" & observed$method=="ave", "sobs"]
+	nseqs <- nochims[nochims$method=="ave", "nseqs"]
+
+	return(c(perfect[1,2], nochims[1,3], obs.mock, obs.soil, obs.mouse, obs.human, nseqs))
+}
+
+otu.table <- t(sapply(regions, getOTUResults))
+nseqs <- otu.table[1,7]
+perfect <- otu.table[1,1]
+otu.table <- otu.table[,-c(1,7)]
+
+otu.table <- cbind(100 * final.error[rownames(otu.table),"precluster.error"], otu.table)
+colnames(otu.table) <- c("Error Rate (%)", "Mock with no chimeras", "Observed mock", "Soil", "Mouse", "Human")
+rownames(otu.table) <- pretty.region[rownames(otu.table)]
+
+#kable(otu.table, digits=c(2, rep(1,5)))
+
+#|      | Error Rate (%)| Mock with no chimeras| Observed mock|  Soil| Mouse| Human|
+#|:-----|--------------:|---------------------:|-------------:|-----:|-----:|-----:|
+#|V4    |           0.14|                  26.0|          27.4| 335.8|  78.5|  58.1|
+#|V1-V3 |           0.77|                  53.6|          77.0| 436.6| 159.7| 116.8|
+#|V3-V5 |           0.83|                  83.1|         106.8| 388.9| 259.6|  91.6|
+#|V1-V5 |           0.26|                  34.6|          40.7| 403.2|  88.8|  74.7|
+#|V1-V6 |           0.57|                  57.4|          89.7| 431.9| 138.3|  95.9|
+#|V1-V9 |           0.32|                  29.5|          41.8| 390.9|  81.9| 102.0|
+
+getCoverage <- function(region){
+  observed <- read.table(file=paste0("analysis/",region, "/", region, ".trim.unique.good.filter.unique.precluster.pick.an.merge.groups.ave-std.summary"), header=T)
+	obs.mock <- observed[observed$group=="mock"   & observed$method=="ave", "coverage"]
+	obs.soil <- observed[observed$group=="soil"   & observed$method=="ave", "coverage"]
+	obs.mouse <- observed[observed$group=="mouse" & observed$method=="ave", "coverage"]
+	obs.human <- observed[observed$group=="human" & observed$method=="ave", "coverage"]
+
+	return(c(obs.mock, obs.soil, obs.mouse, obs.human))
+}
+
+coverage.table <- t(sapply(regions, getCoverage))
+colnames(coverage.table) <- c("Mock", "Soil", "Mouse", "Human")
+rownames(coverage.table) <- pretty.region[rownames(coverage.table)]
+
+
+```
 
 The sequencing error rate is known to affect the number of OTUs that are
-observed. For each region, we calculated the number of OTUs we would have
-observed in the mock community if there were no PCR or sequencing errors or
-chimeras, the number of OTUs if there were no chimeras, and the number of OTUs
-observed using the pipeline described above and UCHIME to identify and cull
-chimeras (Table OTU). We also calculated the number of OTUs in the soil, mouse,
-and human samples using the same pipeline with chimera detection and removal.
-Because we wanted to compare all datasets using the same number of reads and
-because a large number of reads from the V1-V9 dataset were removed for quality
-problems, we rarefied all datasets to 354 sequences per dataset. Among the mock
-community samples the number of OTUs increased with error rate. Although the
-variation in the number of OTUs is affected by the error rate, it is also
-affected by the specificity of the PCR primers and the sequence variation within
-the region being amplified.
-
-```{r}
-counts <- matrix(rep(0, length(regions)*12), nrow=length(regions))
-rownames(counts) <- regions
-colnames(counts) <- c("human1", "human2", "human3", "mock1", "mock2", "mock3", "mouse1", "mouse2", "mouse3", "soil1", "soil2", "soil3")
-
-
-for(r in regions){
-  shared <- read.table(file=paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.an.shared", sep=""), header=T)
-  rownames(shared) <- shared$Group
-  shared <- shared[,-c(1,2,3)]
-
-  groups <- gsub(".v\\d*", "", rownames(shared))
-  stopifnot(sum(groups == colnames(counts)) == length(groups))
-  nseqs <- apply(shared, 1, sum)
-  counts[r,] <- nseqs
-}
-```
-
-
-Let's merge the three replicates for each sample like we did for the error analysis and move forward... First we'll make a mapping file and then we'll run merge.groups in mothur
-
-```{r}
-for(r in regions){
-  write.table(cbind(paste(colnames(counts), ".", r, sep=""), gsub("\\d", "", colnames(counts))), file=paste(r, "/merge.groups", sep=""), quote=F, row.names=F, col.names=F, sep="\t")
-}
-```
-
-
-
-
-Here's what we get out when we run the above code again on the meged groups:
-
-
-```{r}
-counts <- matrix(rep(0, length(regions)*4), nrow=length(regions))
-rownames(counts) <- regions
-colnames(counts) <- c("human", "mock","mouse", "soil")
-
-for(r in regions){
-  shared <- read.table(file=paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.an.merge.shared", sep=""), header=T)
-  rownames(shared) <- shared$Group
-  shared <- shared[,-c(1,2,3)]
-
-  groups <- gsub(".v\\d*", "", rownames(shared))
-  stopifnot(sum(groups == colnames(counts)) == length(groups))
-  nseqs <- apply(shared, 1, sum)
-  counts[r,] <- nseqs
-}
-```
-
-
-
-
-
-Now we want to summarize the number of OTUs we observed under different conditions:
-
-```{r}
-getOTUCounts <- function(region){
-  perfect <- read.table(file=paste0(region, "/HMP_MOCK.filter.pick.phylip.an.summary"), header=T)
-  nochims <- read.table(file=paste0(region, "/", region, ".mock.precluster.pick.an.ave-std.summary"), header=T)
-  observed <- read.table(file=paste0(region, "/", region, ".trim.unique.good.filter.unique.precluster.pick.an.merge.groups.ave-std.summary"), header=T)
-  return(c(perfect[1L,2], nochims[1,3], observed[2,4], observed[4,4], observed[3,4], observed[1,4]))
-}
-
-otu.table <- t(sapply(regions, getOTUCounts))
-colnames(otu.table) <- c("perfect", "no.chims", "obs.mock", "soil", "mouse", "human")
-
-# v13      20   35.937   55.401 305.985 122.231 88.773
-# v15      20   27.474   28.714 285.448  64.535 62.028
-# v16      20   40.322   69.514 306.604 117.886 80.746
-# v19      20   25.501   35.292 279.116  73.578 83.000
-# v35      20   57.477   76.115 279.711 177.080 72.076
-# v4       19   21.007   22.385 245.987  57.993 47.201
-```
-
-
-
+observed [ref]. For each region, we determined that if there were no chimeras or
+PCR or sequencing errors, then we would expect to find `r perfect[[1]]` OTUs. When
+achieved perfect chimera removal, but allowed for PCR and sequencing errors, we
+observed between `r diff<-otu.table[,2]-perfect;
+round(min(diff), digits=1)` (`r names(which.min(diff))`) and `r round(max(diff), digits=1)`
+(`r names(which.max(diff))`) extra OTUs. The range in the number of extra OTUs was largely
+explained by the sequencing error rate (Pearson's R=
+`r round(cor.test(diff, final.error[,"precluster.error"])$estimate, 2)`. Next, we determined
+the number of OTUs that were observed when we used UCHIME to identify chimeric sequence.
+Under these more realistic conditions, we observed between `r diff<-otu.table[,3]-perfect;
+round(min(diff), digits=1)` (`r names(which.min(diff))`) and `r round(max(diff), digits=1)`
+(`r names(which.max(diff))`) extra OTUs. Finally, we calculated the number of OTUs in the
+soil, mouse, and human samples using the same pipeline with chimera detection and removal
+based on the UCHIME algorithm. Again, we found that there was a strong correlation between
+the number of observed OTUs and the error rate for the
+soil (`r format(round(cor.test(otu.table[,"Soil"], final.error[,"precluster.error"])$estimate, 2), nsmall=2)`),
+mouse (`r format(round(cor.test(otu.table[,"Mouse"], final.error[,"precluster.error"])$estimate, 2), nsmall=2)`),
+and human samples (`r format(round(cor.test(otu.table[,"Human"], final.error[,"precluster.error"])$estimate, 2), nsmall=2)`). 
+These results underscore the effect of sequencing error on the inflation of the number of
+observed OTUs.
 
 
 ### Increasing sequence length improves classification
@@ -791,28 +770,27 @@ getDepths <- function(taxFileName, cutoff=80){
 }
 
 for(r in regions){
-  rdpFileName <- paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.pds_rdp.wang.taxonomy", sep="")
+  rdpFileName <- paste("analysis/", r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.pds.wang.taxonomy", sep="")
   rdp <- getDepths(rdpFileName)
 
-  ggFileName <- paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.pds_gg.wang.taxonomy", sep="")
+  ggFileName <- paste("analysis/", r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.gg.wang.taxonomy", sep="")
   gg <- getDepths(ggFileName)
 
-  silvaFileName <- paste(r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.nr_v119.wang.taxonomy", sep="")
+  silvaFileName <- paste("analysis/", r, "/", r, ".trim.unique.good.filter.unique.precluster.pick.bacteria.wang.taxonomy", sep="")
   silva <- getDepths(silvaFileName)
 
-  write.table(cbind("rdp" = rdp, "gg" = gg, "silva"=silva), file=paste(r, "/", r, ".tax.compare", sep=""), quote=F)
+  write.table(cbind("rdp" = rdp, "gg" = gg, "silva"=silva), file=paste("analysis/", r, "/", r, ".tax.compare", sep=""), quote=F)
 
-
-  rdpMock <- paste(r, "/", r, ".mock.precluster.pds_rdp.wang.taxonomy", sep="")
+  rdpMock <- paste("analysis/", r, "/", r, ".mock.precluster.pds.wang.taxonomy", sep="")
   rdp <- getDepths(rdpMock)
 
-  ggMock <- paste(r, "/", r, ".mock.precluster.pds_gg.wang.taxonomy", sep="")
+  ggMock <- paste("analysis/", r, "/", r, ".mock.precluster.gg.wang.taxonomy", sep="")
   gg <- getDepths(ggMock)
 
-  silvaMock <- paste(r, "/", r, ".mock.precluster.nr_v119.wang.taxonomy", sep="")
+  silvaMock <- paste("analysis/", r, "/", r, ".mock.precluster.bacteria.wang.taxonomy", sep="")
   silva <- getDepths(silvaMock)
 
-  write.table(cbind("rdp" = rdp, "gg" = gg, "silva"= silva), file=paste(r, "/mock.tax.compare", sep=""), quote=F)  
+  write.table(cbind("rdp" = rdp, "gg" = gg, "silva"= silva), file=paste("analysis/", r, "/mock.tax.compare", sep=""), quote=F)  
 }
 ```
 
@@ -851,7 +829,6 @@ getDepthByLibrary <- function(region){
   return(rbind(mock.rdp, human.rdp, mouse.rdp, soil.rdp, mock.gg, human.gg, mouse.gg, soil.gg, mock.silva, human.silva, mouse.silva, soil.silva))
 }
 
-#composite <-array(0, dim=c(8,6,8))
 composite <- data.frame(matrix(rep(0, 8*6*12), ncol=8))
 colnames(composite) <- 0:7
 composite[1:12,] <- getDepthByLibrary("v4");
