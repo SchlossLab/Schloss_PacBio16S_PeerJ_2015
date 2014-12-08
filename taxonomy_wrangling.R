@@ -61,7 +61,8 @@ for(r in regions){
 
 
 # here we want to merge the classification depth that we got from each sequence
-# as well as the number of sequences that each sequence represents by library
+# as well as the library that each sequence showed up in. This calculates the
+# fraction of unique sequences that classified to a given depth.
 getDepthByLibrary <- function(region){
 	
 	# get the frequency data...
@@ -75,6 +76,7 @@ getDepthByLibrary <- function(region){
 	depth.table$gg <- factor(depth.table$gg, levels=0:7)
 	depth.table$silva <- factor(depth.table$silva, levels=0:7)
 	
+	# get the reads that showed up in each sample
 	mock.depth <- depth.table[count.table$mock > 0,]
 	human.depth <- depth.table[count.table$human > 0,]
 	mouse.depth <- depth.table[count.table$mouse > 0,]
@@ -96,7 +98,8 @@ getDepthByLibrary <- function(region){
 	mouse.silva <- 100*summary(mouse.depth$silva)/nrow(mouse.depth)
 	soil.silva <- 100*summary(soil.depth$silva)/nrow(soil.depth)
 	
-	return(rbind(mock.rdp, human.rdp, mouse.rdp, soil.rdp, mock.gg, human.gg, mouse.gg, soil.gg, mock.silva, human.silva, mouse.silva, soil.silva))
+	return(rbind(mock.rdp, human.rdp, mouse.rdp, soil.rdp, mock.gg, human.gg,
+							 mouse.gg, soil.gg, mock.silva, human.silva, mouse.silva, soil.silva))
 }
 
 # for each region get the percentage of sequences in each library that
