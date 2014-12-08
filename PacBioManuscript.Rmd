@@ -751,46 +751,32 @@ observed OTUs.
 ### Increasing sequence length improves classification
 
 
-```{r}
-  data <- read.table(file="taxonomy.depth.analysis", header=T)
-  rdp <- cbind("Mock"=data[data$database=="rdp" & data$sample=="mock", "total"], "Human"=data[data$database=="rdp" & data$sample=="human", "total"],
-               "Mouse"=data[data$database=="rdp" & data$sample=="mouse", "total"], "Soil"=data[data$database=="rdp" & data$sample=="soil", "total"])
-  rownames(rdp) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
+```{r, classificationSummary}
+data <- read.table(file="taxonomy.depth.analysis", header=T)
 
-  gg <- cbind("Mock"=data[data$database=="gg" & data$sample=="mock", "total"], "Human"=data[data$database=="gg" & data$sample=="human", "total"],
-               "Mouse"=data[data$database=="gg" & data$sample=="mouse", "total"], "Soil"=data[data$database=="gg" & data$sample=="soil", "total"])
-  rownames(gg) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
+rdp <- cbind("Mock"=data[data$database=="rdp" & data$sample=="mock", "total"],
+						 "Human"=data[data$database=="rdp" & data$sample=="human", "total"],
+						 "Mouse"=data[data$database=="rdp" & data$sample=="mouse", "total"],
+						 "Soil"=data[data$database=="rdp" & data$sample=="soil", "total"])
+rownames(rdp) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
 
-  silva <- cbind("Mock"=data[data$database=="silva" & data$sample=="mock", "total"], "Human"=data[data$database=="silva" & data$sample=="human", "total"],
-               "Mouse"=data[data$database=="silva" & data$sample=="mouse", "total"], "Soil"=data[data$database=="silva" & data$sample=="soil", "total"])
-  rownames(silva) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
+gg <- cbind("Mock"=data[data$database=="gg" & data$sample=="mock", "total"],
+						"Human"=data[data$database=="gg" & data$sample=="human", "total"],
+						"Mouse"=data[data$database=="gg" & data$sample=="mouse", "total"],
+						"Soil"=data[data$database=="gg" & data$sample=="soil", "total"])
+rownames(gg) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
 
-  gg.sp <- cbind("Mock"=data[data$database=="gg" & data$sample=="mock", "X7"], "Human"=data[data$database=="gg" & data$sample=="human", "X7"],
-               "Mouse"=data[data$database=="gg" & data$sample=="mouse", "X7"], "Soil"=data[data$database=="gg" & data$sample=="soil", "X7"])
-  rownames(gg.sp) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
+silva <- cbind("Mock"=data[data$database=="silva" & data$sample=="mock", "total"],
+							 "Human"=data[data$database=="silva" & data$sample=="human", "total"],
+							 "Mouse"=data[data$database=="silva" & data$sample=="mouse", "total"],
+							 "Soil"=data[data$database=="silva" & data$sample=="soil", "total"])
+rownames(silva) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
 
-
-  pdf(file="classification.pdf", width=7, height=7)
-  par(mar=c(5, 5, 0.5, 1))
-  dotchart(gg, xlim=c(0,100), col="black", xlab="Unique reads that classified\nto genus or species level (%)", pch=19)
-  points(x=rdp[,"Mock"], y=25:30, pch=15, col="black")
-  points(x=rdp[,"Human"], y=17:22, pch=15, col="black")
-  points(x=rdp[,"Mouse"], y=9:14, pch=15, col="black")
-  points(x=rdp[,"Soil"], y=1:6, pch=15, col="black")
-
-  points(x=silva[,"Mock"], y=25:30, pch=17, col="black")
-  points(x=silva[,"Human"], y=17:22, pch=17, col="black")
-  points(x=silva[,"Mouse"], y=9:14, pch=17, col="black")
-  points(x=silva[,"Soil"], y=1:6, pch=17, col="black")
-
-
-  points(x=gg.sp[,"Mock"], y=25:30, pch=21, bg="gray")
-  points(x=gg.sp[,"Human"], y=17:22, pch=21, bg="gray")
-  points(x=gg.sp[,"Mouse"], y=9:14, pch=21, bg="gray")
-  points(x=gg.sp[,"Soil"], y=1:6, pch=21, bg="gray")
-
-  legend(x=63, y=12, legend=c("RDP (gen.)", "SILVA (gen.)", "greengenes (gen.+sp.)", "greengenes (sp.)"), pch=c(15, 17, 19, 21), col="black", pt.bg=c("black", "black", "black", "gray"), bg="white")
-  dev.off()
+gg.sp <- cbind("Mock"=data[data$database=="gg" & data$sample=="mock", "X7"],
+							 "Human"=data[data$database=="gg" & data$sample=="human", "X7"],
+							 "Mouse"=data[data$database=="gg" & data$sample=="mouse", "X7"],
+							 "Soil"=data[data$database=="gg" & data$sample=="soil", "X7"])
+rownames(gg.sp) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
 ```
 
 We classified all of the sequence data we generated using the naïve Bayesian
@@ -800,15 +786,17 @@ ability to assign the sequence to a genus or species. Interestingly, each of the
 samples we analyzed varied in their ability to assign sequences to the depth of
 genus or species and the reference database that did the best job of classifying
 the sequences varied by sample type. For example, the SILVA reference did the
-best for the human fecal samples and the RDP did the best for the mouse feces
-and soil samples. An advantage of the greengenes database is that it contains
+best for the human feces and soil samples and the RDP did the best for the mouse feces
+samples. An advantage of the greengenes database is that it contains
 information for 2,514 species-level lineages for 11% of the reference sequences;
-the other databases only provide taxonomic data to the genus level. Although
-there was a modest association between the length of the fragment and the
+the other databases only provided taxonomic data to the genus level. There was a
+modest association between the length of the fragment and the
 ability to classify sequences to the species-level for the human samples, there
-was no such association for the mouse and soil samples. In fact, at most 6.0% of
-the soil sequences and 4.6% of the mouse sequences could be classified to a
-genus. These results indicate that the ability to classify sequences to the
+was no such association for the mouse and soil samples. In fact, at most
+`r format(round(max(gg.sp[,"Soil"]), digits=1), nsmall=1)`% of
+the soil sequences and `r format(round(max(gg.sp[,"Mouse"]), digits=1), nsmall=1)`%
+of the mouse sequences could be classified to a
+species. These results indicate that the ability to classify sequences to the
 genus or species level is a function of read length, sample type, and the
 reference database.  
 
@@ -816,7 +804,6 @@ reference database.
 ### Sequencing errors are not random
 
 
-# Not sure this is needed...
 # It is commonly said that the error profile in PacBio-generated sequence data
 # are random. As we saw above, the substitution preference was random. However,
 # if the errors are truly random, then we would expect to have a bunch of
@@ -825,14 +812,12 @@ reference database.
 # most reads, let's consider the v4, v35, and v15 mock community samples from
 # before the pre.cluster step:
 #
-# ```{r, engine='bash'}
 # for REGION in $(ls -d v*)
 # do
 #   mothur "#get.groups(fasta=$REGION/$REGION.trim.unique.good.filter.unique.fasta, name=$REGION/$REGION.trim.unique.good.filter.names, group=$REGION/$REGION.good.groups, groups=mock1.$REGION-mock2.$REGION-mock3.$REGION);
 #           degap.seqs();
 #           seq.error(fasta=current, name=current, reference=$REGION/HMP_MOCK.filter.fasta, aligned=F, processors=8)"
 # done
-# ```
 
 ... on into R ...
 
@@ -860,24 +845,7 @@ v15.table <- table(one.off$weight)
 v15.total <- sum(error$weight)
 ```
 
-Let's plot the number of expected errors, assuming they're random, if the fragment is 1458 nt long...
 
-```{r}
-x <- 0:20
-e1 <- 0.0049
-e2 <- 0.0034
-e3 <- 0.002
-e4 <- 0.001
-
-pdf(file="error.rate.pdf")
-plot(x, dbinom(x, 1458, e1), type="l", ylim=c(0,0.35), xlab="Number of errors", ylab="% of full-length 16S rRNA gene sequences", yaxt="n", lwd=3)
-points(x, dbinom(x, 1458, e2), type="l", col="red", lwd=3)
-points(x, dbinom(x, 1458, e3), type="l", col="blue", lwd=3)
-points(x, dbinom(x, 1458, e4), type="l", col="darkgreen", lwd=3)
-axis(2, at=seq(0,0.35,0.05), label=seq(0,35,5), las=1)
-legend(x=12, y=0.30, legend=c("0.49%", "0.34%", "0.20%","0.10%"), lwd=3, col=c("black", "red", "blue", "darkgreen"))
-dev.off()
-```
 
 
 Although there was no obvious bias in the substitution, insertion, or deletion
@@ -1256,7 +1224,50 @@ dev.off()
 
 ### Figure 4
 
+```{r, classificationDotChart, fig.width=7, fig.height=7}
+pdf(file="classification.pdf", width=7, height=7)
+par(mar=c(5, 5, 0.5, 1))
+dotchart(gg, xlim=c(0,100), col="black", xlab="Unique reads that classified\nto genus or species level (%)", pch=19)
 
+points(x=rdp[,"Mock"], y=25:30, pch=15, col="black")
+points(x=rdp[,"Human"], y=17:22, pch=15, col="black")
+points(x=rdp[,"Mouse"], y=9:14, pch=15, col="black")
+points(x=rdp[,"Soil"], y=1:6, pch=15, col="black")
+
+points(x=silva[,"Mock"], y=25:30, pch=17, col="black")
+points(x=silva[,"Human"], y=17:22, pch=17, col="black")
+points(x=silva[,"Mouse"], y=9:14, pch=17, col="black")
+points(x=silva[,"Soil"], y=1:6, pch=17, col="black")
+
+points(x=gg.sp[,"Mock"], y=25:30, pch=21, bg="gray")
+points(x=gg.sp[,"Human"], y=17:22, pch=21, bg="gray")
+points(x=gg.sp[,"Mouse"], y=9:14, pch=21, bg="gray")
+points(x=gg.sp[,"Soil"], y=1:6, pch=21, bg="gray")
+
+legend(x=63, y=12, legend=c("RDP (gen.)", "SILVA (gen.)", "greengenes (gen.+sp.)", "greengenes (sp.)"), pch=c(15, 17, 19, 21), col="black", pt.bg=c("black", "black", "black", "gray"), bg="white")
+dev.off()
+```
+
+
+
+## Figure 5
+
+```{r}
+x <- 0:20
+e1 <- 0.0049
+e2 <- 0.0034
+e3 <- 0.002
+e4 <- 0.001
+
+pdf(file="error.rate.pdf")
+plot(x, dbinom(x, 1458, e1), type="l", ylim=c(0,0.35), xlab="Number of errors", ylab="% of full-length 16S rRNA gene sequences", yaxt="n", lwd=3)
+points(x, dbinom(x, 1458, e2), type="l", col="red", lwd=3)
+points(x, dbinom(x, 1458, e3), type="l", col="blue", lwd=3)
+points(x, dbinom(x, 1458, e4), type="l", col="darkgreen", lwd=3)
+axis(2, at=seq(0,0.35,0.05), label=seq(0,35,5), las=1)
+legend(x=12, y=0.30, legend=c("0.49%", "0.32%", "0.20%","0.10%"), lwd=3, col=c("black", "red", "blue", "darkgreen"))
+dev.off()
+```
 
 
 
