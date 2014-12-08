@@ -804,28 +804,27 @@ reference database.
 ### Sequencing errors are not random
 
 ```{r}
-error <- read.table(file="v4.trim.unique.good.filter.unique.pick.ng.error.summary", header=T, row.names=1)
+error <- read.table(file="analysis/v4/v4.trim.unique.good.filter.unique.pick.error.summary", header=T, row.names=1)
 error.nochim <- error[error$numparents==1,]
 one.off <- error.nochim[error.nochim$mismatches==1,]
 one.off.sum <- sum(one.off$weight)
 v4.table <- table(one.off$weight)
 v4.total <- sum(error$weight)
 
-error <- read.table(file="v35.trim.unique.good.filter.unique.pick.ng.error.summary", header=T, row.names=1)
+error <- read.table(file="analysis/v35/v35.trim.unique.good.filter.unique.pick.error.summary", header=T, row.names=1)
 error.nochim <- error[error$numparents==1,]
 one.off <- error.nochim[error.nochim$mismatches==1,]
+one.off.sum <- sum(one.off$weight)
 v35.table <- table(one.off$weight)
 v35.total <- sum(error$weight)
 
-error <- read.table(file="v15.trim.unique.good.filter.unique.pick.ng.error.summary", header=T, row.names=1)
+error <- read.table(file="analysis/v15/v15.trim.unique.good.filter.unique.pick.error.summary", header=T, row.names=1)
 error.nochim <- error[error$numparents==1,]
 one.off <- error.nochim[error.nochim$mismatches==1,]
+one.off.sum <- sum(one.off$weight)
 v15.table <- table(one.off$weight)
 v15.total <- sum(error$weight)
 ```
-
-
-
 
 Although there was no obvious bias in the substitution, insertion, or deletion
 patterns, during the pre-clustering analysis we noted that the frequency
