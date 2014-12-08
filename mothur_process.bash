@@ -123,6 +123,24 @@ done
 
 
 
+# It is commonly said that the error profile in PacBio-generated sequence data
+# are random. As we saw above, the substitution preference was random. However,
+# if the errors are truly random, then we would expect to have a bunch of
+# singleton error sequences, not sequences with errors that show up multiple
+# times. Let's see what type of error profile we have. Because they have the
+# most reads, let's consider the v4, v35, and v15 mock community samples from
+# before the pre.cluster step:
+
+for REGION in $(ls -d v*)
+do
+mothur "#get.groups(fasta=$REGION/$REGION.trim.unique.good.filter.unique.fasta, name=$REGION/$REGION.trim.unique.good.filter.names, group=$REGION/$REGION.good.groups, groups=mock1.$REGION-mock2.$REGION-mock3.$REGION); seq.error(fasta=current, name=current, reference=$REGION/HMP_MOCK.filter.fasta, processors=8)"
+done
+
+
+
+
+
+
 # Let's remove all of the chimeras we didn't detect from the mock communities
 
 for REGION in v*
@@ -197,7 +215,7 @@ done
 
 
 
-# Finally, let's count how many times each sequence shows up in each of the
+# Let's count how many times each sequence shows up in each of the
 # merged groups
 
 for REGION in v*
@@ -206,3 +224,6 @@ do
 done
 
 cd ../
+
+
+
