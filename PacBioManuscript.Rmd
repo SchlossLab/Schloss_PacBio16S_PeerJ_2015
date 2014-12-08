@@ -803,24 +803,6 @@ reference database.
 
 ### Sequencing errors are not random
 
-
-# It is commonly said that the error profile in PacBio-generated sequence data
-# are random. As we saw above, the substitution preference was random. However,
-# if the errors are truly random, then we would expect to have a bunch of
-# singleton error sequences, not sequences with errors that show up multiple
-# times. Let's see what type of error profile we have. Because they have the
-# most reads, let's consider the v4, v35, and v15 mock community samples from
-# before the pre.cluster step:
-#
-# for REGION in $(ls -d v*)
-# do
-#   mothur "#get.groups(fasta=$REGION/$REGION.trim.unique.good.filter.unique.fasta, name=$REGION/$REGION.trim.unique.good.filter.names, group=$REGION/$REGION.good.groups, groups=mock1.$REGION-mock2.$REGION-mock3.$REGION);
-#           degap.seqs();
-#           seq.error(fasta=current, name=current, reference=$REGION/HMP_MOCK.filter.fasta, aligned=F, processors=8)"
-# done
-
-... on into R ...
-
 ```{r}
 error <- read.table(file="v4.trim.unique.good.filter.unique.pick.ng.error.summary", header=T, row.names=1)
 error.nochim <- error[error$numparents==1,]
@@ -829,14 +811,11 @@ one.off.sum <- sum(one.off$weight)
 v4.table <- table(one.off$weight)
 v4.total <- sum(error$weight)
 
-
-
 error <- read.table(file="v35.trim.unique.good.filter.unique.pick.ng.error.summary", header=T, row.names=1)
 error.nochim <- error[error$numparents==1,]
 one.off <- error.nochim[error.nochim$mismatches==1,]
 v35.table <- table(one.off$weight)
 v35.total <- sum(error$weight)
-
 
 error <- read.table(file="v15.trim.unique.good.filter.unique.pick.ng.error.summary", header=T, row.names=1)
 error.nochim <- error[error$numparents==1,]
