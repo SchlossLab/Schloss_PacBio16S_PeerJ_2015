@@ -1,6 +1,5 @@
 regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
 
-
 countGoodBootstraps <- function(nameConf, cutoff=80){
 	bootstrap <- gsub(".*\\((\\d*)\\).*", "\\1", nameConf)
 	bootstrap[bootstrap == "unclassified"] = 0
