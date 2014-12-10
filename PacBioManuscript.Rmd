@@ -1,18 +1,18 @@
 ---
 title: "Sequencing 16S rRNA gene fragments using the PacBio SMRT DNA sequencing system"
-author: "Patrick D. Schloss"
-date: "July 21, 2014"
+author: Patrick D. Schloss
+date: July 21, 2014
 output:
-	word_document:
-		keep_md: true
+	keep_md: true
 ---
+
 
 **Running title:** 16S rRNA genes sequencing with PacBio
 
 **Authors:** Patrick D. Schloss^1#^, Sarah L. Westcott^1^, Matthew L. Jenior^1^,
 and Sarah K. Highlander^2^
 
-* Correspondence:	pschloss@umich.edu
+\* Correspondence:	pschloss@umich.edu
 734.647.5801
 Department of Microbiology and Immunology
 University of Michigan
@@ -173,6 +173,7 @@ analyzing PacBio data is available on the mothur wiki
 
 ```{r setup, echo=TRUE, eval=TRUE, tidy=TRUE}
 rm(list=ls())
+library("knitr")
 pdf.options(encoding="ISOLatin2.enc")
 regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
 clrs <- rainbow(length(regions))
@@ -599,8 +600,8 @@ QualityScoreFigure). When we used this threshold, we were able to reduce the err
 rate by `r paste(round(range(quality.reduction), digits=1), collapse=" to ")`%
 (Figure ErrorSequenceCoverage). We noted that the fraction of reads retained
 decreased as the length of the fragment increased with retention of
-`r round(100*aveq.error["v4", "kept"],digits=1)`% of the V4 reads and
-`r round(100*aveq.error["v19", "kept"],digits=1)`% of the V1-V9 reads (Figure
+`r round(100*aveq.error["v4", "60.frac"],digits=1)`% of the V4 reads and
+`r round(100*aveq.error["v19", "60.frac"],digits=1)`% of the V1-V9 reads (Figure
 ErrorSequenceCoverage). Next, we asked whether which combinations of culling
 reads with mismatches to the expected barcodes and primers, less than 10-fold
 sequencing coverage, and an average quality score less than 60 made the most
@@ -641,7 +642,7 @@ rownames(final.error) <- regions
 #v19  0.005158478      0.003163881
 
 
-reduction <- 100*(1-final.error[,"precluster"]/final.error[,"unique"])
+reduction <- 100*(1-final.error[,"precluster.error"]/final.error[,"unique.error"])
 rnd.reduction <- round(reduction, 0)
 min.rnd.red <- min(rnd.reduction)
 max.rnd.red <- max(rnd.reduction)
@@ -826,25 +827,27 @@ v15.table <- table(one.off$weight)
 v15.total <- sum(error$weight)
 ```
 
-Although there was no obvious bias in the substitution, insertion, or deletion
-patterns, during the pre-clustering analysis we noted that the frequency
-distribution of sequences observed was not uniform. This indicated a lack of
-randomness in the error profile. Because we were able to obtain a large number
-of reads from the V1-V5 (N=5109 sequences), V4 (N=12684), and V3-V5 (N=3677)
-datasets, we investigated the mock communities from these regions further. We
+Above, we described that although there was no obvious bias in the substitution
+or insertion rate, we did observe that guanines and cytosines were more likely
+to be deleted than adenines and thymidines. This lack of randomness in the error
+profile suggested that there might be a systematic non-random distribution of
+the errors across the sequences. This would manifest itself by the creation of
+duplicate sequences with the same error. Because we were able to obtain a large
+number of reads from the mock communitie where we sequenced the V4
+(N=`r v4.total`), V1-V5 (N=`r v15.total` sequences), and V3-V5 (N=`r v35.total`)
+regions, we investigated the mock community data from these regions further. We
 identified all of the sequences that had a 1-nt difference to the true sequence.
-A majority of these sequences only appeared once; however, we observed sequences
-that appeared 19 (V1-V5), 60 (V4), and 14 (V3-V5) times. Manual inspection of
-these sequences indicated that they were not intra-genomic chimeras, but a
-single base substitution, deletion, and insertion, respectively. The presence of
-these errors at relative abundances between 0.37 and 0.47% indicates that
-removing singleton sequences or OTUs will give a false sense of sequence
-curation since many errors will be observed more than once. Furthermore,
-recently described oligotyping methods would need to be reassessed since those
-methods assume that every base in a sequence is equally likely to be incorrect.
-
-
-
+For these three regions, a majority of the sequences with 1-nt errors were only
+observed once (V4: `r round(100*v4.table[1]/sum(v4.table), 1)`%, V1-V5:
+`r round(100*v15.table[1]/sum(v15.table), 1)`%, V3-V5:
+`r round(100*v35.table[1]/sum(v35.table), 1)`%). We found that the frequency of the
+most abundant 1-nt error paralleled the number of sequences. There were two sequences
+in the V4 dataset that occured `r names(v4.table[length(v4.table)])` times, one
+sequence in the V1-V5 dataset that occured `r names(v15.table[length(v15.table)])`
+times, and one sequence in the V3-V5 dataset that occured
+`r names(v35.table[length(v35.table)])` times. These results indicate that
+reproducible errors occur with the PacBio sequencing platform and that they can be
+quite frequent.
 
 
 ## Conclusions
@@ -885,6 +888,16 @@ Critical that people begin to utilize mock communities as part of their
 experimental design so that they can quantify their error rates
 
 Probably not worth the effort at this point
+
+A limitation of the Illumina, IonTorrent, and 454 sequencing platforms is that
+the sequence reads are too short to allow for full length sequencing of the 16S
+rRNA gene. This has had the effect of slowing the deposition of reference
+16S rRNA gene sequences in reference databases. Obviously, one potential advantage
+of PacBio sequencing is the ability to generate these full length sequences.
+
+Recently described oligotyping methods would need to be reassessed since those
+methods assume that every base in a sequence is equally likely to be incorrect. 
+
 
 
 ## Acknowledgements
