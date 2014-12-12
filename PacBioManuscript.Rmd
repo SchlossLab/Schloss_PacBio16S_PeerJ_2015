@@ -183,7 +183,7 @@ pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "
 names(clrs) <- regions
 
 
-opts_chunk$set("fig.path"="figure/")
+opts_chunk$set("fig.path"="figures/")
 opts_chunk$set("fig.align"="center")
 opts_chunk$set("dev" = c("png", "cairo_pdf"))
 

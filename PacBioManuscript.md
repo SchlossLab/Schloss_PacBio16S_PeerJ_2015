@@ -520,29 +520,29 @@ v19            5003                  67.8                     18.0              
 ## Figures
 
 ### Figure 1
-<img src="figure/Figure_1-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="figures/Figure_1-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 
 ### Figure 2
-<img src="figure/Figure_2-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="figures/Figure_2-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 
 
 ### Figure 3
-<img src="figure/Figure_3-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="figures/Figure_3-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 ### Figure 4
 
-<img src="figure/Figure_4-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="figures/Figure_4-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 
 ## Figure 5
 
-<img src="figure/Figure_5-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="figures/Figure_5-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 
