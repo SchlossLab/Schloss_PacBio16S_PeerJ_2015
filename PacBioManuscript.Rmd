@@ -337,7 +337,7 @@ reads and the percentage of reads removed increased with the length of the
 fragment (Figure PipelineError). For each region, the number of reads removed
 because of the presence of ambiguous base calls was similar to the number of
 reads that were removed for not fully aligning to the correct region within the
-16S rRNA gene (Table SupplementalReasonsLost). The latter class of errors was
+16S rRNA gene (Table 2). The latter class of errors was
 generally due to sequence truncations that could not be explained.  
 
 
@@ -968,7 +968,7 @@ knitr::kable(t1, digits=1, row.names=TRUE, col.names=c("Forward", "Reverse", "*E
 
 
 **Table 2.**
-```{r SuppTable1, warning=TRUE, results='asis'}
+```{r Table2, warning=TRUE, results='asis'}
 rownames(reasons.lost) <- pretty.region[rownames(reasons.lost)]
 reasons.lost <- cbind(orig.nseqs, 100*reasons.lost, basic.nseqs)
 knitr::kable(reasons.lost, digits=1, row.names=TRUE,
