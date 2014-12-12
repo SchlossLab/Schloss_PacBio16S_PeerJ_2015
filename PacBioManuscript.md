@@ -500,8 +500,6 @@ V4      GTGCCAGCMGCCGCGGTAA    GGACTACHVGGGTWTCTAAT             NA              
 
 
 ### Figure 3
-
-
 <img src="figure/QualityScoreFigure-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
