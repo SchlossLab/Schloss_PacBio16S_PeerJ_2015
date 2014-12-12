@@ -191,7 +191,7 @@ than adenines (11.4%) or thymidines
 (9.47%). When we considered the Phred
 quality score of each base call, we observed a median quality score of 72
 for correct base calls and scores of 22 and 20 for
-substitutions and insertions, respectively (Figure FigureErrorQualityScore_A). Although there
+substitutions and insertions, respectively (Figure 1A). Although there
 was a broad distribution of quality scores with each type of base call, the errors could
 largely be distinguished from the correct base calls.
 
@@ -212,10 +212,10 @@ considered. This basic procedure resulted in the removal of between
 32.2
 (V1-V9)% of the
 reads and the percentage of reads removed increased with the length of the
-fragment (Figure PipelineError). For each region, the number of reads removed
+fragment (Figure 2). For each region, the number of reads removed
 because of the presence of ambiguous base calls was similar to the number of
 reads that were removed for not fully aligning to the correct region within the
-16S rRNA gene (Table SupplementalReasonsLost). The latter class of errors was
+16S rRNA gene (Table 2). The latter class of errors was
 generally due to sequence truncations that could not be explained.  
 
 
@@ -247,44 +247,50 @@ identify and remove those sequences with errors using three different
 approaches. First, we hypothesized that errors in the barcode and primer would
 be correlated with the error rate for the entire sequence. We observed a strong
 relationship between the number of mismatches to the barcodes and primers and the
-error rate of the rest of the sequence fragment (Figure FigureErrorQualityScore_B). Although
+error rate of the rest of the sequence fragment (Figure 1B). Although
 allowing no mismatches to the barcodes and primers yielded the lowest error rate,
 that stringent criterion removed a large fraction of the reads from the dataset and
 allowing at most one mismatch marginally increased the error rate while preserving
-more sequences in the dataset (Figure PipelineError). Second, we hypothesized
+more sequences in the dataset (Figure 2). Second, we hypothesized
 that increased sequencing coverage should yield lower error rates. We found that
 once we had obtained 10-fold coverage of the fragments, the error rate did not
-change appreciably (Figure FigureErrorQualityScore_C). When we compared the error
+change appreciably (Figure 1C). When we compared the error
 rates of reads with at least 10-fold coverage to those with less coverage, we
-reduced the error rate by 26.5 to 29.7% for each region except the V4 region for which
-the error rate was reduced by 53%.
-Third, based on the earlier analysis associating errors with quality scores, we used
-two quality score-based approaches for identifying reads with errors (Figure
-QualityScoreFigure. We calculated
-the minimum average quality score across all 50-nt window within each sequence and we
-also calculated the average quality score across each sequence. We then associated
-both methods of calculating the average quality score with the error rate of the
-reads and the fraction of sequences that would be retained if each threshold were
-selected. Using the sliding window approach we did not observe any clear break points
-indicating that one quality score would be better than another. In contrast, using
-the whole sequence quality score average we observed a decrease in the error rate and
-the fraction of sequences retained when the threshold was increased above 60 (Figure
-QualityScoreFigure). When we used this threshold, we were able to reduce the error
-rate by 32.8 to 56.1%
-(Figure ErrorSequenceCoverage). We noted that the fraction of reads retained
+reduced the error rate by
+26.5 to 29.7%
+for each region except the V4 region for which the error rate was reduced by
+53%. Third, based on the earlier
+analysis associating errors with quality scores, we used two quality score-based
+approaches for identifying reads with errors (Figure 3). We calculated the
+minimum average quality score across all 50-nt window within each sequence and
+we also calculated the average quality score across each sequence. We then
+associated both methods of calculating the average quality score with the error
+rate of the reads and the fraction of sequences that would be retained if each
+threshold were selected. Using the sliding window approach we did not observe
+any clear break points indicating that one quality score would be better than
+another (Figure 3AB). In contrast, using the whole sequence quality score
+average we observed a decrease in the error rate and the fraction of sequences
+retained when the threshold was increased above 60 (Figure 3CD). When we used
+this threshold, we were able to reduce the error rate by 
+32.8 to 56.1%
+(Figure 2A). We noted that the fraction of reads retained
 decreased as the length of the fragment increased with retention of
 86.9% of the V4 reads and
 50.1% of the V1-V9 reads (Figure
-ErrorSequenceCoverage). Next, we asked whether which combinations of culling
-reads with mismatches to the expected barcodes and primers, less than 10-fold
-sequencing coverage, and an average quality score less than 60 made the most
-meaningful reductions in the error rate while preserving the most reads. Finally, we
-implemented the basic curation pipeline along with permutations of these
-three critera. We observed similar error rates when we required 1 or fewer
-mismatches to the barcodes and primers and an average quality score above 60 as
-when we also required a minimum 10-fold coverage. Culling sequences that had more than
-one mismatch to the barcodes and primers and those with an average quality score less
-than 60 reduced the error rate to between 0.22 and 0.97. This procedure resulted in the removal of 18 and 53% of the reads (Figure PipelineError).
+2B). Next, we asked whether which combinations of culling reads with mismatches
+to the expected barcodes and primers, less than 10-fold sequencing coverage, and
+an average quality score less than 60 made the most meaningful reductions in the
+error rate while preserving the most reads when implemented with the basic
+curation pipeline (Figure 2B). We observed similar error rates when we required
+1 or fewer mismatches to the barcodes and primers and an average quality score
+above 60 as when we also required a minimum 10-fold coverage. Culling sequences
+that had more than one mismatch to the barcodes and primers and those with an
+average quality score less than 60 reduced the error rate to between 
+0.22 and 0.97.
+This procedure resulted in the removal of 
+18 and 53%
+of the reads (Figure 2). The remainder of this paper uses this sequence curation
+approach.
 
 
 ### Pre-clustering sequences to further reduce sequencing noise
@@ -310,7 +316,7 @@ and 0.83%
 (V3-V5); the
 full-length, V1-V9, fragments had an error rate of
 0.32%
-(Figure ErrorSequenceCoverage). These error rates are 7-40
+(Figure 2B). These error rates are 7-40
 times higher than what we have previously observed using the Roche 454 and
 Illumina MiSeq platforms (0.02%)[refs].
 
@@ -348,7 +354,7 @@ observed OTUs.
 
 We classified all of the sequence data we generated using the naïve Bayesian
 classifier using the RDP, SILVA, and greengenes reference taxonomies (Figure
-Classification). In general, increasing the length of the region improved the
+4). In general, increasing the length of the region improved the
 ability to assign the sequence to a genus or species. Interestingly, each of the
 samples we analyzed varied in their ability to assign sequences to the depth of
 genus or species and the reference database that did the best job of classifying
@@ -424,7 +430,7 @@ applications. We can estimate the distribution of errors assuming that the
 errors follow a binomial distribution along the length of the 1,500 nt
 gene with the error rate that we achieved from the V1-V9 mock community data
 prior to pre-clustering the sequences, which was 
-0.52% (Figure SimErrorRate). Under
+0.52% (Figure 5). Under
 these conditions one would only expect 
 0.04% of the
 sequences to have no errors. In fact, 95% of the reads would have at least 
@@ -459,7 +465,7 @@ the quality of the database (1 paragraph)
 
 ### ToDo:
 
-* Renumber figures and tables
+* Add data for Table 1
 * Make figure captions
 * Make table captions
 * Insert references
@@ -514,29 +520,29 @@ v19            5003                  67.8                     18.0              
 ## Figures
 
 ### Figure 1
-<img src="figure/ErrorQualityScoreFigure-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="figure/Figure_1-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 
 ### Figure 2
-<img src="figure/PipelineErrorFigure-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="figure/Figure_2-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 
 
 ### Figure 3
-<img src="figure/QualityScoreFigure-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="figure/Figure_3-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 ### Figure 4
 
-<img src="figure/classificationDotChart-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="figure/Figure_4-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 
 ## Figure 5
 
-<img src="figure/simulateErrors-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="figure/Figure_5-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 

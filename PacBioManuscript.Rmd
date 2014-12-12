@@ -272,7 +272,7 @@ than adenines (`r format(delete.bias["rA"], digits=3, nsmall=1)`%) or thymidines
 (`r format(delete.bias["rT"], digits=3, nsmall=1)`%). When we considered the Phred
 quality score of each base call, we observed a median quality score of `r m.quant["50%"]`
 for correct base calls and scores of `r s.quant["50%"]` and `r i.quant["50%"]` for
-substitutions and insertions, respectively (Figure FigureErrorQualityScore_A). Although there
+substitutions and insertions, respectively (Figure 1A). Although there
 was a broad distribution of quality scores with each type of base call, the errors could
 largely be distinguished from the correct base calls.
 
@@ -334,7 +334,7 @@ considered. This basic procedure resulted in the removal of between
 `r round(max(100*(1-reasons.lost[,"good"])), digits=1)`
 (`r pretty.region[names(which.max(100*(1-reasons.lost[,"good"])))]`)% of the
 reads and the percentage of reads removed increased with the length of the
-fragment (Figure PipelineError). For each region, the number of reads removed
+fragment (Figure 2). For each region, the number of reads removed
 because of the presence of ambiguous base calls was similar to the number of
 reads that were removed for not fully aligning to the correct region within the
 16S rRNA gene (Table 2). The latter class of errors was
@@ -580,44 +580,50 @@ identify and remove those sequences with errors using three different
 approaches. First, we hypothesized that errors in the barcode and primer would
 be correlated with the error rate for the entire sequence. We observed a strong
 relationship between the number of mismatches to the barcodes and primers and the
-error rate of the rest of the sequence fragment (Figure FigureErrorQualityScore_B). Although
+error rate of the rest of the sequence fragment (Figure 1B). Although
 allowing no mismatches to the barcodes and primers yielded the lowest error rate,
 that stringent criterion removed a large fraction of the reads from the dataset and
 allowing at most one mismatch marginally increased the error rate while preserving
-more sequences in the dataset (Figure PipelineError). Second, we hypothesized
+more sequences in the dataset (Figure 2). Second, we hypothesized
 that increased sequencing coverage should yield lower error rates. We found that
 once we had obtained 10-fold coverage of the fragments, the error rate did not
-change appreciably (Figure FigureErrorQualityScore_C). When we compared the error
+change appreciably (Figure 1C). When we compared the error
 rates of reads with at least 10-fold coverage to those with less coverage, we
-reduced the error rate by `r paste(round(sort(coverage.reduction)[c(1,5)], digits=1), collapse=" to ")`% for each region except the V4 region for which
-the error rate was reduced by `r round(coverage.reduction["v4"], digits=1)`%.
-Third, based on the earlier analysis associating errors with quality scores, we used
-two quality score-based approaches for identifying reads with errors (Figure
-QualityScoreFigure. We calculated
-the minimum average quality score across all 50-nt window within each sequence and we
-also calculated the average quality score across each sequence. We then associated
-both methods of calculating the average quality score with the error rate of the
-reads and the fraction of sequences that would be retained if each threshold were
-selected. Using the sliding window approach we did not observe any clear break points
-indicating that one quality score would be better than another. In contrast, using
-the whole sequence quality score average we observed a decrease in the error rate and
-the fraction of sequences retained when the threshold was increased above 60 (Figure
-QualityScoreFigure). When we used this threshold, we were able to reduce the error
-rate by `r paste(round(range(quality.reduction), digits=1), collapse=" to ")`%
-(Figure ErrorSequenceCoverage). We noted that the fraction of reads retained
+reduced the error rate by
+`r paste(round(sort(coverage.reduction)[c(1,5)], digits=1), collapse=" to ")`%
+for each region except the V4 region for which the error rate was reduced by
+`r round(coverage.reduction["v4"], digits=1)`%. Third, based on the earlier
+analysis associating errors with quality scores, we used two quality score-based
+approaches for identifying reads with errors (Figure 3). We calculated the
+minimum average quality score across all 50-nt window within each sequence and
+we also calculated the average quality score across each sequence. We then
+associated both methods of calculating the average quality score with the error
+rate of the reads and the fraction of sequences that would be retained if each
+threshold were selected. Using the sliding window approach we did not observe
+any clear break points indicating that one quality score would be better than
+another (Figure 3AB). In contrast, using the whole sequence quality score
+average we observed a decrease in the error rate and the fraction of sequences
+retained when the threshold was increased above 60 (Figure 3CD). When we used
+this threshold, we were able to reduce the error rate by 
+`r paste(round(range(quality.reduction), digits=1), collapse=" to ")`%
+(Figure 2A). We noted that the fraction of reads retained
 decreased as the length of the fragment increased with retention of
 `r round(100*aveq.error["v4", "60.frac"],digits=1)`% of the V4 reads and
 `r round(100*aveq.error["v19", "60.frac"],digits=1)`% of the V1-V9 reads (Figure
-ErrorSequenceCoverage). Next, we asked whether which combinations of culling
-reads with mismatches to the expected barcodes and primers, less than 10-fold
-sequencing coverage, and an average quality score less than 60 made the most
-meaningful reductions in the error rate while preserving the most reads. Finally, we
-implemented the basic curation pipeline along with permutations of these
-three critera. We observed similar error rates when we required 1 or fewer
-mismatches to the barcodes and primers and an average quality score above 60 as
-when we also required a minimum 10-fold coverage. Culling sequences that had more than
-one mismatch to the barcodes and primers and those with an average quality score less
-than 60 reduced the error rate to between `r paste(round(100*range(oligosQScore.error[,"1.60.error"]), digits=2), collapse=" and ")`. This procedure resulted in the removal of `r paste(rev(round(100*(1-range(oligosQScore.error[,"1.60.frac"])), digits=0)), collapse=" and ")`% of the reads (Figure PipelineError).
+2B). Next, we asked whether which combinations of culling reads with mismatches
+to the expected barcodes and primers, less than 10-fold sequencing coverage, and
+an average quality score less than 60 made the most meaningful reductions in the
+error rate while preserving the most reads when implemented with the basic
+curation pipeline (Figure 2B). We observed similar error rates when we required
+1 or fewer mismatches to the barcodes and primers and an average quality score
+above 60 as when we also required a minimum 10-fold coverage. Culling sequences
+that had more than one mismatch to the barcodes and primers and those with an
+average quality score less than 60 reduced the error rate to between 
+`r paste(round(100*range(oligosQScore.error[,"1.60.error"]), digits=2), collapse=" and ")`.
+This procedure resulted in the removal of 
+`r paste(rev(round(100*(1-range(oligosQScore.error[,"1.60.frac"])), digits=0)), collapse=" and ")`%
+of the reads (Figure 2). The remainder of this paper uses this sequence curation
+approach.
 
 
 ### Pre-clustering sequences to further reduce sequencing noise
@@ -677,7 +683,7 @@ and `r round(max(100*final.error[,"precluster.error"]), digits=2)`%
 (`r pretty.region[names(which.max(final.error[,"precluster.error"]))]`); the
 full-length, V1-V9, fragments had an error rate of
 `r round(100* final.error["v19","precluster.error"], digits=2)`%
-(Figure ErrorSequenceCoverage). These error rates are 7-40
+(Figure 2B). These error rates are 7-40
 times higher than what we have previously observed using the Roche 454 and
 Illumina MiSeq platforms (0.02%)[refs].
 
@@ -792,7 +798,7 @@ rownames(gg.sp) <- c("V4", "V3-V5", "V1-V3", "V1-V5", "V1-V6", "V1-V9")
 
 We classified all of the sequence data we generated using the naïve Bayesian
 classifier using the RDP, SILVA, and greengenes reference taxonomies (Figure
-Classification). In general, increasing the length of the region improved the
+4). In general, increasing the length of the region improved the
 ability to assign the sequence to a genus or species. Interestingly, each of the
 samples we analyzed varied in their ability to assign sequences to the depth of
 genus or species and the reference database that did the best job of classifying
@@ -889,7 +895,7 @@ applications. We can estimate the distribution of errors assuming that the
 errors follow a binomial distribution along the length of the 1,500 nt
 gene with the error rate that we achieved from the V1-V9 mock community data
 prior to pre-clustering the sequences, which was 
-`r round(100*final.error["v19","unique.error"],2)`% (Figure SimErrorRate). Under
+`r round(100*final.error["v19","unique.error"],2)`% (Figure 5). Under
 these conditions one would only expect 
 `r round(100*dbinom(0, 1500, final.error["v19","unique.error"]), 2)`% of the
 sequences to have no errors. In fact, 95% of the reads would have at least 
@@ -924,7 +930,6 @@ the quality of the database (1 paragraph)
 
 ### ToDo:
 
-* Renumber figures and tables
 * Add data for Table 1
 * Make figure captions
 * Make table captions
@@ -952,7 +957,7 @@ P30DK034933 to PDS and U54HG004973 to SKH).
 ## Tables
 
 **Table 1. Primer pairs used to generate 16S rRNA gene fragments of varying length.**
-```{r Table1, warning=TRUE, results='asis'}
+```{r Table_1, warning=TRUE, results='asis'}
 oligos <- read.table(file="pacbio.oligos", stringsAsFactors=F)[1:6,]
 rownames(oligos) <- pretty.region[oligos$V4]
 oligos <- oligos[,c("V2", "V3")]
@@ -968,7 +973,7 @@ knitr::kable(t1, digits=1, row.names=TRUE, col.names=c("Forward", "Reverse", "*E
 
 
 **Table 2.**
-```{r Table2, warning=TRUE, results='asis'}
+```{r Table_2, warning=TRUE, results='asis'}
 rownames(reasons.lost) <- pretty.region[rownames(reasons.lost)]
 reasons.lost <- cbind(orig.nseqs, 100*reasons.lost, basic.nseqs)
 knitr::kable(reasons.lost, digits=1, row.names=TRUE,
@@ -984,7 +989,7 @@ knitr::kable(reasons.lost, digits=1, row.names=TRUE,
 ## Figures
 
 ### Figure 1
-```{r ErrorQualityScoreFigure, fig.width=6.5, fig.height=3.0}
+```{r Figure_1, fig.width=6.5, fig.height=3.0}
 layout(matrix(c(1,2,3), nrow=1), heights=1, widths=c(0.75,1,1))
 
 
@@ -1073,7 +1078,7 @@ layout(1)
 
 
 ### Figure 2
-```{r PipelineErrorFigure, width=6.5, height=6}
+```{r Figure_2, width=6.5, height=6}
 error.fraction <- cbind(initial.error=init.rates, basic.error=basic.error,
 												bcprimer.error, coverage.error, aveq.error,
 												oligosCoverage.error, oligosQScore.error,
@@ -1161,7 +1166,7 @@ layout(1)
 
 
 ### Figure 3
-```{r QualityScoreFigure, fig.height=6.5, fig.width=6.5}
+```{r Figure_3, fig.height=6.5, fig.width=6.5}
 aggregateErrorMinQualityScore <- function(folder){
 	write(folder, "")
 	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder,
@@ -1272,7 +1277,7 @@ legend(x=10, y=0.50, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regio
 
 ### Figure 4
 
-```{r, classificationDotChart, fig.width=7, fig.height=7}
+```{r, Figure_4, fig.width=7, fig.height=7}
 #pdf(file="classification.pdf", width=7, height=7)
 par(mar=c(5, 5, 0.5, 1))
 dotchart(gg, xlim=c(0,100), col="black", xlab="Unique reads that classified\nto genus or species level (%)", pch=19)
@@ -1300,7 +1305,7 @@ legend(x=63, y=12, legend=c("RDP (gen.)", "SILVA (gen.)", "greengenes (gen.+sp.)
 
 ## Figure 5
 
-```{r simulateErrors, fig.width=7, fig.height=4}
+```{r Figure_5, fig.width=7, fig.height=4}
 x <- 0:20
 e1 <- final.error["v19","unique.error"]
 e2 <- final.error["v19","precluster.error"]
