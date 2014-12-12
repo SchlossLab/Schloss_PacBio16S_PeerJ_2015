@@ -13,5 +13,5 @@ mothur.*.logfile
 *.pdf
 HMP_MOCK*
 *.Rout
-
+*_cache/
 *.tgz
