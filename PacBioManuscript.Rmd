@@ -1,14 +1,14 @@
 ---
-title: "Sequencing 16S rRNA gene fragments using the PacBio SMRT DNA sequencing system"
-author: "Patrick D. Schloss"
-date: format(Sys.time(), "%B %d, %Y")
-output:
-  html_document:
-    keep_md: yes
+output:	md_document
 ---
 
+# Sequencing 16S rRNA gene fragments using the PacBio SMRT DNA sequencing system
 
 **Running title:** 16S rRNA genes sequencing with PacBio
+
+
+**`r format(Sys.time(), "%B %d, %Y")`**
+
 
 **Authors:** Patrick D. Schloss^1#^, Sarah L. Westcott^1^, Matthew L. Jenior^1^,
 and Sarah K. Highlander^2^
@@ -931,7 +931,7 @@ the quality of the database (1 paragraph)
 ### ToDo:
 
 * Add data for Table 1
-* Make figure captions
+* Make figure captions / move actual figures to end of document
 * Make table captions
 * Insert references
 
@@ -1072,7 +1072,6 @@ title(xlab="Coverage", ylab="", cex.lab=1.5)
 box()
 
 layout(1)
-#dev.off()
 ```
 
 
@@ -1268,17 +1267,13 @@ title(ylab="Sequences above threshold (%)")
 axis(2, at=seq(0,1,0.2), label=FALSE, tick=TRUE)
 mtext(side=2, line=0.6, at=1, text="D", las=2, cex=2, font=2)
 
-
 legend(x=10, y=0.50, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions], cex=1.0)
-
-#dev.off()
 ```
 
 
 ### Figure 4
 
 ```{r, Figure_4, fig.width=7, fig.height=7}
-#pdf(file="classification.pdf", width=7, height=7)
 par(mar=c(5, 5, 0.5, 1))
 dotchart(gg, xlim=c(0,100), col="black", xlab="Unique reads that classified\nto genus or species level (%)", pch=19)
 
@@ -1298,7 +1293,6 @@ points(x=gg.sp[,"Mouse"], y=9:14, pch=21, bg="gray")
 points(x=gg.sp[,"Soil"], y=1:6, pch=21, bg="gray")
 
 legend(x=63, y=12, legend=c("RDP (gen.)", "SILVA (gen.)", "greengenes (gen.+sp.)", "greengenes (sp.)"), pch=c(15, 17, 19, 21), col="black", pt.bg=c("black", "black", "black", "gray"), bg="white")
-#dev.off()
 ```
 
 
