@@ -961,7 +961,14 @@ knitr::kable(t1, digits=1, row.names=TRUE, col.names=c("Forward", "Reverse", "*E
 **Table 2.**
 ```{r SuppTable1, warning=TRUE, results='asis'}
 rownames(reasons.lost) <- pretty.region[rownames(reasons.lost)]
-knitr::kable(100*reasons.lost, digits=1, row.names=TRUE, col.names=c("Good reads (%)", "Wrong start/end position (%)", "Excessively long homopolymers (%)", "Ambiguous base calls (%)"), align="c")
+reasons.lost <- cbind(orig.nseqs, 100*reasons.lost, basic.nseqs)
+knitr::kable(reasons.lost, digits=1, row.names=TRUE,
+						 col.names=c("Initial sequences (N)", "Good reads (%)",
+						 						"Wrong start/end position (%)",
+						 						"Excessively long homopolymers (%)",
+						 						"Ambiguous base calls (%)",
+						 						"Sequences remaining (N\\)"),
+						 align="c")
 ```
 
 
