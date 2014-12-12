@@ -1,9 +1,10 @@
 ---
 title: "Sequencing 16S rRNA gene fragments using the PacBio SMRT DNA sequencing system"
-author: Patrick D. Schloss
-date: July 21, 2014
+author: "Patrick D. Schloss"
+date: format(Sys.time(), "%B %d, %Y")
 output:
-	keep_md: true
+  html_document:
+    keep_md: yes
 ---
 
 
@@ -12,7 +13,7 @@ output:
 **Authors:** Patrick D. Schloss^1#^, Sarah L. Westcott^1^, Matthew L. Jenior^1^,
 and Sarah K. Highlander^2^
 
-\* Correspondence:	pschloss@umich.edu
+* Correspondence:	pschloss@umich.edu
 734.647.5801
 Department of Microbiology and Immunology
 University of Michigan
@@ -22,6 +23,7 @@ Ann Arbor, MI  48109
 
 1	Department of Microbiology and Immunology, 1500 W. Medical Center, University
 of Michigan, Ann Arbor, MI 48109
+
 2	J Craig Venter Institute, 4120 Torrey Pines Road, La Jolla, CA 92307
 
 
@@ -171,10 +173,10 @@ derivatives can be obtained at FigShare. A standard operating procedure for
 analyzing PacBio data is available on the mothur wiki
 (http://www.mothur.org/wiki/PacBio_SOP).
 
-```{r setup, echo=TRUE, eval=TRUE, tidy=TRUE}
+```{r setup, echo=FALSE, eval=TRUE, tidy=TRUE}
 rm(list=ls())
 library("knitr")
-pdf.options(encoding="ISOLatin2.enc")
+#pdf.options(encoding="ISOLatin2.enc")
 regions <- c("v4", "v13", "v35", "v15", "v16", "v19")
 clrs <- rainbow(length(regions))
 pretty.region <- c("v13"="V1-V3", "v15"="V1-V5", "v16"="V1-V6", "v19"="V1-V9", "v35"="V3-V5", "v4"="V4")
@@ -183,12 +185,14 @@ names(clrs) <- regions
 
 opts_chunk$set("fig.path"="figure/")
 opts_chunk$set("fig.align"="center")
-opts_chunk$set("dev" = c("png", "pdf"))
+opts_chunk$set("dev" = c("png", "cairo_pdf"))
 
 opts_chunk$set("tidy" = TRUE)
 
-opts_chunk$set("echo" = TRUE)
+opts_chunk$set("echo" = FALSE)
+
 opts_chunk$set("eval" = TRUE)
+opts_chunk$set("results" = 'hide')
 opts_chunk$set("warning" = FALSE)
 ```
 
@@ -491,7 +495,7 @@ oligosQScore <- function(folder){
 
 	good1 <- mismatch <= 1 & composite$aveQ >= 60
 	composite.good1 <- composite[good1,]
-	write(file="v4.good.txt", rownames(composite[good1,]))
+
 	return(c(mean(composite.good0[,"error"]), nrow(composite.good0)/nrow(composite),
 	mean(composite.good1[,"error"]), nrow(composite.good1)/nrow(composite) ))
 }
@@ -664,10 +668,14 @@ based on a 3% distance threshold. Needless to say, this approach would limit
 one’s ability to detect 3 nt differences between V1-V9 sequences. When we apply
 this approach to our PacBio data, we observed a reduction in the error rate
 between `r min.rnd.red` (`r min.region`) and `r max.rnd.red`% (`r max.region`).
-The final error rates varied between `r round(min(100*final.error[,"precluster"]), digits=2)` (`r pretty.region[names(which.min(final.error[,"precluster"]))]`)
-and `r round(max(100*final.error[,"precluster"]), digits=2)`%
-(`r pretty.region[names(which.max(final.error[,"precluster"]))]`); the
-full-length, V1-V9, fragments had an error rate of `r round(100* final.error["v19","precluster"], digits=2)`% (Figure ErrorSequenceCoverage). These error rates are 7-40
+The final error rates varied between
+`r round(min(100*final.error[,"precluster.error"]), digits=2)`
+(`r pretty.region[names(which.min(final.error[,"precluster.error"]))]`)
+and `r round(max(100*final.error[,"precluster.error"]), digits=2)`%
+(`r pretty.region[names(which.max(final.error[,"precluster.error"]))]`); the
+full-length, V1-V9, fragments had an error rate of
+`r round(100* final.error["v19","precluster.error"], digits=2)`%
+(Figure ErrorSequenceCoverage). These error rates are 7-40
 times higher than what we have previously observed using the Roche 454 and
 Illumina MiSeq platforms (0.02%)[refs].
 
@@ -742,9 +750,9 @@ round(min(diff), digits=1)` (`r names(which.min(diff))`) and `r round(max(diff),
 soil, mouse, and human samples using the same pipeline with chimera detection and removal
 based on the UCHIME algorithm. Again, we found that there was a strong correlation between
 the number of observed OTUs and the error rate for the
-soil (`r format(round(cor.test(otu.table[,"Soil"], final.error[,"precluster.error"])$estimate, 2), nsmall=2)`),
-mouse (`r format(round(cor.test(otu.table[,"Mouse"], final.error[,"precluster.error"])$estimate, 2), nsmall=2)`),
-and human samples (`r format(round(cor.test(otu.table[,"Human"], final.error[,"precluster.error"])$estimate, 2), nsmall=2)`). 
+soil (R=`r format(round(cor.test(otu.table[,"Soil"], final.error[,"precluster.error"])$estimate, 2), nsmall=2)`),
+mouse (R=`r format(round(cor.test(otu.table[,"Mouse"], final.error[,"precluster.error"])$estimate, 2), nsmall=2)`),
+and human samples (R=`r format(round(cor.test(otu.table[,"Human"], final.error[,"precluster.error"])$estimate, 2), nsmall=2)`). 
 These results underscore the effect of sequencing error on the inflation of the number of
 observed OTUs.
 
@@ -919,7 +927,7 @@ P30DK034933 to PDS and U54HG004973 to SKH).
 ## Tables
 
 **Table 1. Primer pairs used to generate 16S rRNA gene fragments of varying length.**
-```{r Table1}
+```{r Table1, warning=TRUE, results='asis'}
 oligos <- read.table(file="pacbio.oligos", stringsAsFactors=F)[1:6,]
 rownames(oligos) <- pretty.region[oligos$V4]
 oligos <- oligos[,c("V2", "V3")]
@@ -928,7 +936,7 @@ coordinates <- rep("NA", 6)
 length <- rep("NA", 6)
 references <- rep("NA", 6)
 t1 <- cbind(oligos, coordinates, length, references)
-kable(t1, digits=1, row.names=TRUE, col.names=c("Forward", "Reverse", "*E. coli* coordinates", "Length (bp)^a^", "References"), align=c("l", "l", "c", "c", "c"))
+knitr::kable(t1, digits=1, row.names=TRUE, col.names=c("Forward", "Reverse", "*E. coli* coordinates", "Length (bp)^a^", "References"), align=c("l", "l", "c", "c", "c"))
 ```
 
 ^a^	Represents the expected median length of the DNA fragments amplified between the primers when using the 16S rRNA gene fragments in the mock community.
@@ -1015,7 +1023,7 @@ layout(1)
 
 ### Figure 2
 ```{r PipelineErrorFigure, width=6.5, height=6}
-cairo_pdf(file="test.pdf", width=6.5, height=6)
+#cairo_pdf(file="test.pdf", width=6.5, height=6)
 error.fraction <- cbind(initial.error=init.rates, basic.error=basic.error, bcprimer.error, coverage.error, aveq.error, oligosCoverage.error, oligosQScore.error, coverageQScore.error, allFilters.error, final.error)
 rownames(error.fraction) <- gsub("v(\\d*)", "\\1", rownames(error.fraction))
 
@@ -1094,10 +1102,8 @@ text(x=c(1:14)+0.2, y=rep(1, 11), label=c("Initial data", "Basic criteria", "No 
 		"Coverage & Quality", "No Mismatches,\nCoverage & Quality", 
 		"\u22641 Mismatch,\nCoverage & Quality", "After Pre-clustering"), srt=90, pos=2, cex=1)  
 
-
 layout(1)
-dev.off()
-
+#dev.off()
 ```
 
 
@@ -1106,7 +1112,7 @@ dev.off()
 ### Figure 3
 
 
-```{r QualityScoreFigure, fig.width=6.5, fig.width=6.5}
+```{r QualityScoreFigure, fig.height=6.5, fig.width=6.5}
 aggregateErrorMinQualityScore <- function(folder){
 	write(folder, "")
 	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder,
@@ -1162,7 +1168,7 @@ write(folder, "")
 	points(binned$Group.1, remaining, type="l", col=clrs[folder], lwd=2)
 }
 
-pdf(file="test.pdf", width=6.5, height=6.5)
+#pdf(file="test.pdf", width=6.5, height=6.5)
 layout(1)
 layout(matrix(c(1,2,3,4), nrow=2, byrow=F), width=c(1.1,1), height=c(1, 1.3))
 
@@ -1209,14 +1215,14 @@ mtext(side=2, line=0.6, at=1, text="D", las=2, cex=2, font=2)
 
 legend(x=10, y=0.50, legend=pretty.region[regions], lty=1, lwd=2, col=clrs[regions], cex=1.0)
 
-dev.off()
+#dev.off()
 ```
 
 
 ### Figure 4
 
 ```{r, classificationDotChart, fig.width=7, fig.height=7}
-pdf(file="classification.pdf", width=7, height=7)
+#pdf(file="classification.pdf", width=7, height=7)
 par(mar=c(5, 5, 0.5, 1))
 dotchart(gg, xlim=c(0,100), col="black", xlab="Unique reads that classified\nto genus or species level (%)", pch=19)
 
@@ -1236,7 +1242,7 @@ points(x=gg.sp[,"Mouse"], y=9:14, pch=21, bg="gray")
 points(x=gg.sp[,"Soil"], y=1:6, pch=21, bg="gray")
 
 legend(x=63, y=12, legend=c("RDP (gen.)", "SILVA (gen.)", "greengenes (gen.+sp.)", "greengenes (sp.)"), pch=c(15, 17, 19, 21), col="black", pt.bg=c("black", "black", "black", "gray"), bg="white")
-dev.off()
+#dev.off()
 ```
 
 
@@ -1250,14 +1256,14 @@ e2 <- 0.0034
 e3 <- 0.002
 e4 <- 0.001
 
-pdf(file="error.rate.pdf")
+#file="error.rate.pdf")
 plot(x, dbinom(x, 1458, e1), type="l", ylim=c(0,0.35), xlab="Number of errors", ylab="% of full-length 16S rRNA gene sequences", yaxt="n", lwd=3)
 points(x, dbinom(x, 1458, e2), type="l", col="red", lwd=3)
 points(x, dbinom(x, 1458, e3), type="l", col="blue", lwd=3)
 points(x, dbinom(x, 1458, e4), type="l", col="darkgreen", lwd=3)
 axis(2, at=seq(0,0.35,0.05), label=seq(0,35,5), las=1)
 legend(x=12, y=0.30, legend=c("0.49%", "0.32%", "0.20%","0.10%"), lwd=3, col=c("black", "red", "blue", "darkgreen"))
-dev.off()
+#dev.off()
 ```
 
 
@@ -1265,14 +1271,13 @@ dev.off()
 
 ## Supplemental Tables
 
-SupplementalReasonsLost
-```{r}
+```{r SuppTable1, warning=TRUE, results='asis'}
 rownames(reasons.lost) <- pretty.region[rownames(reasons.lost)]
-kable(100*reasons.lost, digits=1, row.names=TRUE, col.names=c("Good reads (%)", "Wrong start/end position (%)", "Excessively long homopolymers (%)", "Ambiguous base calls (%)"), align="c")
+knitr::kable(100*reasons.lost, digits=1, row.names=TRUE, col.names=c("Good reads (%)", "Wrong start/end position (%)", "Excessively long homopolymers (%)", "Ambiguous base calls (%)"), align="c")
 ```
 
 
 
-```{r versions, echo=T, eval=T}
-sessionInfo()
+```{r, results='asis', versions}
+sessionInfo("knitr")
 ```
