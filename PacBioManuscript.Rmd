@@ -925,6 +925,7 @@ the quality of the database (1 paragraph)
 ### ToDo:
 
 * Renumber figures and tables
+* Add data for Table 1
 * Make figure captions
 * Make table captions
 * Insert references
