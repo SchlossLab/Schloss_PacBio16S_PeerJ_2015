@@ -204,8 +204,13 @@ To establish a simple curation procedure, we culled any sequence that contained
 an ambiguous base call, had a string of the same base repeated 9 or more times,
 did not start and end at the expected alignment coordinates for that region
 of the 16S rRNA gene, or that was chimeric. This reduced the experiment-wide
-error rate from 1.80 to 0.90% across the six regions we considered. This basic
-procedure resulted in the removal of between 4 (V4) and 32.2 (V1-V9)% of the
+error rate from 1.80 to 
+0.90% across the six regions we
+considered. This basic procedure resulted in the removal of between
+4
+(V4) and 
+32.2
+(V1-V9)% of the
 reads and the percentage of reads removed increased with the length of the
 fragment (Figure PipelineError). For each region, the number of reads removed
 because of the presence of ambiguous base calls was similar to the number of
@@ -486,6 +491,18 @@ V4      GTGCCAGCMGCCGCGGTAA    GGACTACHVGGGTWTCTAAT             NA              
 ^a^	Represents the expected median length of the DNA fragments amplified between the primers when using the 16S rRNA gene fragments in the mock community.
 
 
+**Table 2.**
+
+         Good reads (%)    Wrong start/end position (%)    Excessively long homopolymers (%)    Ambiguous base calls (%) 
+------  ----------------  ------------------------------  -----------------------------------  --------------------------
+V4            96.0                     2.9                                0.1                             1.5            
+V1-V3         84.0                     10.0                               0.1                             7.5            
+V3-V5         77.3                     15.6                               0.2                             11.0           
+V1-V5         79.1                     11.5                               0.2                             12.5           
+V1-V6         72.6                     11.4                               0.1                             19.4           
+V1-V9         67.8                     18.0                               0.5                             17.5           
+
+
 ## Figures
 
 ### Figure 1
@@ -516,34 +533,5 @@ V4      GTGCCAGCMGCCGCGGTAA    GGACTACHVGGGTWTCTAAT             NA              
 
 
 
-## Supplemental Tables
 
 
-         Good reads (%)    Wrong start/end position (%)    Excessively long homopolymers (%)    Ambiguous base calls (%) 
-------  ----------------  ------------------------------  -----------------------------------  --------------------------
-V4            96.0                     2.9                                0.1                             1.5            
-V1-V3         84.0                     10.0                               0.1                             7.5            
-V3-V5         77.3                     15.6                               0.2                             11.0           
-V1-V5         79.1                     11.5                               0.2                             12.5           
-V1-V6         72.6                     11.4                               0.1                             19.4           
-V1-V9         67.8                     18.0                               0.5                             17.5           
-
-
-
-R version 3.1.1 (2014-07-10)
-Platform: x86_64-apple-darwin13.1.0 (64-bit)
-
-locale:
-[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
-
-attached base packages:
-character(0)
-
-other attached packages:
-[1] knitr_1.7
-
-loaded via a namespace (and not attached):
- [1] base_3.1.1      codetools_0.2-8 datasets_3.1.1  digest_0.6.4   
- [5] evaluate_0.5.5  formatR_1.0     graphics_3.1.1  grDevices_3.1.1
- [9] htmltools_0.2.6 methods_3.1.1   rmarkdown_0.3.3 stats_3.1.1    
-[13] stringr_0.6.2   tools_3.1.1     utils_3.1.1     yaml_2.1.13    

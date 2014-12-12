@@ -279,7 +279,7 @@ largely be distinguished from the correct base calls.
 
 ### A basic sequence curation procedure
 
-```{r}
+```{r initialError}
 getInitError <- function(folder){
 	error <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".mock.filter.error.summary", sep=""), header=T, row.names=1)
 	error <- error[error$numparents==1,]
@@ -288,10 +288,6 @@ getInitError <- function(folder){
 
 init.rates <- unlist(lapply(regions, getInitError))
 names(init.rates) <- regions
-#         v4         v13         v35         v15         v16         v19 
-#0.007348394 0.022576344 0.023803251 0.016778645 0.024307232 0.021551162 
-
-
 
 getReasonsLost <- function(region){
 	composite <- read.table(file=paste("pipeline_dev/", region, "/", region, ".composite", sep=""), header=T, row.names=1)
@@ -309,8 +305,8 @@ reasons.lost <- matrix(unlist(lapply(regions, getReasonsLost)), ncol=5, byrow=T)
 colnames(reasons.lost) <- c("good", "start.stop", "homop", "ambig", "nseqs")
 rownames(reasons.lost) <- regions
 
-nseqs <- reasons.lost[,"nseqs"]
-n.good <- nseqs * reasons.lost[,1]
+orig.nseqs <- reasons.lost[,"nseqs"]
+basic.nseqs <- orig.nseqs * reasons.lost[,1]
 reasons.lost <- reasons.lost[,-5]
 
 getBasicError <- function(folder){
@@ -323,15 +319,20 @@ basic.error <- unlist(lapply(regions, getBasicError))
 names(basic.error) <- regions
 #         v4         v13         v35         v15         v16         v19 
 #0.005373722 0.014743697 0.013730112 0.009027326 0.014249660 0.013027623 
-composite.basic.error <- 100 * sum(basic.error*n.good)/(sum(n.good))
+composite.basic.error <- 100 * sum(basic.error*basic.nseqs)/(sum(basic.nseqs))
 ```
 
 To establish a simple curation procedure, we culled any sequence that contained
 an ambiguous base call, had a string of the same base repeated 9 or more times,
 did not start and end at the expected alignment coordinates for that region
 of the 16S rRNA gene, or that was chimeric. This reduced the experiment-wide
-error rate from `r format(init.error.rate, digits=3, nsmall=2)` to `r format(composite.basic.error, digits=2, nsmall=2)`% across the six regions we considered. This basic
-procedure resulted in the removal of between `r round(min(100*(1-reasons.lost[,"good"])), digits=1)` (`r pretty.region[names(which.min(100*(1-reasons.lost[,"good"])))]`) and `r round(max(100*(1-reasons.lost[,"good"])), digits=1)` (`r pretty.region[names(which.max(100*(1-reasons.lost[,"good"])))]`)% of the
+error rate from `r format(init.error.rate, digits=3, nsmall=2)` to 
+`r format(composite.basic.error, digits=2, nsmall=2)`% across the six regions we
+considered. This basic procedure resulted in the removal of between
+`r round(min(100*(1-reasons.lost[,"good"])), digits=1)`
+(`r pretty.region[names(which.min(100*(1-reasons.lost[,"good"])))]`) and 
+`r round(max(100*(1-reasons.lost[,"good"])), digits=1)`
+(`r pretty.region[names(which.max(100*(1-reasons.lost[,"good"])))]`)% of the
 reads and the percentage of reads removed increased with the length of the
 fragment (Figure PipelineError). For each region, the number of reads removed
 because of the presence of ambiguous base calls was similar to the number of
@@ -354,10 +355,12 @@ getFragment_BPErrorRates <- function(folder){
 errors <- lapply(regions, getFragment_BPErrorRates)
 
 errors.table <- matrix(errors[[1]], ncol=2, byrow=F)
-err.bcprimer <- aggregate(100*errors.table[,1], by=list(errors.table[,2]), function(x){c(mean(x), length(x))})
+err.bcprimer <- aggregate(100*errors.table[,1], by=list(errors.table[,2]),
+													function(x){c(mean(x), length(x))})
 
 getBCPrimerError <- function(folder){
-	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder, ".composite", sep=""), header=T, row.names=1)
+	composite <- read.table(file=paste("pipeline_dev/", folder, "/", folder,
+																		 ".composite", sep=""), header=T, row.names=1)
 	composite <- composite[composite$reason == "g",]
 	mismatch <- composite$fbdiffs + composite$rbdiffs + composite$fpdiffs + composite$rpdiffs
 
@@ -955,6 +958,13 @@ knitr::kable(t1, digits=1, row.names=TRUE, col.names=c("Forward", "Reverse", "*E
 ^a^	Represents the expected median length of the DNA fragments amplified between the primers when using the 16S rRNA gene fragments in the mock community.
 
 
+**Table 2.**
+```{r SuppTable1, warning=TRUE, results='asis'}
+rownames(reasons.lost) <- pretty.region[rownames(reasons.lost)]
+knitr::kable(100*reasons.lost, digits=1, row.names=TRUE, col.names=c("Good reads (%)", "Wrong start/end position (%)", "Excessively long homopolymers (%)", "Ambiguous base calls (%)"), align="c")
+```
+
+
 ## Figures
 
 ### Figure 1
@@ -1295,15 +1305,7 @@ legend(x=12, y=0.30, legend=paste0(round(100*c(e1, e2, e3, e4), 2), "%"),
 
 
 
-## Supplemental Tables
 
-```{r SuppTable1, warning=TRUE, results='asis'}
-rownames(reasons.lost) <- pretty.region[rownames(reasons.lost)]
-knitr::kable(100*reasons.lost, digits=1, row.names=TRUE, col.names=c("Good reads (%)", "Wrong start/end position (%)", "Excessively long homopolymers (%)", "Ambiguous base calls (%)"), align="c")
-```
-
-
-
-```{r, results='asis', versions}
-sessionInfo("knitr")
+```{r, versions}
+sessionInfo()
 ```
