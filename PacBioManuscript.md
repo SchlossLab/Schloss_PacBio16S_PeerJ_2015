@@ -400,13 +400,14 @@ sequence fragments (error rates < 0.02%) [ref]. The promise of the PacBio
 sequencing platform was the generation of high-quality near full-length sequence
 fragments. As we have shown in this study, it is possible to generate near
 full-length sequences; however, the error rate associated with those reads is
-considerable (i.e. 0.34%) and requires a level of sequencing coverage that is
-not commonly observed in a typical sequencing run. This results in the
-generation of a small number of low quality full-length sequences. When we
-considered the shorter V4 region, that is similar in length to what is sequenced
-by the MiSeq platform, the error rates were nearly 5-fold higher than what has
-previously been reported (0.09%). It appears that the promise offered by the
-PacBio platform has not been realized.
+considerable (i.e. 0.32%)
+and requires a level of sequencing coverage that is not commonly observed in a
+typical sequencing run. This results in the generation of a small number of low
+quality full-length sequences. When we considered the shorter V4 region, that is
+similar in length to what is sequenced by the MiSeq platform, the error rates
+we observed with the PacBio platform were nearly 5-fold higher than what has
+previously been reported. It appears that the promise offered by the PacBio
+platform has not been realized.
 
 The widespread adoption of the 454 and MiSeq platforms and decrease in Sanger
 sequencing for sequencing the 16S rRNA gene has resulted in a decrease in the
@@ -414,12 +415,29 @@ generation of the full-length reference sequences that are needed for performing
 phylogenetic analyses and designing lineage specific PCR primers and fluorescent
 in situ hybridization probes. It remains to be determined whether the elevated
 error rates we observed for full-length sequences are prohibitive for these
-applications. Considering the 16S rRNA gene fragment is approximately 1,500 nt
-long and an error rate of 0.34%, one would expect 26% of the sequences to have
-no errors, 35% to have one error, 24% to have two errors, and 11% to have 3
+applications. We can estimate the distribution of errors assuming that the
+errors follow a binomial distribution along the length of the 1,500 nt
+gene with the error rate that we achieved from the V1-V9 mock community data
+prior to pre-clustering the sequences, which was 
+0.52% (Figure SimErrorRate). Under
+these conditions one would only expect 
+0.04% of the
+sequences to have no errors. In fact, 95% of the reads would have at least 
+3 errors and 50% of the
+reads would have at least 
+8 errors. If the error
+rate from the pre-clustered data
+(0.32%) were used, then 95% of
+the reads would have at least 
+2 errors and 50% of the
+reads would have at least 
+5 errors. If it were
+posible to replicate the low error rates we have previously obsereved using the
+454 and Illumina MiSeq platforms, which was 0.02%, then we would expect 
+74.1% of the sequences to have no errors.
+In fact, 95% of the reads would have 1 or fewer
 errors.
 
-Figure FullLengthErrors
 
 Classification is dependent on quality of sequence data, length of the data, and
 the quality of the database
@@ -429,11 +447,7 @@ experimental design so that they can quantify their error rates
 
 Probably not worth the effort at this point
 
-A limitation of the Illumina, IonTorrent, and 454 sequencing platforms is that
-the sequence reads are too short to allow for full length sequencing of the 16S
-rRNA gene. This has had the effect of slowing the deposition of reference
-16S rRNA gene sequences in reference databases. Obviously, one potential advantage
-of PacBio sequencing is the ability to generate these full length sequences.
+
 
 Recently described oligotyping methods would need to be reassessed since those
 methods assume that every base in a sequence is equally likely to be incorrect. 
@@ -499,7 +513,7 @@ V4      GTGCCAGCMGCCGCGGTAA    GGACTACHVGGGTWTCTAAT             NA              
 
 ## Figure 5
 
-<img src="figure/unnamed-chunk-5-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="figure/simulateErrors-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 
