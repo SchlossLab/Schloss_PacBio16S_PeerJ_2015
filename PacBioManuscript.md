@@ -531,7 +531,7 @@ other attached packages:
 [1] knitr_1.7
 
 loaded via a namespace (and not attached):
- [1] base_3.1.1      datasets_3.1.1  digest_0.6.4    evaluate_0.5.5 
- [5] formatR_1.0     graphics_3.1.1  grDevices_3.1.1 htmltools_0.2.6
- [9] methods_3.1.1   rmarkdown_0.3.3 stats_3.1.1     stringr_0.6.2  
-[13] tools_3.1.1     utils_3.1.1     yaml_2.1.13    
+ [1] base_3.1.1      codetools_0.2-8 datasets_3.1.1  digest_0.6.4   
+ [5] evaluate_0.5.5  formatR_1.0     graphics_3.1.1  grDevices_3.1.1
+ [9] htmltools_0.2.6 methods_3.1.1   rmarkdown_0.3.3 stats_3.1.1    
+[13] stringr_0.6.2   tools_3.1.1     utils_3.1.1     yaml_2.1.13    

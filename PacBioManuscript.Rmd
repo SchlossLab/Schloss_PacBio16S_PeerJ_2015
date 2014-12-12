@@ -188,12 +188,11 @@ opts_chunk$set("fig.align"="center")
 opts_chunk$set("dev" = c("png", "cairo_pdf"))
 
 opts_chunk$set("tidy" = TRUE)
-
 opts_chunk$set("echo" = FALSE)
-
 opts_chunk$set("eval" = TRUE)
 opts_chunk$set("results" = 'hide')
 opts_chunk$set("warning" = FALSE)
+opts_chunk$set("cache" = TRUE)
 ```
 
 ## Results and Discussion
@@ -1037,7 +1036,7 @@ getJitter <- function(x){
 	runif(6, x-jitter, x+jitter)
 }
 
-l <- layout(matrix(c(1,2,3), nrow=3), heights=c(1,1,0.5))
+l <- layout(matrix(c(1,2,3), nrow=3), heights=c(1,1,0.6))
 
 par(mar=c(0.5, 7, 0.5, 0.5))
 plot(1, type="n", xlim=c(1, 14), ylim=c(0,2.5), axes=F, xlab="", ylab="", cex.lab=1.5)
@@ -1065,7 +1064,7 @@ abline(v=seq(3.5,13.5, 1), col="grey")
 abline(v=c(1.5, 2.5, 13.5), col="black", lwd=2)
 
 
-mtext(side=2, line=4, at=2.44, text="A", cex=2, font=2, las=1)
+mtext(side=2, line=4.5, at=2.44, text="A", cex=2, font=2, las=1)
 
 
 par(mar=c(0.5, 7, 0.5, 0.5))
@@ -1088,7 +1087,7 @@ box()
 abline(v=seq(3.5,13.5, 1), col="grey")
 abline(v=c(1.5, 2.5, 13.5), col="black", lwd=2)
 
-mtext(side=2, line=4, at=98, text="B", cex=2, font=2, las=1)
+mtext(side=2, line=4.5, at=98, text="B", cex=2, font=2, las=1)
 axis(2, las=2, at=seq(0,100, 25), label=seq(0, 100, 25), cex.axis=1.5)
 text(1,0, label="NA")
 text(2,0, label="NA")
