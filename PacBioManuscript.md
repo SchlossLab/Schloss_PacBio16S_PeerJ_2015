@@ -441,21 +441,29 @@ posible to replicate the low error rates we have previously obsereved using the
 454 and Illumina MiSeq platforms, which was 0.02%, then we would expect 
 74.1% of the sequences to have no errors.
 In fact, 95% of the reads would have 1 or fewer
-errors.
+errors. Although full-length sequence data is highly desired, at this point, it
+does not appear that the PacBio platform can provide the data of sufficient
+quality to fill the niche of generating reference sequences.
 
 
-Classification is dependent on quality of sequence data, length of the data, and
-the quality of the database
+### Remaining outline...
 
-Critical that people begin to utilize mock communities as part of their
-experimental design so that they can quantify their error rates
+* Classification is dependent on quality of sequence data, length of the data, and
+the quality of the database (1 paragraph)
+* Conclude (1 paragraph)  
+	* Critical that people begin to utilize mock communities as part of their
+	  experimental design so that they can quantify their error rates. Merely
+	  demonstrating one can generate sequence data is insufficient.
+	* Probably not worth the effort at this point
 
-Probably not worth the effort at this point
 
+### ToDo:
 
+* Renumber figures and tables
+* Make figure captions
+* Make table captions
+* Insert references
 
-Recently described oligotyping methods would need to be reassessed since those
-methods assume that every base in a sequence is equally likely to be incorrect. 
 
 
 
