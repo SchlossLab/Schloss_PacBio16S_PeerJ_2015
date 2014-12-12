@@ -11,6 +11,7 @@ mothur.*.logfile
 *.docx
 *.html
 *.pdf
+!figures/*.pdf
 HMP_MOCK*
 *.Rout
 *_cache/
