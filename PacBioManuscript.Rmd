@@ -1,5 +1,7 @@
 ---
-output:	md_document
+output:
+  html_document:
+    keep_md: yes
 ---
 
 # Sequencing 16S rRNA gene fragments using the PacBio SMRT DNA sequencing system
@@ -13,7 +15,7 @@ output:	md_document
 **Authors:** Patrick D. Schloss^1#^, Sarah L. Westcott^1^, Matthew L. Jenior^1^,
 and Sarah K. Highlander^2^
 
-* Correspondence:	pschloss@umich.edu
+\* Correspondence:	pschloss@umich.edu
 734.647.5801
 Department of Microbiology and Immunology
 University of Michigan
@@ -22,8 +24,8 @@ University of Michigan
 Ann Arbor, MI  48109
 
 1	Department of Microbiology and Immunology, 1500 W. Medical Center, University
-of Michigan, Ann Arbor, MI 48109
 
+of Michigan, Ann Arbor, MI 48109
 2	J Craig Venter Institute, 4120 Torrey Pines Road, La Jolla, CA 92307
 
 
@@ -628,7 +630,7 @@ approach.
 
 ### Pre-clustering sequences to further reduce sequencing noise
 
-```{r}
+```{r precluster}
 summarizeError <- function(folder, method){
   file1 <- paste("analysis/", folder, "/", folder, ".mock1.", method, ".error.summary", sep="")
   file2 <- paste("analysis/", folder, "/", folder, ".mock2.", method, ".error.summary", sep="")
@@ -929,10 +931,8 @@ the quality of the database (1 paragraph)
 
 
 ### ToDo:
-
+* Finish Discussion
 * Add data for Table 1
-* Make figure captions / move actual figures to end of document
-* Make table captions
 * Insert references
 
 
@@ -956,7 +956,8 @@ P30DK034933 to PDS and U54HG004973 to SKH).
 
 ## Tables
 
-**Table 1. Primer pairs used to generate 16S rRNA gene fragments of varying length.**
+**Table 1. Summary of the primer pairs used to generate the 16S rRNA gene fragment fragments and the characteristics of each region.**
+
 ```{r Table_1, warning=TRUE, results='asis'}
 oligos <- read.table(file="pacbio.oligos", stringsAsFactors=F)[1:6,]
 rownames(oligos) <- pretty.region[oligos$V4]
@@ -964,15 +965,16 @@ oligos <- oligos[,c("V2", "V3")]
 colnames(oligos) <- c("Forward", "Reverse")
 coordinates <- rep("NA", 6)
 length <- rep("NA", 6)
-references <- rep("NA", 6)
-t1 <- cbind(oligos, coordinates, length, references)
-knitr::kable(t1, digits=1, row.names=TRUE, col.names=c("Forward", "Reverse", "*E. coli* coordinates", "Length (bp)^a^", "References"), align=c("l", "l", "c", "c", "c"))
+t1 <- cbind(oligos, coordinates, length)
+knitr::kable(t1, digits=1, row.names=TRUE, col.names=c("Forward", "Reverse", "*E. coli* coordinates", "Length (bp)^a^"), align=c("l", "l", "c", "c"))
 ```
 
 ^a^	Represents the expected median length of the DNA fragments amplified between the primers when using the 16S rRNA gene fragments in the mock community.
 
 
-**Table 2.**
+**Table 2. Summary of the reasons that sequences were excluded because of the
+basic sequence curation steps**
+
 ```{r Table_2, warning=TRUE, results='asis'}
 rownames(reasons.lost) <- pretty.region[rownames(reasons.lost)]
 reasons.lost <- cbind(orig.nseqs, 100*reasons.lost, basic.nseqs)
@@ -987,6 +989,50 @@ knitr::kable(reasons.lost, digits=1, row.names=TRUE,
 
 
 ## Figures
+
+**Figure 1. Summary of errors in data generated using PacBio sequencing platform
+to sequence various regions within the 16S rRNA gene.** Quality scores varied
+with error types (A). The seqeuncing error rate of the amplified gene fragments
+increased with mismatches to the barcodes and primers (B). The sequencing error
+rate declined with increasd sequencing coverage; however, increasing the
+sequencing depth beyond 10-fold coverage had no meaningful effect on the
+sequencing error rate (C).
+
+
+**Figure 2. Change in error rate (A) and the percentage of sequences that were
+retained (B) when using various sequence curation methods.** The condition that
+was used for downstream analyses is indicated by the star. The plotted numbers
+represent the region that was sequenced. For example "15" represents the data
+for the V1-V5 region.
+
+
+**Figure 3. The relationship between the error rate of each region and the
+composite quality scores for the sequences.** The error rates (A and C) and
+percentage of sequences (B and D) were calculated for the reads that had a
+composite quality score above the plotted value. The composite quality scores
+were calculated by either determining the minimum value of the average quality
+score wihin all 50-nt windows within each region (A and B) or by calculating
+the average quality score across the entire sequence read (C and D).
+
+
+**Figure 4. The percentage of unique sequences that could be classified using
+taxonomy references curated from the RDP, SILVA, or greengenes for the four
+types of samples that were sequenced across the six regions from the 16S rRNA
+gene.** Only the greengenes taxonomy reference provided species-level
+information.
+
+
+**Figure 5. The percentage of V1-V9 sequences that were predicted to have
+between 0 and 20 errors as a function of the error rate of the sequences.** The 
+error rates were selected because they represented the error rate for the V1-V9
+sequences before (`r round(100*final.error["v19","unique.error"], 2)`%) and
+after (`r round(100*final.error["v19","precluster.error"], 2)`%) the
+pre-clustering step, the lowest observed error rate we observed (V4:
+`r round(100*final.error["v4","precluster.error"], 2)`%) and the error rate we 
+observed previously using the 454 and MiSeq sequencing platforms. The predicted
+number of errors was assumed to follow a binomial distribution.
+
+
 
 ### Figure 1
 ```{r Figure_1, fig.width=6.5, fig.height=3.0}
@@ -1297,7 +1343,7 @@ legend(x=63, y=12, legend=c("RDP (gen.)", "SILVA (gen.)", "greengenes (gen.+sp.)
 
 
 
-## Figure 5
+### Figure 5
 
 ```{r Figure_5, fig.width=7, fig.height=4}
 x <- 0:20
