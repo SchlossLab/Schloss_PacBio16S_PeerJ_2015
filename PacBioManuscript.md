@@ -1,6 +1,5 @@
 
 ### ToDo:
-* Finish Discussion
 * Insert references
 * Abstract
 
@@ -413,9 +412,9 @@ quite frequent.
 The various sequencing platforms that are available to microbial ecologists are
 able to fill unique needs and have their own strengths and weaknesses. For
 sequencing the 16S rRNA gene, the 454 platform is able to generate a moderate
-number of high-quality 500-nt sequence fragments (error rates < 0.02%) [ref] and
+number of high-quality 500-nt sequence fragments (error rates below 0.02%) [ref] and
 the MiSeq platform is able to generate a large number of high-quality 250-nt
-sequence fragments (error rates < 0.02%) [ref]. The promise of the PacBio
+sequence fragments (error rates below 0.02%) [ref]. The promise of the PacBio
 sequencing platform was the generation of high-quality near full-length sequence
 fragments. As we have shown in this study, it is possible to generate near
 full-length sequences; however, the error rate associated with those reads is
@@ -449,28 +448,46 @@ rate could be dropped to 0.25%, then 95% of
 the reads would have at least 
 1 errors and 50% of the
 reads would have at least 
-4 errors. If it were
-posible to replicate the low error rates we have previously obsereved using the
-454 and Illumina MiSeq platforms, which was 0.02%, then we would expect 
+4 errors. If it were posible to replicate the low
+error rates we have previously obsereved using the 454 and Illumina MiSeq
+platforms, which was 0.02%, then we would expect 
 74.1% of the sequences to have no errors.
 In fact, 95% of the reads would have 1 or fewer
 errors. Although full-length sequence data is highly desired, at this point, it
 does not appear that the PacBio platform can provide the data of sufficient
 quality to fill the niche of generating reference sequences.
 
+Full-length sequences are frequently seen as a panacea to overcome the
+limitations of taxonomic classifications. The ability to classify each of our
+sample types benefited from the generation of full-length sequences. It was
+interesting that the benefit varied by sample type and database. For example,
+using the mouse libraries, the difference between the V1-V9 was less than 5%
+when classifying against the SILVA and greengenes databases. The effect of the 
+database that was used was also interesting. The RDP database outperformed the
+other databases for the mouse samples and the SILVA database outperformed the
+others for the human and soil samples. The three databases were equally
+effective for classifying the mock communities. Finally, only the greengenes
+database provided species-level information for its reference sequences.
+Therefore, it was only possible to obtain species-level classifications when 
+that database was used. The sequences from the mouse and soil libraries were not
+effectively classified to the species level (all less than 10%). In contrast,
+classificatoin of the human libraries resulted in more than 40% of the sequences
+being classified to a genus, regardless of the region. That the variation in
+species-level classification for the human libraries was less than 10% suggests
+that the benefit of added length is minimal considering the lower sequencing
+yield.
 
-
-* Classification is dependent on quality of sequence data, length of the data, and
-the quality of the database (1 paragraph)
-* Conclude (1 paragraph)  
-	* Critical that people begin to utilize mock communities as part of their
-	  experimental design so that they can quantify their error rates. Merely
-	  demonstrating one can generate sequence data is insufficient.
-	* Probably not worth the effort at this point
-
-
-
-
+The development of next generation sequencing technology continues to advance
+and there is justifiable excitement to apply these technologies to sequence the
+16S rRNA gene. Although it is clearly possible to generate sequencing data from
+these various platforms, it is critical that we assess the platforms for their
+ability to generate high quality data and the particular niche that the new
+approach will fill. With this in mind, it is essential that researchers utilize
+mock communities as part of their experimental design so that they can quantify
+their error rates. The ability to generate large numbers of near full-length 16S
+rRNA gene sequences is an exciting advance. At this point, the excitement must
+be tempered by the appreciation that the error rates limit the application of
+the approach.
 
 
 ## Acknowledgements
