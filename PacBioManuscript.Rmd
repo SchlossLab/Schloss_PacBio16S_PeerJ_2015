@@ -6,7 +6,6 @@ output:
 
 ### ToDo:
 * Finish Discussion
-* Add data for Table 1
 * Insert references
 * Abstract
 
@@ -962,17 +961,49 @@ P30DK034933 to PDS and U54HG004973 to SKH).
 **Table 1. Summary of the primer pairs used to generate the 16S rRNA gene fragment fragments and the characteristics of each region.**
 
 ```{r Table_1, warning=TRUE, results='asis'}
+
+getSloppyRevComp <- function(sequence){
+	rev.sequence <- paste(rev(unlist(strsplit(sequence, ""))), collapse="")
+	revcomp.sequence <- chartr("ATGCRYSWKMBDHVN", "TACG...........", rev.sequence)
+	return(revcomp.sequence)
+}
+
+getPos <- function(primer, sequence=ecoli, forward=TRUE){
+	if(forward==FALSE){
+		primer <- getSloppyRevComp(primer)
+	}
+	primer <- gsub("[^ATGC]", ".", primer)
+	
+	pos <- regexpr(primer, sequence)
+	
+	if(forward==FALSE){
+		pos <- pos + nchar(primer) -1
+	}
+	return(pos)
+	
+}
+
+#taken from... http://www.ncbi.nlm.nih.gov/nuccore/NC_022648.1?report=fasta&from=4564120&to=4565661
+ecoli <- "AAATTGAAGAGTTTGATCATGGCTCAGATTGAACGCTGGCGGCAGGCCTAACACATGCAAGTCGAACGGTAACAGGAAGCAGCTTGCTGCTTTGCTGACGAGTGGCGGACGGGTGAGTAATGTCTGGGAAACTGCCTGATGGAGGGGGATAACTACTGGAAACGGTAGCTAATACCGCATAACGTCGCAAGACCAAAGAGGGGGACCTTCGGGCCTCTTGCCATCGGATGTGCCCAGATGGGATTAGCTAGTAGGTGGGGTAACGGCTCACCTAGGCGACGATCCCTAGCTGGTCTGAGAGGATGACCAGCCACACTGGAACTGAGACACGGTCCAGACTCCTACGGGAGGCAGCAGTGGGGAATATTGCACAATGGGCGCAAGCCTGATGCAGCCATGCCGCGTGTATGAAGAAGGCCTTCGGGTTGTAAAGTACTTTCAGCGGGGAGGAAGGGAGTAAAGTTAATACCTTTGCTCATTGACGTTACCCGCAGAAGAAGCACCGGCTAACTCCGTGCCAGCAGCCGCGGTAATACGGAGGGTGCAAGCGTTAATCGGAATTACTGGGCGTAAAGCGCACGCAGGCGGTTTGTTAAGTCAGATGTGAAATCCCCGGGCTCAACCTGGGAACTGCATCTGATACTGGCAAGCTTGAGTCTCGTAGAGGGGGGTAGAATTCCAGGTGTAGCGGTGAAATGCGTAGAGATCTGGAGGAATACCGGTGGCGAAGGCGGCCCCCTGGACGAAGACTGACGCTCAGGTGCGAAAGCGTGGGGAGCAAACAGGATTAGATACCCTGGTAGTCCACGCCGTAAACGATGTCGACTTGGAGGTTGTGCCCTTGAGGCGTGGCTTCCGGAGCTAACGCGTTAAGTCGACCGCCTGGGGAGTACGGCCGCAAGGTTAAAACTCAAATGAATTGACGGGGGCCCGCACAAGCGGTGGAGCATGTGGTTTAATTCGATGCAACGCGAAGAACCTTACCTGGTCTTGACATCCACGGAAGTTTTCAGAGATGAGAATGTGCCTTCGGGAACCGTGAGACAGGTGCTGCATGGCTGTCGTCAGCTCGTGTTGTGAAATGTTGGGTTAAGTCCCGCAACGAGCGCAACCCTTATCCTTTGTTGCCAGCGGTCCGGCCGGGAACTCAAAGGAGACTGCCAGTGATAAACTGGAGGAAGGTGGGGATGACGTCAAGTCATCATGGCCCTTACGACCAGGGCTACACACGTGCTACAATGGCGCATACAAAGAGAAGCGACCTCGCGAGAGCAAGCGGACCTCATAAAGTGCGTCGTAGTCCGGATTGGAGTCTGCAACTCGACTCCATGAAGTCGGAATCGCTAGTAATCGTGGATCAGAATGCCACGGTGAATACGTTCCCGGGCCTTGTACACACCGCCCGTCACACCATGGGAGTGGGTTGCAAAAGAAGTAGGTAGCTTAACCTTCGGGAGGGCGCTTACCACTTTGTGATTCATGACTGGGGTGAAGTCGTAACAAGGTAACCGTAGGGGAACCTGCGGTTGGATCACCTCCTTA"
+
+
+
 oligos <- read.table(file="pacbio.oligos", stringsAsFactors=F)[1:6,]
 rownames(oligos) <- pretty.region[oligos$V4]
 oligos <- oligos[,c("V2", "V3")]
 colnames(oligos) <- c("Forward", "Reverse")
-coordinates <- rep("NA", 6)
-length <- rep("NA", 6)
+
+start <- sapply(oligos[,1], getPos)
+end <- sapply(oligos[,2], getPos, forward=FALSE) 
+
+
+coordinates <- paste(start, end, sep="-")
+length <- end - start + 1
 t1 <- cbind(oligos, coordinates, length)
-knitr::kable(t1, digits=1, row.names=TRUE, col.names=c("Forward", "Reverse", "*E. coli* coordinates", "Length (bp)^a^"), align=c("l", "l", "c", "c"))
+knitr::kable(t1, digits=1, row.names=TRUE, col.names=c("Forward", "Reverse", "*E. coli* coordinates^a^", "Length (bp)"), align=c("l", "l", "c", "c"))
 ```
 
-^a^	Represents the expected median length of the DNA fragments amplified between the primers when using the 16S rRNA gene fragments in the mock community.
+^a^	The coordinates where the start and end of the forward and reverse primers anneal, respectively.
 
 
 **Table 2. Summary of the reasons that sequences were excluded because of the

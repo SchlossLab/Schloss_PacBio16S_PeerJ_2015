@@ -1,10 +1,17 @@
 
+### ToDo:
+* Finish Discussion
+* Add data for Table 1
+* Insert references
+* Abstract
+
+
 # Sequencing 16S rRNA gene fragments using the PacBio SMRT DNA sequencing system
 
 **Running title:** 16S rRNA genes sequencing with PacBio
 
 
-**December 13, 2014**
+**December 16, 2014**
 
 
 **Authors:** Patrick D. Schloss^1#^, Sarah L. Westcott^1^, Matthew L. Jenior^1^,
@@ -465,10 +472,6 @@ the quality of the database (1 paragraph)
 	* Probably not worth the effort at this point
 
 
-### ToDo:
-* Finish Discussion
-* Add data for Table 1
-* Insert references
 
 
 
@@ -494,16 +497,16 @@ P30DK034933 to PDS and U54HG004973 to SKH).
 **Table 1. Summary of the primer pairs used to generate the 16S rRNA gene fragment fragments and the characteristics of each region.**
 
 
-        Forward                Reverse                 *E. coli* coordinates    Length (bp)^a^ 
-------  ---------------------  ---------------------  -----------------------  ----------------
-V1-V9   AGRGTTTGATYMTGGCTCAG   GGYTACCTTGTTACGACTT              NA                    NA       
-V1-V6   AGRGTTTGATYMTGGCTCAG   ACRACACGAGCTGACGAC               NA                    NA       
-V1-V5   AGRGTTTGATYMTGGCTCAG   CCCGTCAATTCMTTTRAGT              NA                    NA       
-V1-V3   AGRGTTTGATYMTGGCTCAG   ATTACCGCGGCTGCTGG                NA                    NA       
-V3-V5   CCTACGGGAGGCAGCAG      CCCGTCAATTCMTTTRAGT              NA                    NA       
-V4      GTGCCAGCMGCCGCGGTAA    GGACTACHVGGGTWTCTAAT             NA                    NA       
+        Forward                Reverse                 *E. coli* coordinates^a^    Length (bp) 
+------  ---------------------  ---------------------  --------------------------  -------------
+V1-V9   AGRGTTTGATYMTGGCTCAG   GGYTACCTTGTTACGACTT              8-1510                1503     
+V1-V6   AGRGTTTGATYMTGGCTCAG   ACRACACGAGCTGACGAC               8-1078                1071     
+V1-V5   AGRGTTTGATYMTGGCTCAG   CCCGTCAATTCMTTTRAGT              8-927                  920     
+V1-V3   AGRGTTTGATYMTGGCTCAG   ATTACCGCGGCTGCTGG                8-534                  527     
+V3-V5   CCTACGGGAGGCAGCAG      CCCGTCAATTCMTTTRAGT             341-927                 587     
+V4      GTGCCAGCMGCCGCGGTAA    GGACTACHVGGGTWTCTAAT            515-806                 292     
 
-^a^	Represents the expected median length of the DNA fragments amplified between the primers when using the 16S rRNA gene fragments in the mock community.
+^a^	The coordinates where the start and end of the forward and reverse primers anneal, respectively.
 
 
 **Table 2. Summary of the reasons that sequences were excluded because of the
