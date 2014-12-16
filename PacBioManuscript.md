@@ -1,7 +1,6 @@
 
 ### ToDo:
 * Finish Discussion
-* Add data for Table 1
 * Insert references
 * Abstract
 
@@ -446,12 +445,11 @@ sequences to have no errors. In fact, 95% of the reads would have at least
 3 errors and 50% of the
 reads would have at least 
 8 errors. If the error
-rate from the pre-clustered data
-(0.32%) were used, then 95% of
+rate could be dropped to 0.25%, then 95% of
 the reads would have at least 
-2 errors and 50% of the
+1 errors and 50% of the
 reads would have at least 
-5 errors. If it were
+4 errors. If it were
 posible to replicate the low error rates we have previously obsereved using the
 454 and Illumina MiSeq platforms, which was 0.02%, then we would expect 
 74.1% of the sequences to have no errors.
@@ -461,7 +459,6 @@ does not appear that the PacBio platform can provide the data of sufficient
 quality to fill the niche of generating reference sequences.
 
 
-### Remaining outline...
 
 * Classification is dependent on quality of sequence data, length of the data, and
 the quality of the database (1 paragraph)
@@ -559,13 +556,11 @@ information.
 
 **Figure 5. The percentage of V1-V9 sequences that were predicted to have
 between 0 and 20 errors as a function of the error rate of the sequences.** The 
-error rates were selected because they represented the error rate for the V1-V9
-sequences before (0.52%) and
-after (0.32%) the
-pre-clustering step, the lowest observed error rate we observed (V4:
-0.14%) and the error rate we 
-observed previously using the 454 and MiSeq sequencing platforms. The predicted
-number of errors was assumed to follow a binomial distribution.
+highest error rate, 0.52%,
+corresponds to what was observed before the pre-clustering step
+The smalles error rate (0.02%) corresponds to our previous observations using
+the 454 and MiSeq sequencing platforms. The predicted number of errors was
+assumed to follow a binomial distribution.
 
 
 

@@ -910,12 +910,11 @@ sequences to have no errors. In fact, 95% of the reads would have at least
 `r qbinom(0.05, 1500, final.error["v19","unique.error"])` errors and 50% of the
 reads would have at least 
 `r qbinom(0.50, 1500, final.error["v19","unique.error"])` errors. If the error
-rate from the pre-clustered data
-(`r round(100*final.error["v19","precluster.error"],2)`%) were used, then 95% of
+rate could be dropped to 0.25%, then 95% of
 the reads would have at least 
-`r qbinom(0.05, 1500, final.error["v19","precluster.error"])` errors and 50% of the
+`r qbinom(0.05, 1500, 0.0025)` errors and 50% of the
 reads would have at least 
-`r qbinom(0.50, 1500, final.error["v19","precluster.error"])` errors. If it were
+`r qbinom(0.50, 1500, 0.0025)` errors. If it were
 posible to replicate the low error rates we have previously obsereved using the
 454 and Illumina MiSeq platforms, which was 0.02%, then we would expect 
 `r round(100*dbinom(0, 1500, 0.0002), 1)`% of the sequences to have no errors.
@@ -925,7 +924,6 @@ does not appear that the PacBio platform can provide the data of sufficient
 quality to fill the niche of generating reference sequences.
 
 
-### Remaining outline...
 
 * Classification is dependent on quality of sequence data, length of the data, and
 the quality of the database (1 paragraph)
@@ -1058,13 +1056,11 @@ information.
 
 **Figure 5. The percentage of V1-V9 sequences that were predicted to have
 between 0 and 20 errors as a function of the error rate of the sequences.** The 
-error rates were selected because they represented the error rate for the V1-V9
-sequences before (`r round(100*final.error["v19","unique.error"], 2)`%) and
-after (`r round(100*final.error["v19","precluster.error"], 2)`%) the
-pre-clustering step, the lowest observed error rate we observed (V4:
-`r round(100*final.error["v4","precluster.error"], 2)`%) and the error rate we 
-observed previously using the 454 and MiSeq sequencing platforms. The predicted
-number of errors was assumed to follow a binomial distribution.
+highest error rate, `r round(100*final.error["v19","unique.error"], 2)`%,
+corresponds to what was observed before the pre-clustering step
+The smalles error rate (0.02%) corresponds to our previous observations using
+the 454 and MiSeq sequencing platforms. The predicted number of errors was
+assumed to follow a binomial distribution.
 
 
 
@@ -1382,8 +1378,8 @@ legend(x=63, y=12, legend=c("RDP (gen.)", "SILVA (gen.)", "greengenes (gen.+sp.)
 ```{r Figure_5, fig.width=7, fig.height=4}
 x <- 0:20
 e1 <- final.error["v19","unique.error"]
-e2 <- final.error["v19","precluster.error"]
-e3 <- final.error["v4","precluster.error"]
+e2 <- 0.0025
+e3 <- 0.0010
 e4 <- 0.0002
 
 par(mar=c(5,6,0.5, 0.5))
@@ -1393,7 +1389,7 @@ points(x, dbinom(x, 1458, e2), type="l", col="red", lwd=3)
 points(x, dbinom(x, 1458, e3), type="l", col="blue", lwd=3)
 points(x, dbinom(x, 1458, e4), type="l", col="darkgreen", lwd=3)
 axis(2, at=seq(0,0.35,0.05), label=seq(0,35,5), las=1)
-legend(x=12, y=0.30, legend=paste0(round(100*c(e1, e2, e3, e4), 2), "%"),
+legend(x=12, y=0.30, legend=paste0(format(round(100*c(e1, e2, e3, e4), 2), nsmall=2), "%"),
 			 lwd=3, col=c("black", "red", "blue", "darkgreen"))
 ```
 
