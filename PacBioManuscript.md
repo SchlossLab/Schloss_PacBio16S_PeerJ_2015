@@ -1,8 +1,4 @@
 
-### ToDo:
-* Insert references
-
-
 # Sequencing 16S rRNA gene fragments using the PacBio SMRT DNA sequencing system
 
 **Running title:** 16S rRNA genes sequencing with PacBio
