@@ -501,16 +501,19 @@ P30DK034933 to PDS and U54HG004973 to SKH).
 **Table 1. Summary of the primer pairs used to generate the 16S rRNA gene fragment fragments and the characteristics of each region.**
 
 
-        Forward                Reverse                 *E. coli* coordinates^a^    Length (bp) 
-------  ---------------------  ---------------------  --------------------------  -------------
-V1-V9   AGRGTTTGATYMTGGCTCAG   GGYTACCTTGTTACGACTT              8-1510                1503     
-V1-V6   AGRGTTTGATYMTGGCTCAG   ACRACACGAGCTGACGAC               8-1078                1071     
-V1-V5   AGRGTTTGATYMTGGCTCAG   CCCGTCAATTCMTTTRAGT              8-927                  920     
-V1-V3   AGRGTTTGATYMTGGCTCAG   ATTACCGCGGCTGCTGG                8-534                  527     
-V3-V5   CCTACGGGAGGCAGCAG      CCCGTCAATTCMTTTRAGT             341-927                 587     
-V4      GTGCCAGCMGCCGCGGTAA    GGACTACHVGGGTWTCTAAT            515-806                 292     
+        Forward                Reverse                 *E. coli* coordinates^a^    Length (bp)^b^ 
+------  ---------------------  ---------------------  --------------------------  ----------------
+V1-V9   AGRGTTTGATYMTGGCTCAG   GGYTACCTTGTTACGACTT              8-1510                  1464      
+V1-V6   AGRGTTTGATYMTGGCTCAG   ACRACACGAGCTGACGAC               8-1078                  1033      
+V1-V5   AGRGTTTGATYMTGGCTCAG   CCCGTCAATTCMTTTRAGT              8-927                   881       
+V1-V3   AGRGTTTGATYMTGGCTCAG   ATTACCGCGGCTGCTGG                8-534                   490       
+V3-V5   CCTACGGGAGGCAGCAG      CCCGTCAATTCMTTTRAGT             341-927                  551       
+V4      GTGCCAGCMGCCGCGGTAA    GGACTACHVGGGTWTCTAAT            515-806                  253       
 
 ^a^	The coordinates where the start and end of the forward and reverse primers anneal, respectively.
+
+^b^	The number of bases between the primers.
+
 
 
 **Table 2. Summary of the reasons that sequences were excluded because of the

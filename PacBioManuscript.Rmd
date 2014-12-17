@@ -1001,12 +1001,15 @@ end <- sapply(oligos[,2], getPos, forward=FALSE)
 
 
 coordinates <- paste(start, end, sep="-")
-length <- end - start + 1
+length <- end - start - nchar(oligos[,1]) - nchar(oligos[,2]) + 1
 t1 <- cbind(oligos, coordinates, length)
-knitr::kable(t1, digits=1, row.names=TRUE, col.names=c("Forward", "Reverse", "*E. coli* coordinates^a^", "Length (bp)"), align=c("l", "l", "c", "c"))
+knitr::kable(t1, digits=1, row.names=TRUE, col.names=c("Forward", "Reverse", "*E. coli* coordinates^a^", "Length (bp)^b^"), align=c("l", "l", "c", "c"))
 ```
 
 ^a^	The coordinates where the start and end of the forward and reverse primers anneal, respectively.
+
+^b^	The number of bases between the primers.
+
 
 
 **Table 2. Summary of the reasons that sequences were excluded because of the
