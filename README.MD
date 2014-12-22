@@ -17,13 +17,19 @@ sh write.paper
 ```
 
 In running these commands we assume that you have a copy of R and mothur
-installed in your PATH.
+installed in your PATH. You can then convert the resulting markdown file to a
+Word docx file by doing:
+
+```
+sh compile_docx.sh PacBioManuscript.md
+open PacBioManuscript.docx
+```
 
 
 
 ## Background
 
-We ran 10 SMRT cells and their data were located in the following folders that
+We ran 8 SMRT cells and their data were located in the following folders that
 were housed within a folder called `raw_data`:
 
 ```
