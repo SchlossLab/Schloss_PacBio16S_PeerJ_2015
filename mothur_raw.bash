@@ -11,7 +11,11 @@ wget http://www.mothur.org/pacbio/E01_1_Cell5_PacBioRun108_PSchloss311_p15.tgz
 wget http://www.mothur.org/pacbio/E01_1_Cell5_PacBioRun109_PSchloss317_p19.tgz
 wget http://www.mothur.org/pacbio/F01_1_Cell6_PacBioRun108_PSchloss312_p35.tgz
 wget http://www.mothur.org/pacbio/H01_1_Cell8_PacBioRun112_PSchloss319_p19.tgz
-tar xvzf *.tgz
+
+for TGZ in *PSchloss*tgz
+do
+  tar xvzf "$TGZ"
+done
 
 # Let's use bash to clean up the folders a bit since these file names are long
 # and unwieldy. We'll start by creating a folder called  `ccs.fastq`. We'll
