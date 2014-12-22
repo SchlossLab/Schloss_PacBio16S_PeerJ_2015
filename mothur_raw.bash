@@ -3,14 +3,16 @@
 # their guts into the raw_data directory available at www.mothur.org. From a new
 # directory start here...
 
-wget http://www.mothur.org/pacbio/B01_1_Cell2_PacBioRun109_PSchloss311_p15.tgz
-wget http://www.mothur.org/pacbio/C01_1_Cell3_PacBioRun109_PSchloss315_p16.tgz
-wget http://www.mothur.org/pacbio/D01_1_Cell4_PacBioRun108_PSchloss310_p13.tgz
-wget http://www.mothur.org/pacbio/D01_1_Cell4_PacBioRun109_PSchloss316_p4.tgz
-wget http://www.mothur.org/pacbio/E01_1_Cell5_PacBioRun108_PSchloss311_p15.tgz
-wget http://www.mothur.org/pacbio/E01_1_Cell5_PacBioRun109_PSchloss317_p19.tgz
-wget http://www.mothur.org/pacbio/F01_1_Cell6_PacBioRun108_PSchloss312_p35.tgz
-wget http://www.mothur.org/pacbio/H01_1_Cell8_PacBioRun112_PSchloss319_p19.tgz
+#wget http://www.mothur.org/pacbio/B01_1_Cell2_PacBioRun109_PSchloss311_p15.tgz
+#wget http://www.mothur.org/pacbio/C01_1_Cell3_PacBioRun109_PSchloss315_p16.tgz
+#wget http://www.mothur.org/pacbio/D01_1_Cell4_PacBioRun108_PSchloss310_p13.tgz
+#wget http://www.mothur.org/pacbio/D01_1_Cell4_PacBioRun109_PSchloss316_p4.tgz
+#wget http://www.mothur.org/pacbio/E01_1_Cell5_PacBioRun108_PSchloss311_p15.tgz
+#wget http://www.mothur.org/pacbio/E01_1_Cell5_PacBioRun109_PSchloss317_p19.tgz
+#wget http://www.mothur.org/pacbio/F01_1_Cell6_PacBioRun108_PSchloss312_p35.tgz
+#wget http://www.mothur.org/pacbio/H01_1_Cell8_PacBioRun112_PSchloss319_p19.tgz
+
+cp ../pacbio/*PSchloss*tgz ./
 
 for TGZ in *PSchloss*tgz
 do
