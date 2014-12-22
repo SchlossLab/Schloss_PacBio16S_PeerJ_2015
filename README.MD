@@ -1,12 +1,27 @@
 # README
 
+## The paper
+
 This is the repository for the manuscript "Sequencing 16S rRNA gene fragments
 using the PacBio SMRT DNA sequencing system" written by Patrick D. Schloss,
-Sarah L. Westcott, Matthew L. Jenior, and Sarah K. Highlander. The entire
-manuscript can be generated on a Mac OS X or Linux computer by running the
-following commands:
+Sarah L. Westcott, Matthew L. Jenior, and Sarah K. Highlander. The raw data are
+available from the Sequencing Read Archive (accession #XXXXXXXX) and the
+processed movies can be obtained using the commands in mothur_raw.bash. The
+entire manuscript can be generated on a Mac OS X or Linux computer by running
+the following commands:
+
+```
+git clone https://github.com/SchlossLab/PacBio_16S.git
+cd PacBio_16S
+sh write.paper
+```
+
+In running these commands we assume that you have a copy of R and mothur
+installed in your PATH.
 
 
+
+## Background
 
 We ran 10 SMRT cells and their data were located in the following folders that
 were housed within a folder called `raw_data`:
