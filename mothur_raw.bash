@@ -1,7 +1,17 @@
-# Required inputs:
-# raw_data/ -> Need to load from somewhere
-# HMP_MOCK.align -> Need to load from somewhere
+# The raw data available form the Sequencing Read Archive (SRA); however, so you
+# don't have to jump through those hoops, we have also made archives that spill
+# their guts into the raw_data directory available at www.mothur.org. From a new
+# directory start here...
 
+wget http://www.mothur.org/pacbio/B01_1_Cell2_PacBioRun109_PSchloss311_p15.tgz
+wget http://www.mothur.org/pacbio/C01_1_Cell3_PacBioRun109_PSchloss315_p16.tgz
+wget http://www.mothur.org/pacbio/D01_1_Cell4_PacBioRun108_PSchloss310_p13.tgz
+wget http://www.mothur.org/pacbio/D01_1_Cell4_PacBioRun109_PSchloss316_p4.tgz
+wget http://www.mothur.org/pacbio/E01_1_Cell5_PacBioRun108_PSchloss311_p15.tgz
+wget http://www.mothur.org/pacbio/E01_1_Cell5_PacBioRun109_PSchloss317_p19.tgz
+wget http://www.mothur.org/pacbio/F01_1_Cell6_PacBioRun108_PSchloss312_p35.tgz
+wget http://www.mothur.org/pacbio/H01_1_Cell8_PacBioRun112_PSchloss319_p19.tgz
+tar xvzf *.tgz
 
 # Let's use bash to clean up the folders a bit since these file names are long
 # and unwieldy. We'll start by creating a folder called  `ccs.fastq`. We'll
