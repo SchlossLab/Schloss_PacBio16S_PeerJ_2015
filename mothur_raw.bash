@@ -17,6 +17,8 @@ do
   tar xvzf "$TGZ"
 done
 
+rm *PSchloss*tgz
+
 # Let's use bash to clean up the folders a bit since these file names are long
 # and unwieldy. We'll start by creating a folder called  `ccs.fastq`. We'll
 # transfer the fastqs from the `raw_data` folder into into region-specific
