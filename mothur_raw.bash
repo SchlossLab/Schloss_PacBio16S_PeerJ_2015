@@ -14,9 +14,8 @@ wget http://www.mothur.org/pacbio/H01_1_Cell8_PacBioRun112_PSchloss319_p19.tgz
 
 for TGZ in *PSchloss*tgz
 do
-  FOLDER=echo "{$TGZ}"} | sed "s/.tgz//"
-  echo "$FOLDER"
-  #tar xvzf "$TGZ"
+  FOLDER=$(echo "$TGZ" | sed 's/.tgz//')
+  tar xvzf "$TGZ" "raw_data/$FOLDER/Analysis_Results/*fastq"
 done
 
 rm *PSchloss*tgz
