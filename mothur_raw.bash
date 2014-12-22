@@ -15,7 +15,7 @@ wget http://www.mothur.org/pacbio/H01_1_Cell8_PacBioRun112_PSchloss319_p19.tgz
 for TGZ in *PSchloss*tgz
 do
   FOLDER=$(echo "$TGZ" | sed 's/.tgz//')
-  tar xvzf "$TGZ" "raw_data/$FOLDER/Analysis_Results/*fastq"
+  tar xvzf "$TGZ" "raw_data/$FOLDER/Analysis_Results/*fast[aq]"
 done
 
 rm *PSchloss*tgz
@@ -64,7 +64,7 @@ cd subreads.fasta
 mkdir -p v19 v16 v15 v13 v35 v4
 for REGION in 19 16 15 13 35 4
 do
-    cat ../raw_data/*_p$REGION/Analysis_Results/*subreads.fasta > v$REGION/v$REGION.subreads.fasta
+    cat ../raw_data/*_p$REGION/Analysis_Results/*subreads.fastq > v$REGION/v$REGION.subreads.fastq
 done
 
 
