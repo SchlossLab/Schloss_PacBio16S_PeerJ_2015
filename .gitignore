@@ -16,3 +16,5 @@ HMP_MOCK*
 *.Rout
 *_cache/
 *.tgz
+cache/
+references/
