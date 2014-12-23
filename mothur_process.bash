@@ -160,7 +160,6 @@ do
 done
 
 
-
 # Let's find the smallest number of sequences in each region
 MIN=$(cat v*/*mock.precluster.perfect.pick.an.summary | cut -f 2 | grep "\\." | sort -n | head -n 1 | cut -f 1 -d ".")
 SMALL_LIB=$(cat */*.trim.unique.good.filter.unique.precluster.pick.an.merge.groups.summary | sort -k 3 -n | head -n 7 | tail -n 1 | cut -f 3 | cut -f 1 -d ".")
@@ -226,3 +225,7 @@ do
   mothur "#get.groups(fasta=$REGION/$REGION.trim.unique.good.filter.unique.fasta, name=$REGION/$REGION.trim.unique.good.filter.names, group=$REGION/$REGION.good.groups, groups=mock1.$REGION-mock2.$REGION-mock3.$REGION);
             seq.error(fasta=current, name=current, reference=$REGION/HMP_MOCK.filter.fasta, processors=8)"
 done
+
+
+#Back to the parent directory!
+cd ../
