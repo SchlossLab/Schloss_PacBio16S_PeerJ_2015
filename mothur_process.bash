@@ -24,7 +24,7 @@ cd ../analysis
 for REGION in v*
 do
     cd $REGION
-    mothur "#trim.seqs(fasta=$REGION.fasta, qfile=$REGION.qual, oligos=$REGION.oligos, checkorient=T, pdiffs=1, bdiffs=1, tdiffs=1, maxambig=0, maxhomop=8, qaverage=60, processors=8);
+    mothur "#trim.seqs(fasta=$REGION.fasta, qfile=$REGION.qual, oligos=$REGION.oligos, checkorient=T, pdiffs=1, bdiffs=1, tdiffs=1, maxambig=0, maxhomop=8, qaverage=60, processors=4);
             unique.seqs(fasta=current); align.seqs(fasta=current, reference=../../references/silva.bacteria.align);
             summary.seqs(name=current)"
     cd ../
@@ -158,9 +158,6 @@ do
   mothur "#count.seqs(group=$REGION/$REGION.good.pick.merge.groups, name=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.names)"
 done
 
-cd ../
-
-
 
 # Let's find the smallest number of sequences in each region
 MIN=$(cat v*/*mock.precluster.perfect.pick.an.summary | cut -f 2 | grep "\\." | sort -n | head -n 1 | cut -f 1 -d ".")
@@ -227,3 +224,7 @@ do
   mothur "#get.groups(fasta=$REGION/$REGION.trim.unique.good.filter.unique.fasta, name=$REGION/$REGION.trim.unique.good.filter.names, group=$REGION/$REGION.good.groups, groups=mock1.$REGION-mock2.$REGION-mock3.$REGION);
             seq.error(fasta=current, name=current, reference=$REGION/HMP_MOCK.filter.fasta, processors=8)"
 done
+
+
+#Back to the parent directory!
+cd ../
