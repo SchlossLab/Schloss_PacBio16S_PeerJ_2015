@@ -18,3 +18,5 @@ HMP_MOCK*
 *.tgz
 cache/
 references/
+*.qsub.o*
+*count*
