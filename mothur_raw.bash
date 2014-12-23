@@ -66,7 +66,7 @@ cd subreads.fasta
 mkdir -p v19 v16 v15 v13 v35 v4
 for REGION in 19 16 15 13 35 4
 do
-    cat ../raw_data/*_p$REGION/Analysis_Results/*subreads.fastq > v$REGION/v$REGION.subreads.fastq
+    cat ../raw_data/*_p$REGION/Analysis_Results/*subreads.fasta > v$REGION/v$REGION.subreads.fasta
 done
 
 
@@ -90,7 +90,7 @@ for REGION in v*
 do
     grep ""$REGION"" ../pacbio.oligos > $REGION/$REGION.oligos
     grep "barcode" ../pacbio.oligos >> $REGION/$REGION.oligos
-    cp ../reference/HMP_MOCK.align ./$REGION/
+    cp ../references/HMP_MOCK.align ./$REGION/
 done
 
 
