@@ -159,8 +159,6 @@ do
   mothur "#count.seqs(group=$REGION/$REGION.good.pick.merge.groups, name=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.names)"
 done
 
-cd ../
-
 
 
 # Let's find the smallest number of sequences in each region
