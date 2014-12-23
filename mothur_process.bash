@@ -100,6 +100,19 @@ do
 done
 
 
+
+# Let's merge the three replicates for each library and recreate a shared file
+# based on the merged group files and get the number of sequences per library
+
+for REGION in v*
+do
+  cut -f 1 -d "." $REGION/$REGION.good.pick.groups | sed "s/.$//" > $REGION/$REGION.good.pick.merge.groups
+  cp $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.list $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.list
+  mothur "#make.shared(list=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.list, group=$REGION/$REGION.good.pick.merge.groups, label=0.03);
+        summary.single(shared=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.shared, calc=nseqs)"
+done
+
+
 # Let's get the error rates for our mock communities from before and after
 # running the pre.cluster steps.
 
@@ -122,25 +135,6 @@ do
 done
 
 
-
-# It is commonly said that the error profile in PacBio-generated sequence data
-# are random. As we saw above, the substitution preference was random. However,
-# if the errors are truly random, then we would expect to have a bunch of
-# singleton error sequences, not sequences with errors that show up multiple
-# times. Let's see what type of error profile we have. Because they have the
-# most reads, let's consider the v4, v35, and v15 mock community samples from
-# before the pre.cluster step:
-
-for REGION in $(ls -d v*)
-do
-mothur "#get.groups(fasta=$REGION/$REGION.trim.unique.good.filter.unique.fasta, name=$REGION/$REGION.trim.unique.good.filter.names, group=$REGION/$REGION.good.groups, groups=mock1.$REGION-mock2.$REGION-mock3.$REGION); seq.error(fasta=current, name=current, reference=$REGION/HMP_MOCK.filter.fasta, processors=8)"
-done
-
-
-
-
-
-
 # Let's remove all of the chimeras we didn't detect from the mock communities
 
 for REGION in v*
@@ -149,21 +143,23 @@ do
   cat $REGION/$REGION.mock?.precluster.fasta > $REGION/$REGION.mock.precluster.perfect.fasta
   cat $REGION/$REGION.mock?.precluster.names > $REGION/$REGION.mock.precluster.perfect.names
   mothur "#remove.seqs(fasta=$REGION/$REGION.mock.precluster.perfect.fasta, name=$REGION/$REGION.mock.precluster.perfect.names, accnos=$REGION/$REGION.extra.chimeras);
-  dist.seqs(cutoff=0.15); cluster(); summary.single(calc=nseqs, label=0.03)"
+          dist.seqs(cutoff=0.15);
+          cluster();
+          summary.single(calc=nseqs, label=0.03)"
 done
 
 
 
-
-# Let's merge the three replicates for each library and recreate a shared file
-# based on the merged group files and get the number of sequences per library
+# Let's count how many times each sequence shows up in each of the
+# merged groups
 
 for REGION in v*
 do
-  cut -f 1 -d "." $REGION/$REGION.good.pick.groups | sed "s/.$//" > $REGION/$REGION.good.pick.merge.groups
-  cp $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.list $REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.list
-  mothur "#make.shared(list=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.list, group=$REGION/$REGION.good.pick.merge.groups, label=0.03); summary.single(shared=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.an.merge.shared, calc=nseqs)"
+  mothur "#count.seqs(group=$REGION/$REGION.good.pick.merge.groups, name=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.names)"
 done
+
+cd ../
+
 
 
 # Let's find the smallest number of sequences in each region
@@ -174,8 +170,8 @@ MIN=$(echo $(($MIN<$SMALL_LIB?$MIN:$SMALL_LIB)))
 
 
 
-# Let's rarefy everything to $MIN (~350) reads per sample since this was the size of the
-# smallest v19 library
+# Let's rarefy everything to $MIN (~350) reads per sample since this was the
+# size of the smallest v19 library
 
 for REGION in v*
 do
@@ -215,15 +211,19 @@ done
 
 
 
-# Let's count how many times each sequence shows up in each of the
-# merged groups
+
+
+
+# It is commonly said that the error profile in PacBio-generated sequence data
+# are random. As we saw above, the substitution preference was random. However,
+# if the errors are truly random, then we would expect to have a bunch of
+# singleton error sequences, not sequences with errors that show up multiple
+# times. Let's see what type of error profile we have. Because they have the
+# most reads, let's consider the v4, v35, and v15 mock community samples from
+# before the pre.cluster step:
 
 for REGION in v*
 do
-  mothur "#count.seqs(group=$REGION/$REGION.good.pick.merge.groups, name=$REGION/$REGION.trim.unique.good.filter.unique.precluster.pick.names)"
+  mothur "#get.groups(fasta=$REGION/$REGION.trim.unique.good.filter.unique.fasta, name=$REGION/$REGION.trim.unique.good.filter.names, group=$REGION/$REGION.good.groups, groups=mock1.$REGION-mock2.$REGION-mock3.$REGION);
+            seq.error(fasta=current, name=current, reference=$REGION/HMP_MOCK.filter.fasta, processors=8)"
 done
-
-cd ../
-
-
-
