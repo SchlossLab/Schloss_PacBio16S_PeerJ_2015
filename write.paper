@@ -5,3 +5,4 @@ R CMD BATCH data_wrangling.R
 sh mothur_process.bash
 R CMD BATCH taxonomy_wrangling.R
 R -e 'install.packages("knitr"); library("knitr"); knit2html("PacBioManuscript.Rmd")'
+./compile_docx.sh PacBioManuscript.md 
