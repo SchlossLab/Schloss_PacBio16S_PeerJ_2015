@@ -170,8 +170,8 @@ MIN=$(echo $(($MIN<$SMALL_LIB?$MIN:$SMALL_LIB)))
 
 
 
-# Let's rarefy everything to $MIN (~350) reads per sample since this was the
-# size of the smallest v19 library
+# Let's rarefy everything to $MIN reads per sample since this was the size of
+# the smallest v19 library
 
 for REGION in v*
 do
