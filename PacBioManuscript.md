@@ -9,7 +9,7 @@ output:
 **Running title:** 16S rRNA genes sequencing with PacBio
 
 
-**December 23, 2014**
+**January 05, 2015**
 
 
 **Authors:** Patrick D. Schloss^1#^, Sarah L. Westcott^1^, Matthew L. Jenior^1^,
@@ -193,7 +193,8 @@ RS II SMRT DNA Sequencing System.
 All sequencing data were curated using mothur {Schloss, 2009 #1816} and
 analyzed using the R programming language {R Core Team, 2014 #3456}. The raw
 data can be obtained from the Sequence Read Archive at NCBI under accession
-XXXXXXXXXX. Several specific features were incorporated into mothur to
+SRP051686, which are associated with BioProject PRJNA271568. Several specific
+features were incorporated into mothur to
 facilitate the analysis of PacBio  sequence data.  First, because non-ambiguous
 base calls are assigned to Phred quality scores of zero, the consensus fastq
 files were parsed so that scores of zero were interpreted as corresponding to an
@@ -233,14 +234,14 @@ To build a sequence curation pipeline, we first needed to characterize the error
 rate associated with sequencing the 16S rRNA gene. We observed an average
 sequencing error rate of 1.80%. Insertions, deletions, substitutions, and ambiguous base calls
 accounted for 45.3,
-17.3, 35.7,
+17.3, 35.8,
 and 2.1% of
 the errors, respectively. The substitution errors were equally likely and all four bases
 were equally likely to cause insertion errors. Interestingly, guanines
 (44.6%) and cytosines
 (34.5%) were more likely to be deleted
 than adenines (11.4%) or thymidines
-(9.4%). When we considered the Phred
+(9.5%). When we considered the Phred
 quality score of each base call, we observed a median quality score of 72
 for correct base calls and scores of 22 and 20 for
 substitutions and insertions, respectively (Figure 1A). Although there
@@ -260,7 +261,7 @@ error rate from 1.80 to
 resulted in the removal of between
 4.0
 (V4) and
-31.7
+32.2
 (V1-V9)% of the
 reads. The percentage of reads removed increased with the length of the
 fragment (Figure 2). The number of reads removed
@@ -298,7 +299,7 @@ once we had obtained 10-fold coverage of the fragments, the error rate did not
 change appreciably (Figure 1C). When we compared the error
 rates of reads with at least 10-fold coverage to those with less coverage, we
 reduced the error rate by
-26.6 to 30.8%
+26.5 to 29.7%
 for each region except the V4 region for which the error rate was reduced by
 53%. Third, based on the earlier
 analysis associating errors with quality scores, we used two quality score-based
@@ -313,11 +314,11 @@ another (Figure 3AB). In contrast, using the whole sequence quality score
 average we observed a decrease in the error rate and the fraction of sequences
 retained when the threshold was increased above 60 (Figure 3CD). When we used
 this threshold, we were able to reduce the error rate by
-33.5 to 55.9%
+32.8 to 56.1%
 (Figure 2A). We noted that the fraction of reads retained
 decreased as the length of the fragment increased with retention of
 86.9% of the V4 reads and
-49.9% of the V1-V9 reads (Figure
+50.1% of the V1-V9 reads (Figure
 2B). Next, we asked whether which combinations of culling reads with mismatches
 to the expected barcodes and primers, less than 10-fold sequencing coverage, and
 an average quality score less than 60 made the most meaningful reductions in the
@@ -327,9 +328,9 @@ one or fewer mismatches to the barcodes and primers and an average quality score
 above 60 as when we also required a minimum 10-fold coverage. Culling sequences
 that had more than one mismatch to the barcodes and primers and those with an
 average quality score less than 60 reduced the error rate to between
-0.22 and 0.96.
+0.22 and 0.97.
 This procedure resulted in the removal of
-18 and 54%
+18 and 53%
 of the reads (Figure 2). The remainder of this paper uses this sequence curation
 approach.
 
@@ -370,16 +371,16 @@ The sequencing error rate is known to affect the number of OTUs that are
 observed {Schloss, 2011 #2466}. For each region, we determined that if there were no chimeras or
 PCR or sequencing errors, then we would expect to find 20 OTUs. When
 achieved perfect chimera removal, but allowed for PCR and sequencing errors, we
-observed between 6.2 (V4) and 62.9
+observed between 6 (V4) and 63.1
 (V3-V5) extra OTUs. The range in the number of extra OTUs was largely
 explained by the sequencing error rate (Pearson's R=0.91). Next, we determined
 the number of OTUs that were observed when we used UCHIME to identify chimeric sequence.
-Under these more realistic conditions, we observed between 7.2 (V4) and 87.3
+Under these more realistic conditions, we observed between 7.4 (V4) and 86.8
 (V3-V5) extra OTUs. Finally, we calculated the number of OTUs in the
 soil, mouse, and human samples using the same pipeline with chimera detection and removal
 based on the UCHIME algorithm. Again, we found that there was a strong correlation between
 the number of observed OTUs and the error rate for the
-soil (R=0.63),
+soil (R=0.62),
 mouse (R=0.90),
 and human samples (R=0.72).
 These results underscore the effect of sequencing error on the inflation of the number of
@@ -404,8 +405,8 @@ the other databases only provided taxonomic data to the genus level. There was a
 modest association between the length of the fragment and the
 ability to classify sequences to the species-level for the human samples; there
 was no such association for the mouse and soil samples. In fact, at most
-5.5% of
-the soil sequences and 4.9%
+4.0% of
+the soil sequences and 3.8%
 of the mouse sequences could be classified to a
 species. These results indicate that the ability to classify sequences to the
 genus or species level is a function of read length, sample type, and the
@@ -566,11 +567,11 @@ basic sequence curation steps**
 |    | Initial sequences (N) | Good reads (%) | Wrong start/end position (%) | Excessively long homopolymers (%) | Ambiguous base calls (%) | Sequences remaining (N\) |
 |:---|:---------------------:|:--------------:|:----------------------------:|:---------------------------------:|:------------------------:|:------------------------:|
 |v4  |         21841         |      96.0      |             2.9              |                0.1                |           1.5            |          20974           |
-|v13 |         5212          |      84.3      |             9.5              |                0.1                |           7.5            |           4395           |
+|v13 |         5212          |      84.0      |             10.0             |                0.1                |           7.5            |           4378           |
 |v35 |         7236          |      77.3      |             15.6             |                0.2                |           11.0           |           5594           |
-|v15 |         14866         |      79.8      |             10.7             |                0.2                |           12.4           |          11856           |
-|v16 |         2217          |      72.8      |             11.0             |                0.1                |           19.4           |           1615           |
-|v19 |         5006          |      68.3      |             17.3             |                0.5                |           17.5           |           3421           |
+|v15 |         14875         |      79.1      |             11.5             |                0.2                |           12.5           |          11764           |
+|v16 |         2220          |      72.6      |             11.4             |                0.1                |           19.4           |           1611           |
+|v19 |         5003          |      67.8      |             18.0             |                0.5                |           17.5           |           3393           |
 
 
 ## Figures
