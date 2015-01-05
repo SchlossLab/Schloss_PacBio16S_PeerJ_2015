@@ -4,8 +4,9 @@
 
 This is the repository for the manuscript "Sequencing 16S rRNA gene fragments
 using the PacBio SMRT DNA sequencing system" written by Patrick D. Schloss,
-Sarah L. Westcott, Matthew L. Jenior, and Sarah K. Highlander. The raw data are
-available from the Sequencing Read Archive (accession #XXXXXXXX) and the
+Sarah L. Westcott, Matthew L. Jenior, and Sarah K. Highlander.The raw data can
+be obtained from the Sequence Read Archive at NCBI under accession SRP051686,
+which are associated with BioProject PRJNA271568 and the
 processed movies can be obtained using the commands in mothur_raw.bash. The
 entire manuscript can be generated on a Mac OS X or Linux computer by running
 the following commands:
