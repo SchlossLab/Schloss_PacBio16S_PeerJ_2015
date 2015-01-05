@@ -193,7 +193,8 @@ RS II SMRT DNA Sequencing System.
 All sequencing data were curated using mothur {Schloss, 2009 #1816} and
 analyzed using the R programming language {R Core Team, 2014 #3456}. The raw
 data can be obtained from the Sequence Read Archive at NCBI under accession
-XXXXXXXXXX. Several specific features were incorporated into mothur to
+SRP051686, which are associated with BioProject PRJNA271568. Several specific
+features were incorporated into mothur to
 facilitate the analysis of PacBio  sequence data.  First, because non-ambiguous
 base calls are assigned to Phred quality scores of zero, the consensus fastq
 files were parsed so that scores of zero were interpreted as corresponding to an
