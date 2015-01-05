@@ -1,3 +1,9 @@
+---
+output:
+  html_document:
+    keep_md: yes
+---
+
 # Sequencing 16S rRNA gene fragments using the PacBio SMRT DNA sequencing system
 
 **Running title:** 16S rRNA genes sequencing with PacBio
@@ -595,17 +601,16 @@ score wihin all 50-nt windows within each region (A and B) or by calculating
 the average quality score across the entire sequence read (C and D).
 
 
-**Figure 4. The percentage of unique sequences that could be classified using
-taxonomy references curated from the RDP, SILVA, or greengenes for the four
-types of samples that were sequenced across the six regions from the 16S rRNA
-gene.** Only the greengenes taxonomy reference provided species-level
-information.
-
+**Figure 4. Percentage of unique sequences that could be classified.**
+Classifications were performed using taxonomy references curated from the RDP,
+SILVA, or greengenes databases for the four types of samples that were sequenced
+across the six regions from the 16S rRNA gene. Only the greengenes taxonomy
+reference provided species-level information.
 
 **Figure 5. The percentage of V1-V9 sequences that were predicted to have
 between 0 and 20 errors as a function of the error rate of the sequences.** The
 highest error rate, 0.52%,
-corresponds to what was observed before the pre-clustering step
+corresponds to what was observed before the pre-clustering step.
 The smallest error rate (0.02%) corresponds to our previous observations using
 the 454 and MiSeq sequencing platforms. The predicted number of errors was
 assumed to follow a binomial distribution.
