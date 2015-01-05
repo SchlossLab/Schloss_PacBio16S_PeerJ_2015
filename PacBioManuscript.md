@@ -174,8 +174,8 @@ BAA-334. The mock community DNA is available through BEI resources
 (v3.1, HM-278D). Genomic DNAs from the three other communities were obtained
 using the MO BIO PowerSoil DNA extraction kit. The human and mouse fecal samples
 were obtained using protocols that were reviewed and approved by the University
-Committee on Use and Care of Animals and the Institutional Review Board at the
-University of Michigan.
+Committee on Use and Care of Animals (Protocol #PRO00004877) and the Institutional Review Board at the
+University of Michigan (Protocol #HUM00057066). The human stool donor provided informed consent.
 
 ***Library generation and sequencing.***
 The DNAs were each amplified in triplicate using barcoded primers targeting the
@@ -220,9 +220,9 @@ were classified against the SILVA {Pruesse, 2007 #1735}, RDP {Cole, 2014 #3460},
 and greengenes {Werner, 2012 #2474} reference taxonomies  using a
 naive Bayesian classifier {Wang, 2007 #1809}. Sequences were assigned to
 operational taxonomic units using the average neighbor clustering algorithm with
-a 3% distance threshold {Schloss, 2011 #3156}.  Detailed
-methods including this paper as an R markdown file are available as a public
-online repository (http://github.com/SchlossLab/PacBio_16S).
+a 3% distance threshold {Schloss, 2011 #3156}.  Detailed methods including this
+paper as an R markdown file are available as a public online repository
+(http://github.com/SchlossLab/ Schloss_PacBio16S_PeerJ_2015).
 
 
 
