@@ -1,5 +1,3 @@
-# README
-
 ## The paper
 
 This is the repository for the manuscript "Sequencing 16S rRNA gene fragments
